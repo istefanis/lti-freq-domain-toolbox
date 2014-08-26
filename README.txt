@@ -1,0 +1,100 @@
+lti-freq-domain-toolbox (c) 2014 Ioannis Stefanis <iastefan@outlook.com>
+
+lti-freq-domain-toolbox is distributed under the GNU Lesser General Public License Version 3 (LGPLv3). 
+The LGPLv3 license text is included in the file "LICENSE_LESSER.txt".
+
+See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
+
+
+
+
+1) DESCRIPTION
+
+lti-freq-domain-toolbox implements some basic functions for dealing with tasks such as:
+computation of the transfer function (tf) of a lti system modeled by interconnected tf blocks 
+in the s-domain, generation of bode & nyquist plots, and arithmetic computation of its time-domain response.
+
+
+
+
+2) QUICKSTART FOR NEW USERS OF RACKET
+      
+
+1. Get Racket from: racket-lang.org and install
+
+2. After you run DrRacket, install the lti-freq-domain-toolbox package by: 
+   File->Install Package->Browse->Directory (select folder)
+
+3. Type: (require lti-freq-domain-toolbox) in the top of the definitions 
+   (left or upper part of screen), just below the #lang line
+
+4. Run your program with Ctrl+R
+
+5. Type in the interactions (right or lower part of screen): (run-examples)
+   and then press Enter to run all the examples of "main.rkt".
+
+
+
+
+3) HELP/GUIDELINES/NOTES
+
+
+É.   Open "main.rkt" to run each example and get a feeling of how the program works, 
+     ex. type: (bode (feedback-loop-test1 a))
+
+II.  Build blocks to install inside them the transfer functions (tfs), so as to achieve abstraction
+
+III. The blocks a, b, c, d are predefined for speed
+
+IV.  Do not use parentheses when giving names for elements
+
+V.   Use as input in the functions supplied (bode, compare etc) the names of the blocks,
+     not the tfs, always without parentheses
+
+VI.  Delay can be modeled in two ways: 
+     i)  by approximating it using pade functions (for both s- and t-domain)
+     ii) by adding delay as a function of w by defining a fw function (mainly for the s-domain)
+
+VII. Custom built functions that create circuits, like circuit1 or pid, can be made
+     so that they return the block, so the can be used directly as inputs to functions like bode etc.
+     That isn't the case when using the function tf to build a function, 
+     because tf does not return the block where it is installed
+
+VIII.The connection of two tfs or adders has no effect if they are not elements of the same block.
+     Blocks can themselves be connected
+
+IX.  If all elements inside a block are not connected, the value of the block's total tf
+     is that of the latest installed
+
+X.   Do not simplify a block that has empty blocks inside it 
+     - build new blocks just when they are needed
+
+XI.  Implementation assumption: each tf, adder or block has only one input and multiple outputs.
+     Multiple inputs can be achieved by adding in front of it an adder
+
+XII. Restart the program before working with new circuits defined on already used blocks
+
+
+
+
+
+4) REFERENCES
+
+
+Parts of the code of the program, as the symbolic algebra package,
+have been implemented as demonstrated in:
+
+Structure and Interpretation of Computer Programs second edition. 
+The MIT Press with the McGraw-Hill Book Company, 1996
+Harold Abelson and Gerald Jay Sussman with Julie Sussman, foreword by Alan J. Perlis. 
+
+or are modifications of code presented there.
+
+
+
+The implementation of the Talbot algorithm for Laplace inversion
+was originally demonstrated in Python by Fernando Damian Nieuwveldt <fdnieuwveldt@gmail.com>
+link: http://code.activestate.com/recipes/576934-numerical-inversion-of-the-laplace-transform-using/
+
+L.N.Trefethen, J.A.C.Weideman, and T.Schmelzer. Talbot quadratures
+and rational approximations. BIT. Numerical Mathematics, 46(3):653 670, 2006.
