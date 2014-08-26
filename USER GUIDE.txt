@@ -39,7 +39,7 @@ in the s-domain, generation of bode & nyquist plots, and arithmetic computation 
 3) HELP/GUIDELINES/NOTES
 
 
-É.   Open "main.rkt" to run each example and get a feeling of how the program works, 
+I.   Open "main.rkt" to run each example and get a feeling of how the program works, 
      ex. type: (bode (feedback-loop-test1 a))
 
 II.  Build blocks to install inside them the transfer functions (tfs), so as to achieve abstraction
