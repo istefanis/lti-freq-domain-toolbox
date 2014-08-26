@@ -7,9 +7,6 @@ in the s-domain, generation of bode & nyquist plots, and arithmetic computation 
 
 
 
-
-
-
 lti-freq-domain-toolbox (c) 2014 Ioannis Stefanis <iastefan@outlook.com>
 
 lti-freq-domain-toolbox is distributed under the GNU Lesser General Public License Version 3 (LGPLv3). 
