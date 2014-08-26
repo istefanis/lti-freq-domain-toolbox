@@ -1,7 +1,7 @@
 lti-freq-domain-toolbox
 =======================
 
-lti-freq-domain-toolbox implements some basic functions for tasks such as:
+lti-freq-domain-toolbox is a collection of functions written in Racket, that deal with tasks such as:
 computation of the transfer function (tf) of a lti system modeled by interconnected tf blocks 
 in the s-domain, generation of bode & nyquist plots, and arithmetic computation of its time-domain response.
 
