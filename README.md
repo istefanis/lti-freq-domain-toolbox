@@ -5,6 +5,8 @@ lti-freq-domain-toolbox is a collection of functions written in Racket, that dea
 computation of the transfer function (tf) of a lti system modeled by interconnected tf blocks 
 in the s-domain, generation of bode & nyquist plots, and arithmetic computation of its time-domain response.
 
+![plot examples](https://github.com/iastefan/lti-freq-domain-toolbox/blob/master/plots.png)
+*Some plot examples*
 
 
 lti-freq-domain-toolbox (c) 2014 Ioannis Stefanis <iastefan@outlook.com>
