@@ -22,8 +22,10 @@ in the s-domain, generation of bode & nyquist plots, and arithmetic computation 
 
 1. Get Racket from: racket-lang.org and install
 
-2. After you run DrRacket, install the lti-freq-domain-toolbox package by: 
-   File->Install Package->Browse->Directory (select folder)
+2. After you run DrRacket, install the lti-freq-domain-toolbox package from: 
+   File->Install Package
+   and paste: git://github.com/iastefan/lti-freq-domain-toolbox (for automatic download)
+   or:  Browse->Directory (if you have downloaded it manually)
 
 3. Type: (require lti-freq-domain-toolbox) in the top of the definitions 
    (left or upper part of screen), just below the #lang line
