@@ -2247,7 +2247,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     (plot-height 300)
     (plot-title "F(s) of the complete circuit")
-    (plot-font-family 'default)
     
     
     (for-each 
@@ -2282,7 +2281,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   ;(plot-title (string-append (make-space-line 10) "Bode diagram"))
   (plot-title (string-append (make-space-line 7) "Bode diagram"))
   (plot-x-label "Frequency [rad/s]")
-  (plot-font-family 'default)
   )
 
 
@@ -3291,7 +3289,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (plot-title "Nyquist diagram")
       (plot-x-label "Real part")
       (plot-y-label "Imaginary part")
-      (plot-font-family 'default)
       
       
       (for-each 
@@ -3582,8 +3579,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                      [plot-width    400]
                      [plot-height   200]
                      [plot-x-label  "t"]
-                     [plot-y-label  "f"]
-                     [plot-font-family 'default])
+                     [plot-y-label  "f"])
         
         (plot (list
                ;(axes)
@@ -3629,8 +3625,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                      [plot-width    400]
                      [plot-height   200]
                      [plot-x-label  "t"]
-                     [plot-y-label  "df/dt"]
-                     [plot-font-family 'default])
+                     [plot-y-label  "df/dt"])
         
         (plot (list
                ;(axes)
@@ -3678,8 +3673,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                        [plot-width    400]
                        [plot-height   200]
                        [plot-x-label  "df/dt"]
-                       [plot-y-label  "f"]
-                       [plot-font-family 'default])
+                       [plot-y-label  "f"])
           
           (plot (list
                  (axes)
@@ -3770,8 +3764,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                    [plot-width    400]
                    [plot-height   200]
                    [plot-x-label  "t"]
-                   [plot-y-label  "f"]
-                   [plot-font-family 'default])
+                   [plot-y-label  "f"])
       
       (plot (list
              (axes)
