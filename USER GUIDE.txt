@@ -20,20 +20,23 @@ in the s-domain, generation of bode & nyquist plots, and arithmetic computation 
 2) QUICKSTART FOR NEW USERS OF RACKET
       
 
-1. Get Racket from: racket-lang.org and install
+1. Get Racket from: http://racket-lang.org and install
 
-2. After you run DrRacket, install the lti-freq-domain-toolbox package from: 
-   File->Install Package
-   and paste: git://github.com/iastefan/lti-freq-domain-toolbox (for automatic download)
-   or:  Browse->Directory (if you have downloaded it manually)
+2. After you run DrRacket, open: File->Install Package
+   and paste in the "Package Source" field: lti-freq-domain-toolbox
 
-3. Type: (require lti-freq-domain-toolbox) in the top of the definitions 
-   (left or upper part of screen), just below the #lang line
+3. Type in the definitions (left/upper part of the screen):
+   
+   #lang racket
+   (require lti-freq-domain-toolbox)
 
-4. Run your program with Ctrl+R
+   and run with Ctrl+R
 
-5. Type in the interactions (right or lower part of screen): (run-examples)
-   and then press Enter to run all the examples of "main.rkt".
+5. Type in the interactions (right/lower part of the screen):
+
+   (run-examples)
+
+   and press Enter to test all the examples of "main.rkt".
 
 
 
