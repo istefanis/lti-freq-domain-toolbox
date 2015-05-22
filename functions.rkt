@@ -26,6 +26,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
+(define-namespace-anchor n_anchor)
+(define anchor (namespace-anchor->namespace n_anchor))
+
 
 
 
@@ -2125,21 +2128,21 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                            (list (make-poly-dense 's (map (λ (x) (if (list? x)
                                                                      (if (contains-symbols?-tree x)
                                                                          (round-decimal-tree x)
-                                                                         (round-decimal (eval x) 3))
+                                                                         (round-decimal (eval x anchor) 3))
                                                                      (if (not (symbol? x))
-                                                                         (round-decimal (eval x) 3)
+                                                                         (round-decimal (eval x anchor) 3)
                                                                          x))) 
                                                           a-term-list))
                                  (make-poly-dense 's (map (λ (x) (if (list? x)
                                                                      (if (contains-symbols?-tree x)
                                                                          (round-decimal-tree x)
-                                                                         (round-decimal (eval x) 3))
+                                                                         (round-decimal (eval x anchor) 3))
                                                                      (if (not (symbol? x))
-                                                                         (round-decimal (eval x) 3)
+                                                                         (round-decimal (eval x anchor) 3)
                                                                          x)))
                                                           b-term-list)))
-                           (reduce (make-poly-dense 's (map eval a-term-list))
-                                   (make-poly-dense 's (map eval b-term-list)))))
+                           (reduce (make-poly-dense 's (map (λ(x) (eval x anchor)) a-term-list))
+                                   (make-poly-dense 's (map (λ(x) (eval x anchor)) b-term-list)))))
              (nom (expand-polynomial (cdr (cdr (car division)))))
              (den (expand-polynomial (cdr (cdr (cadr division))))))
         
@@ -2236,7 +2239,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (define (F block)  ; tf is evaluated here
   
   (let* ((total-tfs-value (get-total-tfs-value block))
-         (tfs-value-evaluation (eval total-tfs-value)))
+         (tfs-value-evaluation (eval total-tfs-value anchor)))
     
     (define (tfs s) (tfs-value-evaluation s 0 0 0 0))
     ;(fw1-func 0) 
@@ -2434,7 +2437,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
          
          ; it must be evaluated here and not inside the function of the plot procedure,
          ; so that zooming on the figure is plausible:
-         (tfs-value-evaluation (eval total-tfs-value))) ;tfs-value-evaluation is a function of s and w
+         (tfs-value-evaluation (eval total-tfs-value anchor))) ;tfs-value-evaluation is a function of s and w
     
     (define (tfs w) (tfs-value-evaluation (make-rectangular 0 w) 
                                           (fw1-func w) 
@@ -2761,9 +2764,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   (display-mode-nil!)
   
   (let* ((total-tfs-value1 (cons 'λ (cons '(s fw1 fw2 fw3 fw4) (list (ratio-to-list (get-simplified-block-value block1))))))
-         (tfs-value-evaluation1 (eval total-tfs-value1))                               ;change: cadr
+         (tfs-value-evaluation1 (eval total-tfs-value1 anchor))                               ;change: cadr
          (total-tfs-value2 (cons 'λ (cons '(s fw1 fw2 fw3 fw4) (list (ratio-to-list (get-simplified-block-value block2))))))
-         (tfs-value-evaluation2 (eval total-tfs-value2)))                                                      ;change: tf1 
+         (tfs-value-evaluation2 (eval total-tfs-value2 anchor)))                                                      ;change: tf1 
     
     
     (define (tfs1 w) (tfs-value-evaluation1 (make-rectangular 0 w) 
@@ -2869,7 +2872,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (display-mode-nil!)
       
       (let* ((total-tfs-value1 (cons 'λ (cons '(s fw1 fw2 fw3 fw4) (list (ratio-to-list (get-simplified-block-value block1))))))
-             (tfs-value-evaluation1 (eval total-tfs-value1)))
+             (tfs-value-evaluation1 (eval total-tfs-value1 anchor)))
         
         (define (tfs1 w) (tfs-value-evaluation1 (make-rectangular 0 w) 
                                                 (fw1-func w) 
@@ -2921,7 +2924,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             
             
             (let* ((temp last-value)
-                   (temp-value-evaluation (eval temp)))
+                   (temp-value-evaluation (eval temp anchor)))
               
               (define (tfs-temp w) (temp-value-evaluation (make-rectangular 0 w) 
                                                           (fw1-func w) 
@@ -3029,10 +3032,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                                                (fw1-func w) 
                                                                (fw2-func w)
                                                                (fw3-func w)
-                                                               (fw4-func w))) y)) target))
+                                                               (fw4-func w)) anchor) y)) target))
                              1))
                    
-                   (define tfs-value-evaluation1 (eval (list (cons 'λ (cons '(y) (list (cons 'λ (cons '(s fw1 fw2 fw3 fw4) (list (caddr total-tfs-value))))))) m1)))
+                   (define tfs-value-evaluation1 (eval (list (cons 'λ (cons '(y) (list (cons 'λ (cons '(s fw1 fw2 fw3 fw4) (list (caddr total-tfs-value))))))) m1) anchor))
                    
                    ;(newline)
                    (display "y = ")
@@ -3099,10 +3102,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                                                            (fw1-func w) 
                                                                            (fw2-func w)
                                                                            (fw3-func w)
-                                                                           (fw4-func w))) y))) target))
+                                                                           (fw4-func w)) anchor) y))) target))
                              1))
                    
-                   (define tfs-value-evaluation2 (eval (list (cons 'λ (cons '(y) (list (cons 'λ (cons '(s fw1 fw2 fw3 fw4) (list (caddr total-tfs-value))))))) m2)))                     
+                   (define tfs-value-evaluation2 (eval (list (cons 'λ (cons '(y) (list (cons 'λ (cons '(s fw1 fw2 fw3 fw4) (list (caddr total-tfs-value))))))) m2) anchor))                     
                    
                    ;(newline)
                    
@@ -3190,7 +3193,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
          
          ; it must be evaluated here and not inside the function of the plot procedure,
          ; so that zooming on the figure is plausible:
-         (tfs-value-evaluation (eval total-tfs-value))) ;tfs-value-evaluation is a function of s and w
+         (tfs-value-evaluation (eval total-tfs-value anchor))) ;tfs-value-evaluation is a function of s and w
     
     (define (tfs w) (tfs-value-evaluation (make-rectangular 0 w) 
                                           (fw1-func w) 
@@ -3560,7 +3563,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
          
          ; it must be evaluated here and not inside the function of the plot procedure,
          ; so that zooming on the figure is plausible:
-         (tfs-value-evaluation (eval total-tfs-value))) ;tfs-value-evaluation is a function of s and w
+         (tfs-value-evaluation (eval total-tfs-value anchor))) ;tfs-value-evaluation is a function of s and w
     
     (define (tfs s) (tfs-value-evaluation s 
                                           0 
@@ -3606,7 +3609,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
          
          ; it must be evaluated here and not inside the function of the plot procedure,
          ; so that zooming on the figure is plausible:
-         (tfs-value-evaluation (eval total-tfs-value))) ;tfs-value-evaluation is a function of s and w
+         (tfs-value-evaluation (eval total-tfs-value anchor))) ;tfs-value-evaluation is a function of s and w
     
     (define (tfs s) (tfs-value-evaluation s 
                                           0 
@@ -3652,7 +3655,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
          
          ; it must be evaluated here and not inside the function of the plot procedure,
          ; so that zooming on the figure is plausible:
-         (tfs-value-evaluation (eval total-tfs-value))) ;tfs-value-evaluation is a function of s and w
+         (tfs-value-evaluation (eval total-tfs-value anchor))) ;tfs-value-evaluation is a function of s and w
     
     (define (tfs s) (tfs-value-evaluation s 
                                           0 
@@ -3747,7 +3750,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       ))
   
   
-  (define tfs-value-evaluation (eval total-tfs-value))
+  (define tfs-value-evaluation (eval total-tfs-value anchor))
   (define (tfs s) (tfs-value-evaluation s
                                         0
                                         0
@@ -3779,6 +3782,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (make-space-line 10)))
   
   )
+
 
 
 

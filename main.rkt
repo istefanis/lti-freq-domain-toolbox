@@ -268,15 +268,20 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
+
 ; run the examples
 
 (define (run-examples . speed)
   (if (and (not (null? speed)) (eq? (car speed) 'slow))
-      (map (λ (x) (newline)
-             (newline)
-             (displayln x)
-             (eval x)
-             (sleep 10))
-           examples)
-      (map eval examples)))
+      (begin (map (λ (x) (newline)
+                    (newline)
+                    (displayln x)
+                    (eval x anchor)
+                    (sleep 10))
+                  examples) 'all_examples_run)
+      (begin (map (λ(x) (eval x anchor)) examples)
+             'all_examples_run)))
 
+
+
+;(run-examples)

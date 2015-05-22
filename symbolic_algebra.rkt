@@ -784,8 +784,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   (put 'reduce '(poly-dense poly-dense) reduce-poly)
   
   ;'done-poly-dense
-  (newline)
-  'lti-freq-domain-toolbox_loaded)
+  ;(newline)
+  ;'lti-freq-domain-toolbox_loaded
+  )
 
 
 
@@ -801,7 +802,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (install-complex-package)
 (install-ratio-package)
 (install-poly-dense-package)
-(newline)
+;(newline)
 
 
 
