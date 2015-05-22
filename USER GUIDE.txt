@@ -10,27 +10,31 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 1) DESCRIPTION
 
-lti-freq-domain-toolbox implements some basic functions for dealing with tasks such as:
-computation of the transfer function (tf) of a lti system modeled by interconnected tf blocks 
-in the s-domain, generation of bode & nyquist plots, and arithmetic computation of its time-domain response.
+lti-freq-domain-toolbox is a collection of functions for lti dynamical systems written in Racket, 
+that deal with tasks as:
+- computation of the transfer function (tf) of a system modeled by interconnected tf blocks 
+in the s-domain
+- generation of bode & nyquist plots
+- arithmetic computation of its time-domain response.
 
 
 
 
-2) QUICKSTART FOR NEW USERS OF RACKET
+2) TO USE
       
 
 1. Get Racket from: http://racket-lang.org and install
 
 2. After you run DrRacket, open: File->Install Package
-   and paste in the "Package Source" field: lti-freq-domain-toolbox
+   and paste: lti-freq-domain-toolbox in the "Package Source" field,
+   to automatically download the package
 
 3. Type in the definitions (left/upper part of the screen):
    
    #lang racket
    (require lti-freq-domain-toolbox)
 
-   and run with Ctrl+R
+   to load the package, and run with Ctrl+R
 
 5. Type in the interactions (right/lower part of the screen):
 
