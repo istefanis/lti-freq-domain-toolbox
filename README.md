@@ -1,7 +1,7 @@
 lti-freq-domain-toolbox
 =======================
 
-lti-freq-domain-toolbox is a collection of functions for lti dynamical systems written in [Racket](http://racket-lang.org), that deal with tasks as:
+lti-freq-domain-toolbox is a collection of functions for lti dynamical systems written in [Racket](http://racket-lang.org) that deal with tasks as:
 * computation of the transfer function (tf) of a system modeled by interconnected tf blocks 
 in the s-domain
 * generation of bode & nyquist plots
@@ -26,6 +26,8 @@ in the s-domain
    (run-examples)
    ```
    and press ```Enter``` to test all the examples of "main.rkt".
+
+Read "USER GUIDE.txt" for more guidelines.
 
 =======================
 #####Some plot examples:

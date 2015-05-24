@@ -49,7 +49,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (bode (circuit2 a))
     (bode (circuit3 a))
     (define tf1 (tf '(1) '(0.3 0.1 1) a))
-    (bode a) ;the value of the block's total tf is the that of the latest installed
+    (bode a) ;the value of the block's total tf is that of the latest installed
     (bode a)
     
     

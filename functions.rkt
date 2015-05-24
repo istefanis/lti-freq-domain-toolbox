@@ -2212,8 +2212,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 (require plot)
-(newline)
-
+;(newline)
+(plot-font-size 9.5)
 
 
 

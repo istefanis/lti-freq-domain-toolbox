@@ -10,7 +10,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 1) DESCRIPTION
 
-lti-freq-domain-toolbox is a collection of functions for lti dynamical systems written in Racket, 
+lti-freq-domain-toolbox is a collection of functions for lti dynamical systems written in Racket 
 that deal with tasks as:
 - computation of the transfer function (tf) of a system modeled by interconnected tf blocks 
 in the s-domain
@@ -48,41 +48,40 @@ in the s-domain
 3) HELP/GUIDELINES/NOTES
 
 
-I.   Open "main.rkt" to run each example and get a feeling of how the program works, 
-     ex. type: (bode (feedback-loop-test1 a))
+1. Blocks are used to install inside them elements (transfer functions (tfs) and adders), as a means for 
+   achieving abstraction: (define block1 (make-block)). The blocks a, b, c, d are predefined for speed.
+   Blocks themeselves can be installed inside other blocks: (define a1 (make-block a))
 
-II.  Build blocks to install inside them the transfer functions (tfs), so as to achieve abstraction
+2. Elements (tfs and adders) and blocks are connected as follows: (connect tf1 tf2), (connect a1 a2)
+   The connection of two elements has no effect if they are not elements of the same block.
+   If all elements inside a block are not connected, the value of the block's total tf is that of the 
+   latest installed.
+   Implementation assumption: each tf, adder or block has only one input and multiple outputs.
+   Multiple inputs can be achieved by adding in front of it an adder.
 
-III. The blocks a, b, c, d are predefined for speed
+3. Elements are named without the use of parentheses: 
+   (define tf1 (tf '(1) '(0.3 0.1 1) a)), (define add1 (make-adder a))
 
-IV.  Do not use parentheses when giving names for elements
+4. The functions provided (bode, compare, nyquist etc) take as inputs the names of the blocks, not 
+   the tfs, always without parentheses: (bode a), (compare b c), (nyquist d)
+   The block's total tf is computed when calling such functions.
 
-V.   Use as input in the functions supplied (bode, compare etc) the names of the blocks,
-     not the tfs, always without parentheses
+5. Open "main.rkt" to find examples and get a feeling of how the program works.
 
-VI.  Delay can be modeled in two ways: 
-     i)  by approximating it using pade functions (for both s- and t-domain)
-     ii) by adding delay as a function of w by defining a fw function (mainly for the s-domain)
 
-VII. Custom built functions that create circuits, like circuit1 or pid, can be made
-     so that they return the block, so the can be used directly as inputs to functions like bode etc.
-     That isn't the case when using the function tf to build a function, 
-     because tf does not return the block where it is installed
+Some extra notes:
+-  Delay can be modeled in two ways: 
+   i)  by approximating it using pade functions (for both s- and t-domain)
+   ii) by adding delay as a function of w by defining a fw function (mainly for the s-domain)
 
-VIII.The connection of two tfs or adders has no effect if they are not elements of the same block.
-     Blocks can themselves be connected
+-  As an exception, custom built functions that create circuits, like circuit1 or pid, can be made 
+   so that they return the block, so they can be used directly as inputs to functions:
+   (bode (feedback-loop-test1 a)), instead of: (feedback-loop-test1 a), (bode a)
+   That isn't the case when using tf, because tf does not return the block where it is installed.
 
-IX.  If all elements inside a block are not connected, the value of the block's total tf
-     is that of the latest installed
+-  Do not simplify a block that has empty blocks inside it - build new blocks just when they are needed.
 
-X.   Do not simplify a block that has empty blocks inside it 
-     - build new blocks just when they are needed
-
-XI.  Implementation assumption: each tf, adder or block has only one input and multiple outputs.
-     Multiple inputs can be achieved by adding in front of it an adder
-
-XII. Restart the program before working with new circuits defined on already used blocks
-
+-  Restart the program before working with new circuits defined on already used blocks.
 
 
 
