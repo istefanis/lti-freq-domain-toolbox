@@ -1,8 +1,6 @@
-
-
 #|
 lti-freq-domain-toolbox
-Copyright (C) 2014 Ioannis Stefanis <iastefan@outlook.com>
+Copyright (C) 2014-2020 Ioannis Stefanis <iastefan@outlook.com>
 
 lti-freq-domain-toolbox is distributed under the GNU Lesser General Public License Version 3 (LGPLv3). 
 The LGPLv3 license text is included in the file "LICENSE_LESSER.txt".
@@ -15,12 +13,36 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-
 #lang racket
 
-(require "functions.rkt")
-(provide (all-from-out "functions.rkt"))
+(require math/base)
+(require "elements/general.rkt")
+(require "elements/block.rkt")
+(require "elements/tf.rkt")
+(require "elements/adder.rkt")
+(require "functionality/metrics.rkt")
+(require "functionality/display_modes.rkt")
+(require "functionality/text_generation.rkt")
+(require "functionality/plot_generation.rkt")
+(require "functionality/time_domain.rkt")
+(require "examples.rkt")
+
+(provide (all-from-out "elements/general.rkt"))
+(provide (all-from-out "elements/block.rkt"))
+(provide (all-from-out "elements/tf.rkt"))
+(provide (all-from-out "elements/adder.rkt"))
+(provide (all-from-out "functionality/metrics.rkt"))
+(provide (all-from-out "functionality/display_modes.rkt"))
+(provide (all-from-out "functionality/text_generation.rkt"))
+(provide (all-from-out "functionality/plot_generation.rkt"))
+(provide (all-from-out "functionality/time_domain.rkt"))
+(provide (all-from-out "examples.rkt"))
 (provide (all-defined-out))
+
+
+
+(define-namespace-anchor n_anchor)
+(define anchor (namespace-anchor->namespace n_anchor))
 
 
 
@@ -35,24 +57,34 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 (define examples 
   '(
+
+
+    ;0. initialize a, b, c, d blocks
+
+    (define a (make-block))
+    (define b (make-block))
+    (define c (make-block))
+    (define d (make-block))
+
+
     
-    
+
     
     ;I. simplification examples:
     
     
-    (bode (feedback-loop-test1 a))
-    (bode (multiple-outputs-test1 a))
-    (bode (serial-adders-test1 a))
-    (bode (parallel-tfs-test1 a))
     (bode (circuit1 a))
     (bode (circuit2 a))
     (bode (circuit3 a))
     (define tf1 (tf '(1) '(0.3 0.1 1) a))
     (bode a) ;the value of the block's total tf is that of the latest installed
     (bode a)
-    
-    
+    ;(bode (feedback-loop-test1 a))
+    ;(bode (multiple-outputs-test1 a))
+    ;(bode (serial-adders-test1 a))
+    ;(bode (parallel-tfs-test1 a))
+
+
     
     
     
@@ -74,9 +106,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     
     
-    
     ;III. by function:
-    
     
     ;F:
     (define sinx (tf '(1) '(1 0 1 0) a))
@@ -84,17 +114,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     (F (integrator a))
     
-    
-    
-    
-    ;bode:
-    
-    ;doesn't work:
-    ;(bode (tf '(1) '(1 0) a))
-    ;works:
-    (define tf1 (tf '(1) '(1 0) a))
+      
+    ;Bode
+    ;(bode (tf '(1) '(1 0) a))       ;it doesn't work this way
+    (define tf1 (tf '(1) '(1 0) a))  ;it works
     (bode a)
-    
     
     (bode (cheb-t1 4 8 1 a))
     (bode (cheb-t1 6 1 1 a))
@@ -109,11 +133,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define tf2 (tf '(4 3 6) '(2 1) a))
     (connect tf1 tf2)
     (bode a)
+
     
-    
-    
-    
-    ;compare (blocks):
+    ;Compare (blocks)
     (define c1 (make-block))
     (define c2 (make-block))
     (define tf1 (tf '(1) '(1 0 1) c1)) ;could use a and b which are already defined
@@ -136,23 +158,17 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     ;(define tf1 (tf '(1) '(1 0 1) a))
     ;(define tf2 (tf '(5) '(1 0 1) a))
     ;(compare a a)
+      
     
-    
-    
-    
-    ;tune:
+    ;Tune
     (tune (pi-controller 5 'y a) '(= AR 140) 0.01)
     
     
+    ;Nyquist
+    (nyquist (circuit3 a))
     
     
-    ;nyquist:
-    (nyquist (circuit1 a))
-    
-    
-    
-    
-    ;step:
+    ;Step
     (step (sine a) 5)
     
     (define tf1 (tf '(-8 5) '(0.4 2.2 1) a))
@@ -165,38 +181,29 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     ;(define delay1 (tf '((/ 1 (exp (* s 1)))) '(1) a)) ;or try: (define delay1 (tf '(fw4) '(1) a))
     ;(connect delay1 tf3)
     ;(step a 1)
+   
     
-    
-    
-    ;impulse:
+    ;Impulse
     (impulse (sine a))
     
-    
-    
-    
-    ;trajectory:
+        
+    ;Trajectory
     (trajectory (sine a))
     (define tf1 (tf '(1) '(0.3 0.1 1) a))
     (trajectory a) ;with damping
+       
     
-    
-    
-    
-    ;delay using pade:
+    ;Delay using Pade:
     (step (delay (sine a) 2) 2)
     (step (delay (delay (sine a) 1) 1) 2)
     
     
-    
-    
-    ;delay using fw functions - the fw functions only work at the s-domain:
+    ;Delay using fw functions - the fw functions only work at the s-domain:
     (define tf1 (tf '((* 5 fw3)) '(1 1) a))
     (bode a)
     
     
-    
-    
-    ;delay methods comparison:
+    ;Delay methods comparison:
     (define tf1 (tf '(1) '(1 0 1) a))
     (define delay1 (tf '(fw3) '(1) a))
     (connect delay1 tf1)
