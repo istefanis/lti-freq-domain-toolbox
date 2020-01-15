@@ -34,6 +34,7 @@ Read "USER GUIDE.txt" for more guidelines.
 =======================
 
 Some plot examples:
+
 ![plot examples](https://github.com/iastefan/lti-freq-domain-toolbox/blob/master/plots.png)
 
 
