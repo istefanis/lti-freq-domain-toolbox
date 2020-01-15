@@ -9,6 +9,7 @@ It can perform tasks such as:
 * numerical computation of its time domain response
 
 =======================
+
 To use:
 
 1. Get Racket from: http://racket-lang.org and install
@@ -31,11 +32,13 @@ To use:
 Read "USER GUIDE.txt" for more guidelines.
 
 =======================
+
 Some plot examples:
 ![plot examples](https://github.com/iastefan/lti-freq-domain-toolbox/blob/master/plots.png)
 
 
 =======================
+
 lti-freq-domain-toolbox (c) 2014-2020 Ioannis Stefanis <iastefan@outlook.com>
 
 lti-freq-domain-toolbox is distributed under the GNU Lesser General Public License Version 3 (LGPLv3). 
