@@ -52,13 +52,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 ; multiple inputs can be achieved by adding in front of it an adder
 
 
-(define (make-block . block) ; block is the parent block - optional
-  (let ((value '())   ; block obtains a value only when simplified
+(define (make-block . parent-block) ; parent block is optional
+  (let ((value '())   ; the block obtains a value only when simplified
+        (i-am-block #t)
+        (i-am-tf #f)
+        (i-am-adder #f)
         (blocks '())  ; blocks is a list of all block elements of the block
         (tfs '())     ; tfs is a list of all tf elements of the block
         (adders '())  ; adders is a list of all adder elements of the block
-        (i-am-block #t)
-        (i-am-adder #f)
         (input '())
         (outputs-list '())
         (i-am-simplified #t))
@@ -87,17 +88,30 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                 (cons (car outputs) (remove-output (cdr outputs)))))) 
       (set! outputs-list (remove-output outputs-list)))
     
-    
-    
-    
+
+
+
     
     ; //// blocks, tfs and adders lists operators:
     
+
+    ; list operators for handling tfs and adders elements (they share the same list representation):
+
+    (define (get-next-pair pair) (cdr pair))
+    (define (get-tf-from-pair pair) (car pair))
+    (define (get-adder-from-pair pair) (car pair))
+
+
+    (define (element-of-list? x lst)
+      (cond ((null? lst) #f)
+            ((eq? x (car lst)) #t)
+            (else (element-of-list? x (cdr lst)))))
+
     
-    
+        
     ; blocks operators:
     
-    (define (process-element-of-blocks? x) (element? x blocks))
+    (define (process-element-of-blocks? x) (element-of-list? x blocks))
     
     
     (define (process-adjoin-blocks! x)
@@ -119,11 +133,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (remove! x blocks))
     
     
-    
-    
+        
     ; tfs operators:
     
-    (define (process-element-of-tfs? x) (element? x tfs))
+    (define (process-element-of-tfs? x) (element-of-list? x tfs))
     
     
     (define (process-adjoin-tfs! x)
@@ -145,11 +158,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (remove! x tfs))
     
     
-    
-    
+        
     ; adders operators:
     
-    (define (process-element-of-adders? x) (element? x adders))
+    (define (process-element-of-adders? x) (element-of-list? x adders))
     
     
     (define (process-adjoin-adders! x)
@@ -172,7 +184,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     
     
-    
+
     ; //// simplify (the operation handling the simplification process):
     
     (define (simplify-the-block)
@@ -954,7 +966,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     ; //// message-handling:
     
     (define (me request)
-      (cond ((eq? request 'is-block?) i-am-block)
+      (cond ((eq? request 'get-value) value)
+            ((eq? request 'set-value!) (lambda (x) (set! value x)))
+
+            ((eq? request 'is-block?) i-am-block)
+            ((eq? request 'is-tf?) i-am-tf)
             ((eq? request 'is-adder?) i-am-adder)
 
             ((eq? request 'is-simplified?) i-am-simplified)
@@ -982,23 +998,20 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             ((eq? request 'remove-from-tfs!) (lambda (x) (process-remove-from-tfs! x)))
             ((eq? request 'remove-from-adders!) (lambda (x) (process-remove-from-adders! x)))
             
-            ((eq? request 'get-value) value)
-            ((eq? request 'set-value!) (lambda (x) (set! value x)))
-            
-            ((eq? request 'get-block) (car block))
+            ((eq? request 'get-block) (car parent-block))
             ((eq? request 'get-blocks) blocks)
             ((eq? request 'get-tfs) tfs)
             ((eq? request 'get-adders) adders)
             
             (else (error "Unknown request - MAKE-TF" request))))
     
-    (when (not (null? block))
-      (((car block) 'adjoin-blocks!) me))
+    (when (not (null? parent-block))
+      (((car parent-block) 'adjoin-blocks!) me))
     
     me))
 
 
-
+(define block make-block)
 
 
 

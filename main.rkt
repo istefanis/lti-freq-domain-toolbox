@@ -56,10 +56,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 ;0. initialize a, b, c, d blocks
 
-(define a (make-block))
-(define b (make-block))
-(define c (make-block))
-(define d (make-block))
+(define a (block))
+(define b (block))
+(define c (block))
+(define d (block))
 
 
 
@@ -133,8 +133,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
     
     ;Compare (blocks)
-    (define c1 (make-block))
-    (define c2 (make-block))
+    (define c1 (block))
+    (define c2 (block))
     (define tf1 (tf '(1) '(1 0 1) c1)) ;could use a and b which are already defined
     (define tf2 (tf '(5) '(1 0 1) c2))
     (compare c1 c2)
@@ -217,8 +217,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     ;serial connections:
     
-    (define a1 (make-block a))
-    (define a2 (make-block a))
+    (define a1 (block a))
+    (define a2 (block a))
     (define tf1 (tf '(1) '(0.3 0.1 1) a1))
     (define tf2 (tf '(1) '(5 0.1 1) a1))
     (connect tf1 tf2)
@@ -237,8 +237,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     ;feedback loop:
     
-    (define a1 (make-block a))
-    (define a2 (make-block a))
+    (define a1 (block a))
+    (define a2 (block a))
     (define tf1 (tf '(1) '(0.3 0.1 1) a1)) ;also try this: (define tf1 (tf '(1) '(0.3 fw1 1) a1))
     (define tf2 (tf '(1) '(6 0.1 1) a1))
     (connect tf1 tf2)
@@ -247,11 +247,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (connect a1 a2)
     ;(bode a) ;10^6
     
-    (define a3 (make-block a))
+    (define a3 (block a))
     (define tf4 (tf '(1) '(4 0.1 1) a3))
     (connect a2 a3)
     ;(bode a) ;10^8
-    (define a4 (make-block a))
+    (define a4 (block a))
     (define tf5 (tf '(1) '(1) a4))
     (connect a2 a4)
     

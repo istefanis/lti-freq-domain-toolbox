@@ -38,8 +38,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (define (set-value! element new-value) ((element 'set-value!) new-value))
 
 (define (block? element) (element 'is-block?))
+(define (tf? element) (element 'is-tf?))
 (define (adder? element) (element 'is-adder?))
-(define (tf? element) (and (eq? (element 'is-block?) #f) (eq? (element 'is-adder?) #f)))
+(define (element? element) (or (block? element)
+                               (tf? element)
+                               (adder? element)))
 
 (define (has-adder-input? element) 
   (if (and (not adder?) (element 'has-input?)) (adder? (get-input element)) 'ok))
@@ -92,49 +95,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (define (remove-input! adder) (adder 'remove-input!))
 (define (single-input? adder) (adder 'single-input?))
 (define (two-outputs? adder) (adder 'two-outputs?))
-
-
-
-
-
-; list operators for handling tfs and adders elements (they share the same list representation):
-
-(define (get-next-pair pair) (cdr pair))
-(define (get-tf-from-pair pair) (car pair))
-(define (get-adder-from-pair pair) (car pair))
-
-
-(define (element? x set)
-  (cond ((null? set) #f)
-        ((eq? x (car set)) #t)
-        (else (element? x (cdr set)))))
-
-
-
-
-
-; one-dimensional tables:
-
-(define (lookup key table)
-  (let ((record (m-assoc key (mcdr table))))
-    (if record
-        (mcdr record)
-        #f)))
-
-(define (m-assoc key records)
-  (cond ((null? records) #f)
-        ((equal? (mcar (mcar records)) key) (mcar records))
-        (else (m-assoc key (mcdr records)))))
-
-(define (insert! key value table)
-  (let ((record (m-assoc key (mcdr table))))
-    (if record
-        (set-mcdr! record value)
-        (set-mcdr! table (mcons (mcons key value) (mcdr table))))))
-
-(define (make-table)
-  (mcons '*table* '()))
-
 
 
 

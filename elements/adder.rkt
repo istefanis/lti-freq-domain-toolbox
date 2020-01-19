@@ -43,8 +43,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 (define (make-adder block)
-  (let ((i-am-block #f)
-        (value 'adder)
+  (let ((value 'adder)
+        (i-am-block #f)
+        (i-am-tf #f)
         (i-am-adder #t)
         (inputs-list '())     ; '((input1 sign1) (input2 sign2) ...)
         (outputs-list '()))
@@ -80,7 +81,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     (define (me request)
       (cond ((eq? request 'get-value) value)
+
             ((eq? request 'is-block?) i-am-block)
+            ((eq? request 'is-tf?) i-am-tf)
             ((eq? request 'is-adder?) i-am-adder)
             
             ((eq? request 'has-input?) (not (null? inputs-list)))
@@ -105,8 +108,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     me))
 
-(define (adder block)
-  (make-adder block))
+
+(define adder make-adder)
 
 
 

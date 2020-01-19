@@ -48,6 +48,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 (define (make-tf value block)
   (let ((i-am-block #f)
+        (i-am-tf #t)
         (i-am-adder #f)
         (input '())
         (outputs-list '()))
@@ -78,7 +79,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (me request)
       (cond ((eq? request 'get-value) value)
             ((eq? request 'set-value!) (lambda (x) (set! value x)))
+
             ((eq? request 'is-block?) i-am-block)
+            ((eq? request 'is-tf?) i-am-tf)
             ((eq? request 'is-adder?) i-am-adder)
             
             ((eq? request 'has-input?) (not (null? input)))

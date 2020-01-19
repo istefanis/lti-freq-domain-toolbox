@@ -34,20 +34,20 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 ; //////////   D. circuit examples and elementary blocks  //////////
 
 
-(define (feedback-loop-test1 block) ;parent block
+(define (feedback-loop-test1 block1) ;parent block
   
   (define tf1 (make-tf (make-ratio (make-poly-dense 's '(1 0 1 1 0))
                                    (make-poly-dense 's '(1)))
-                       block))
+                       block1))
   
-  (define tf2 (tf '(1 0) '(2 1 0) block))
-  (define tf3 (tf '(1 0) '(1 0 1 0) block))
-  (define tf4 (tf '(1) '(1 0) block))
-  (define tf5 (tf '(1) '(1 0 0) block))
-  (define tf6 (tf '(2 0) '(3 0 1) block))
+  (define tf2 (tf '(1 0) '(2 1 0) block1))
+  (define tf3 (tf '(1 0) '(1 0 1 0) block1))
+  (define tf4 (tf '(1) '(1 0) block1))
+  (define tf5 (tf '(1) '(1 0 0) block1))
+  (define tf6 (tf '(2 0) '(3 0 1) block1))
   
-  (define add1 (make-adder block))
-  (define add2 (adder block))
+  (define add1 (make-adder block1))
+  (define add2 (adder block1))
   
   (connect-serially tf1 tf2)
   (connect tf2 add1)
@@ -56,65 +56,65 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   (connect add2 tf3)
   (connect tf3 add2)
   
-  block)  ; return the block where the elements were stored so as to be passed to simplify
+  block1)  ; return the block where the elements were stored so as to be passed to simplify
 
 
 
 
-(define (multiple-outputs-test1 block)
+(define (multiple-outputs-test1 block1)
   
-  (define tf1 (tf '(1 0 1 1 0) '(1) block))  
-  (define tf2 (tf '(1 0) '(2 1 0) block))
-  (define tf3 (tf '(1 0) '(1 0 1 0) block))
-  (define tf4 (tf '(1) '(1 0) block))
-  (define tf5 (tf '(1) '(1 0 0) block))
-  (define tf6 (tf '(2 0) '(3 0 1) block))
+  (define tf1 (tf '(1 0 1 1 0) '(1) block1))  
+  (define tf2 (tf '(1 0) '(2 1 0) block1))
+  (define tf3 (tf '(1 0) '(1 0 1 0) block1))
+  (define tf4 (tf '(1) '(1 0) block1))
+  (define tf5 (tf '(1) '(1 0 0) block1))
+  (define tf6 (tf '(2 0) '(3 0 1) block1))
   
-  (define add1 (adder block))
-  (define add2 (adder block))
+  (define add1 (adder block1))
+  (define add2 (adder block1))
   
   (connect add1 tf2)
   (connect tf2 tf3)
   (connect tf2 tf4)
   (connect tf2 tf5)
   
-  block)
+  block1)
 
 
 
 
-(define (serial-adders-test1 block)
+(define (serial-adders-test1 block1)
   
-  (define tf1 (tf '(1 0 1 1 0) '(1) block))  
-  (define tf2 (tf '(1 0) '(2 1 0) block))
-  (define tf3 (tf '(1 0) '(1 0 1 0) block))
-  (define tf4 (tf '(1) '(1 0) block))
-  (define tf5 (tf '(1) '(1 0 0) block))
-  (define tf6 (tf '(2 0) '(3 0 1) block))
+  (define tf1 (tf '(1 0 1 1 0) '(1) block1))  
+  (define tf2 (tf '(1 0) '(2 1 0) block1))
+  (define tf3 (tf '(1 0) '(1 0 1 0) block1))
+  (define tf4 (tf '(1) '(1 0) block1))
+  (define tf5 (tf '(1) '(1 0 0) block1))
+  (define tf6 (tf '(2 0) '(3 0 1) block1))
   
-  (define add1 (adder block))
-  (define add2 (adder block))
+  (define add1 (adder block1))
+  (define add2 (adder block1))
   
   (connect add1 add2)
   (connect add2 tf5)
   (connect tf5 add1)
   
-  block)
+  block1)
 
 
 
 
-(define (parallel-tfs-test1 block)
+(define (parallel-tfs-test1 block1)
   
-  (define tf1 (tf '(1 0 1 1 0) '(1) block))
-  (define tf2 (tf '(1 0) '(2 1 0) block))
-  (define tf3 (tf '(1 0) '(1 0 1 0) block))
-  (define tf4 (tf '(1) '(1 0) block))
-  (define tf5 (tf '(1) '(1 0 0) block))
-  (define tf6 (tf '(2 0) '(3 0 1) block))
+  (define tf1 (tf '(1 0 1 1 0) '(1) block1))
+  (define tf2 (tf '(1 0) '(2 1 0) block1))
+  (define tf3 (tf '(1 0) '(1 0 1 0) block1))
+  (define tf4 (tf '(1) '(1 0) block1))
+  (define tf5 (tf '(1) '(1 0 0) block1))
+  (define tf6 (tf '(2 0) '(3 0 1) block1))
   
-  (define add1 (adder block))
-  (define add2 (adder block))
+  (define add1 (adder block1))
+  (define add2 (adder block1))
   
   (connect add1 tf1)
   (connect add1 tf2)
@@ -123,41 +123,41 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   (connect tf2 add2)
   (connect tf3 add2)
   
-  block)
+  block1)
 
 
 
 
-(define (circuit1 block)  
-  (define tf1 (tf '(-10 0 1) '(1 2 1) block))
-  block)
+(define (circuit1 block1)  
+  (define tf1 (tf '(-10 0 1) '(1 2 1) block1))
+  block1)
 
 
 
-(define (circuit2 block)
+(define (circuit2 block1)
   (define tf1 (make-tf (make-ratio (make-poly-dense 's '(2)) 
                                    (make-poly-dense 's '(1 1)))
-                       block)) 
-  (define tf2 (tf '(1 2 5) '(8) block))
+                       block1)) 
+  (define tf2 (tf '(1 2 5) '(8) block1))
   (connect tf1 tf2)
-  block)
+  block1)
 
 
 
-(define (circuit3 block)
+(define (circuit3 block1)
   
-  (define tf1 (tf '(1 0 0 0 0) '(1 1 0) block))
-  (define tf2 (tf '(1 0) '(2 1 0) block))
-  (define tf3 (tf '(1 0) '(1 0 1 0) block))
-  (define tf4 (tf '(1) '(1 0) block))
-  (define tf5 (tf  '(1) '(1 0 0) block))
-  (define tf6 (tf '(2 0) '(3 0 1) block))
-  (define tf7 (tf '(1) '(4 0 0) block))
+  (define tf1 (tf '(1 0 0 0 0) '(1 1 0) block1))
+  (define tf2 (tf '(1 0) '(2 1 0) block1))
+  (define tf3 (tf '(1 0) '(1 0 1 0) block1))
+  (define tf4 (tf '(1) '(1 0) block1))
+  (define tf5 (tf  '(1) '(1 0 0) block1))
+  (define tf6 (tf '(2 0) '(3 0 1) block1))
+  (define tf7 (tf '(1) '(4 0 0) block1))
   
-  (define add1 (adder block))
-  (define add2 (adder block))
-  (define add3 (adder block))
-  (define add4 (adder block))
+  (define add1 (adder block1))
+  (define add2 (adder block1))
+  (define add3 (adder block1))
+  (define add4 (adder block1))
   
   (connect add1 tf2)
   (connect add1 tf3)
@@ -181,7 +181,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   (connect tf6 tf7)
   (connect tf7 add1)
   
-  block)
+  block1)
 
 
 
@@ -191,23 +191,23 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 ; //// elementary blocks:
 
 
-(define (phase-delay-circuit block)  
-  (define tf1 (tf '(5 1) '(8 1) block))
-  block)
+(define (phase-delay-circuit block1)  
+  (define tf1 (tf '(5 1) '(8 1) block1))
+  block1)
 
 
 
 
-(define (integrator block)
-  (define tf1 (tf '(1) '(1 0) block))
-  block)
+(define (integrator block1)
+  (define tf1 (tf '(1) '(1 0) block1))
+  block1)
 
 
 
 
-(define (sine block)
-  (define tf1 (tf '(1) '(1 0 1) block))
-  block)
+(define (sine block1)
+  (define tf1 (tf '(1) '(1 0 1) block1))
+  block1)
 
 
 
@@ -215,29 +215,29 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 ; //// pid controllers:
 
 
-(define (pi-controller kc ti block)
+(define (pi-controller kc ti block1)
   (define tf1 (tf (list (list '* kc ti) kc)  ; writen this way so as to accept symbols (and so work with tune)
                   (list ti 0)
-                  block))
-  block)
+                  block1))
+  block1)
 
 
 
 
-(define (pd-controller kc td block) 
+(define (pd-controller kc td block1) 
   (define tf1 (tf (list (list '* td kc) kc)
                   '(1)
-                  block))
-  block)
+                  block1))
+  block1)
 
 
 
 
-(define (pid-controller kc ti td block)
+(define (pid-controller kc ti td block1)
   (define tf1 (tf (list (list '* kc ti td) (list '* kc ti) kc)
                   (list ti 0)
-                  block))
-  block)
+                  block1))
+  block1)
 
 
 
@@ -249,7 +249,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (define (cheb-threshold! x)
    (set! cheb-threshold x))
 
-(define (cheb-t1 n e w0 block)
+(define (cheb-t1 n e w0 block1)
   
   (define (theta m)
     (/ (* pi (- (* 2 m) 1)) (* 2 n)))
@@ -262,11 +262,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   
   (set! cheb-threshold (/ 1 (sqrt (+ 1 (* e e)))))
   
-  ;(define b (make-block))
+  ;(define b (block))
   
   
   ;(define tf0 (tf '(1) (list (* (expt 2 (- n 1)) e)) b))
-  (define tf0 (tf '(1) (list (* (expt 2 (- n 1)) e)) block))
+  (define tf0 (tf '(1) (list (* (expt 2 (- n 1)) e)) block1))
   ;(define tf1 (tf '(1) (list 1 (- (spm 1))) b))
   ;(define tf2 (tf '(1) (list 1 (- (spm 2))) b))
   ;(define tf3 (tf '(1) (list 1 (- (spm 3))) b))
@@ -275,13 +275,13 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   (define (connection-function tfm m)
     (when (< m n)
       (let ;((f1 (tf '(1) (list 1 (- (spm (+ m 1)))) b)))
-          ((f1 (tf '(1) (list 1 (- (spm (+ m 1)))) block)))
+          ((f1 (tf '(1) (list 1 (- (spm (+ m 1)))) block1)))
         (connect tfm f1)
         (connection-function f1 (+ m 1)))))
   
   (connection-function tf0 0)
   
-  block)
+  block1)
 
 
 
@@ -311,7 +311,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-(define (pade m n T block)
+(define (pade m n T block1)
   
   ; the values returned for the greater values of i are rather small,
   ; so must be multiplied by an appropriate coefficient:
@@ -349,7 +349,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   
   (define tf1 (tf (map (λ (x) (* (p x) (expt T x))) (integers m))  ; integers from 0 to m
                   (map (λ (x) (* (q x) (expt T x))) (integers n))
-                  block))
+                  block1))
   
   tf1)
 
@@ -357,16 +357,16 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 ; T<7
-(define (delay block T)
+(define (delay block1 T)
   
   (newline)
   (displayln "delay approximated using pade(4,5)")
   
-  (define tf2 (pade 4 5 T block))
+  (define tf2 (pade 4 5 T block1))
   
-  (connect tf2 (cadr (get-tfs block)))
+  (connect tf2 (cadr (get-tfs block1)))
   
-  block)
+  block1)
 
 
 

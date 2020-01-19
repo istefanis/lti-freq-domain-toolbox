@@ -23,7 +23,6 @@ or are modifications of code presented there.
 
 
 
-
 (define (average a b) (/ (+ a b) 2))
 
 (define (square x) (* x x)) 
@@ -68,11 +67,9 @@ or are modifications of code presented there.
 
 
 
-
-
+#|
 ; PRIMES
 
-#|
 (define (prime? n)
   (= n (smallest-divisor n)))
 
@@ -103,7 +100,33 @@ or are modifications of code presented there.
   (if (= b 0)
       a
       (gcd b (remainder a b))))
+
+
+
+
+; 1-D TABLES:
+
+(define (lookup key table)
+  (let ((record (m-assoc key (mcdr table))))
+    (if record
+        (mcdr record)
+        #f)))
+
+(define (m-assoc key records)
+  (cond ((null? records) #f)
+        ((equal? (mcar (mcar records)) key) (mcar records))
+        (else (m-assoc key (mcdr records)))))
+
+(define (insert! key value table)
+  (let ((record (m-assoc key (mcdr table))))
+    (if record
+        (set-mcdr! record value)
+        (set-mcdr! table (mcons (mcons key value) (mcdr table))))))
+
+(define (make-table)
+  (mcons '*table* '()))
 |#
+
 
 
 
@@ -119,7 +142,6 @@ or are modifications of code presented there.
                    (* b product))))
   
   (expt-iter b n 1))
-
 
 
 
