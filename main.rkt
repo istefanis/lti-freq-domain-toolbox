@@ -54,20 +54,17 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 ; //////////   Examples  //////////
 
 
+;0. initialize a, b, c, d blocks
 
-(define examples 
+(define a (make-block))
+(define b (make-block))
+(define c (make-block))
+(define d (make-block))
+
+
+
+(define examples_list
   '(
-
-
-    ;0. initialize a, b, c, d blocks
-
-    (define a (make-block))
-    (define b (make-block))
-    (define c (make-block))
-    (define d (make-block))
-
-
-    
 
     
     ;I. simplification examples:
@@ -285,8 +282,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                     (displayln x)
                     (eval x anchor)
                     (sleep 10))
-                  examples) 'all_examples_run)
-      (begin (map (λ(x) (eval x anchor)) examples)
+                  examples_list) 'all_examples_run)
+      (begin (map (λ(x) (eval x anchor)) examples_list)
              'all_examples_run)))
 
 

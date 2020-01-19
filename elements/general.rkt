@@ -24,31 +24,32 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-; //////////   B0. Basic element functions   //////////
-
+; //////////   B0. Selectors & constructors, Contracts, and some general procedures   //////////
 
 
 ; the elements of circuits (tfs, adders and blocks) are implemented as objects 
 ; using the message-passing style
 
 
+
+; For all elements:
+
 (define (get-value element) (element 'get-value))
 (define (set-value! element new-value) ((element 'set-value!) new-value))
 
+(define (block? element) (element 'is-block?))
 (define (is-adder? element) (element 'is-adder?))
+
 (define (has-adder-input? element) 
   (if (and (not is-adder?) (element 'has-input?)) (is-adder? (get-input element)) 'ok))
 
 (define (has-input? element) (element 'has-input?))
-(define (single-input? adder) (adder 'single-input?))
 (define (get-input element) (element 'get-input))
 (define (set-input! element) (element 'set-input!))
-(define (remove-input! adder) (adder 'remove-input!))
 (define (print-input element) (element 'print-input))
 
 (define (has-outputs? element) (element 'has-outputs?))
 (define (single-output? element) (element 'single-output?))
-(define (two-outputs? adder) (adder 'two-outputs?))
 (define (get-outputs element) (element 'get-outputs))
 (define (add-output! element) (element 'add-output!))
 (define (remove-output! element) (element 'remove-output!))
@@ -56,20 +57,19 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
+; For blocks:
 
 (define (element-of-tfs? block) (block 'element-of-tfs?))
 (define (element-of-adders? block) (block 'element-of-adders?))
+
+(define (is-simplified? block) (block 'is-simplified?))
+(define (simplify block) (block 'simplify))
 
 (define (adjoin-tfs! block) (block 'adjoin-tfs!))
 (define (adjoin-adders! block) (block 'adjoin-adders!))
 
 (define (remove-from-tfs! block) (block 'remove-from-tfs!))
 (define (remove-from-adders! block) (block 'remove-from-adders!))
-
-
-(define (block? element) (element 'is-block?))
-(define (is-simplified? block) (block 'is-simplified?))
-(define (simplify block) (block 'simplify))
 
 (define (get-tfs block) (block 'get-tfs))
 (define (get-adders block) (block 'get-adders))
@@ -86,6 +86,12 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                         (block 'get-value))))))
 
 
+; For adders:
+
+(define (remove-input! adder) (adder 'remove-input!))
+(define (single-input? adder) (adder 'single-input?))
+(define (two-outputs? adder) (adder 'two-outputs?))
+
 
 
 
@@ -97,13 +103,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (define (get-adder-from-pair pair) (car pair))
 
 
-
-
 (define (element? x set)
   (cond ((null? set) #f)
         ((eq? x (car set)) #t)
         (else (element? x (cdr set)))))
-
 
 
 
@@ -138,14 +141,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-; //////////   C. operations on the circuit level  //////////
+; //////////   C. Connection of elements  //////////
 
 
 ; connect-serially:
 
-(define (connect-serially block1 block2)
-  ((set-input! block2) block1)
-  ((add-output! block1) block2))
+(define (connect-serially element1 element2)
+  ((set-input! element2) element1)
+  ((add-output! element1) element2))
 
 
 (define connect connect-serially)
