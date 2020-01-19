@@ -38,10 +38,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (define (set-value! element new-value) ((element 'set-value!) new-value))
 
 (define (block? element) (element 'is-block?))
-(define (is-adder? element) (element 'is-adder?))
+(define (adder? element) (element 'is-adder?))
+(define (tf? element) (and (eq? (element 'is-block?) #f) (eq? (element 'is-adder?) #f)))
 
 (define (has-adder-input? element) 
-  (if (and (not is-adder?) (element 'has-input?)) (is-adder? (get-input element)) 'ok))
+  (if (and (not adder?) (element 'has-input?)) (adder? (get-input element)) 'ok))
 
 (define (has-input? element) (element 'has-input?))
 (define (get-input element) (element 'get-input))

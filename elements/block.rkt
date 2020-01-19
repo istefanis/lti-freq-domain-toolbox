@@ -326,12 +326,12 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                        (map (lambda (x) (connect-serially (car (get-input (car set))) x))
                             (get-outputs (car set)))
                        ((remove-output! (car (get-input (car set)))) (car set))
-                       (map (lambda (x) (when (is-adder? x)
+                       (map (lambda (x) (when (adder? x)
                                           ((remove-input! x) (car set)))) (get-outputs (car set)))
                        (remove (cdr set) so-far))
                       
                       ((and (eq? (length tfs) 1) (not (has-input? (car set)))) ; no inputs
-                       (map (lambda (x) (if (is-adder? x)
+                       (map (lambda (x) (if (adder? x)
                                             ((remove-input! x) (car set))
                                             ((set-input! x) '())))
                             (get-outputs (car set)))
@@ -395,7 +395,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                   ((remove-output! tf) first-output)
                   
                   ; first-output. remove input from tf:
-                  (if (is-adder? first-output)
+                  (if (adder? first-output)
                       ((remove-input! first-output) tf)
                       ((set-input! first-output) '()))
                   
@@ -455,7 +455,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
           
           (let ((input1 (car inputs)))
             
-            (if (and (not (is-adder? input1)) (single-output? input1))
+            (if (and (not (adder? input1)) (single-output? input1))
                 
                 (begin (handle-display (lambda () 
                                          (display "check-input1")
@@ -480,7 +480,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
           
           (if (has-input? input1)
               
-              (if (is-adder? (get-input input1))
+              (if (adder? (get-input input1))
                   
                   (let ((adder1 (get-input input1))
                         (input2 (car inputs)))
@@ -488,7 +488,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                         
                         (if (has-input? input2)
                             
-                            (if (is-adder? (get-input input2))
+                            (if (adder? (get-input input2))
                                 
                                 (let ((adder2 (get-input input2)))
                                   (if (eq? adder1 adder2)
@@ -520,7 +520,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                       (begin (handle-single-display "eq? adder1 adder2" 'test)
                                              (check-input1 adder input1 (cdr inputs)))))
                                 
-                                (begin (handle-single-display "(is-adder? (get-input input2))" 'test)
+                                (begin (handle-single-display "(adder? (get-input input2))" 'test)
                                        (check-input1 adder input1 (cdr inputs))))
                             
                             (begin (handle-single-display "(has-input? input2)" 'test)
@@ -529,7 +529,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                         (begin (handle-single-display "(single-output? input2)" 'test)
                                (check-input1 adder input1 (cdr inputs)))))
                   
-                  (begin (handle-single-display "(is-adder? (get-input input1))" 'test)
+                  (begin (handle-single-display "(adder? (get-input input1))" 'test)
                          (check-adder-inputs adder (cdr inputs))))
               
               (begin (handle-single-display "(has-input? input1)" 'test)
@@ -567,7 +567,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
           
           'move-on
           
-          (if (is-adder? (car outputs))
+          (if (adder? (car outputs))
               
               ; no feedback tf
               (let ((first-adder (car outputs)))
@@ -657,7 +657,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                 (if (single-output? feedback-tf)
                     
                     (let ((feedback-tf-output (car (get-outputs feedback-tf))))
-                      (if (is-adder? feedback-tf-output)
+                      (if (adder? feedback-tf-output)
                           
                           ; as before:
                           (let ((first-adder feedback-tf-output))
@@ -759,7 +759,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                 ))          
                           
                           
-                          (begin (handle-single-display "no-loop-here (is-adder? feedback-tf-output)" 'test)
+                          (begin (handle-single-display "no-loop-here (adder? feedback-tf-output)" 'test)
                                  (check-tf-output tf (cdr outputs)))
                           
                           ))
@@ -800,9 +800,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             (if (single-output? tf)
                 
                 (let ((second-tf (car (get-outputs tf))))
-                  (if (is-adder? second-tf)
+                  (if (adder? second-tf)
                       
-                      (begin (handle-display (lambda () (display "no-serial-merging-tfs-here (is-adder?)")
+                      (begin (handle-display (lambda () (display "no-serial-merging-tfs-here (adder?)")
                                                (newline)
                                                (newline))
                                              'test)
@@ -892,9 +892,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             (if (single-output? adder)
                 
                 (let ((second-adder (car (get-outputs adder))))
-                  (if (not (is-adder? second-adder))
+                  (if (not (adder? second-adder))
                       
-                      (begin (handle-single-display "no-serial-merging-adders-here (is-adder?)" 'test)
+                      (begin (handle-single-display "no-serial-merging-adders-here (adder?)" 'test)
                              (serial-merging-adders next-pair))
                       
                       (if (not (single-input? second-adder))
@@ -954,7 +954,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     ; //// message-handling:
     
     (define (me request)
-      (cond ((eq? request 'is-adder?) i-am-adder)
+      (cond ((eq? request 'is-block?) i-am-block)
+            ((eq? request 'is-adder?) i-am-adder)
+
+            ((eq? request 'is-simplified?) i-am-simplified)
+            ((eq? request 'simplify) (simplify-the-block))
             
             ((eq? request 'has-input?) (not (null? input)))
             ((eq? request 'get-input) input)
@@ -968,7 +972,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             ((eq? request 'remove-output!) (lambda (x) (process-remove-output x)))
             ((eq? request 'print-outputs) (display outputs-list))
             
-            
             ((eq? request 'element-of-blocks?) (lambda (x) (process-element-of-blocks? x)))
             ((eq? request 'element-of-tfs?) (lambda (x) (process-element-of-tfs? x)))
             ((eq? request 'element-of-adders?) (lambda (x) (process-element-of-adders? x)))
@@ -979,9 +982,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             ((eq? request 'remove-from-tfs!) (lambda (x) (process-remove-from-tfs! x)))
             ((eq? request 'remove-from-adders!) (lambda (x) (process-remove-from-adders! x)))
             
-            
-            ((eq? request 'simplify) (simplify-the-block))
-            
             ((eq? request 'get-value) value)
             ((eq? request 'set-value!) (lambda (x) (set! value x)))
             
@@ -989,10 +989,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             ((eq? request 'get-blocks) blocks)
             ((eq? request 'get-tfs) tfs)
             ((eq? request 'get-adders) adders)
-            
-            
-            ((eq? request 'is-block?) i-am-block)
-            ((eq? request 'is-simplified?) i-am-simplified)
             
             (else (error "Unknown request - MAKE-TF" request))))
     

@@ -78,6 +78,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (me request)
       (cond ((eq? request 'get-value) value)
             ((eq? request 'set-value!) (lambda (x) (set! value x)))
+            ((eq? request 'is-block?) i-am-block)
             ((eq? request 'is-adder?) i-am-adder)
             
             ((eq? request 'has-input?) (not (null? input)))
@@ -91,8 +92,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             ((eq? request 'add-output!) (lambda (x) (process-add-output x)))
             ((eq? request 'remove-output!) (lambda (x) (process-remove-output x)))
             ((eq? request 'print-outputs) (display outputs-list))
-            
-            ((eq? request 'is-block?) i-am-block)
             
             (else (error "Unknown request - MAKE-TF" request))))
     
