@@ -20,7 +20,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (require "../math_library/numerical_analysis.rkt")
 (require "display_modes.rkt")
 (require "text_generation.rkt")
-(require "../examples.rkt")
+(require "../circuits.rkt")
 (provide (all-defined-out))
 
 
@@ -29,7 +29,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-; //////////   G. Plot-generating functions (Bode, Nyquist, etc.)  //////////
+
+; //////////   G. Frequency domain plot-generating functions  //////////
 
 
 ; the PLoT library, by Neil Toronto <neil.toronto@gmail.com>, 
@@ -39,26 +40,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 ; that returns the block to be simplified, such as: (circuit1 a) or: (pi-controller 7 5 a)
 
 
-
-
 (newline)
 (plot-font-size 10)
-
-
-
-
-
-
-(define (get-total-tfs-value block)
-  
-  (display-mode-nil!)
-  (newline)
-  
-  ;(let ((cached-simplification-result (simplify block)))
-  (cons 'λ (cons '(s fw1 fw2 fw3 fw4) 
-                 (list (ratio-to-list (get-simplified-block-value block))))))
-;)
-
 
 
 
@@ -105,9 +88,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-
-
-
 (define (bode-plot-parameters)
   (plot-height 200)
   ;(plot-title "Bode plot")
@@ -115,9 +95,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   (plot-title (string-append (make-space-line 7) "Bode plot"))
   (plot-x-label "Frequency [rad/s]")
   )
-
-
-
 
 
 
@@ -166,7 +143,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-
+#|
 (define (unwarp-angle-simple ang w id)
   
   (if (and (eq? (get-had-neg-values id) #t) (> ang 0)) ;cheb: (> ang (/ pi 2)))
@@ -177,7 +154,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             ang)
           ang))
   )
-
+|#
 
 (define (unwarp-angle-simple-2 ang w id)
   
@@ -237,28 +214,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-; fw-functions - for adding functions of w or s to the tf poly
-; - better to use them only in the s-domain:
-
-(define (simple-delay w T) (exp (* (make-rectangular 0 (- w)) T)))
-(define (simple-delay-s s T) (/ 1 (exp (* s T))))
-
-(define (comb-filter w a) (+ 1 (* a (simple-delay w 0.05))))
-
-(define (fw1-func w) (comb-filter w 0.5))
-(define (fw2-func w) (comb-filter w 0.7))
-(define (fw3-func w) (simple-delay w 1))
-(define (fw4-func s) (simple-delay-s s 1))
-
-;(compare (tf '(0.02 fw1) '(1)) (tf '(0.02 fw2) '(1)))
-
-
-
-
-
-
-
-
 ;///// Bode plot
 
 (define (bode block)
@@ -270,7 +225,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
          (tfs-value-evaluation (eval total-tfs-value anchor))) ;tfs-value-evaluation is a function of s and w
     
     (define (tfs w) (tfs-value-evaluation (make-rectangular 0 w) 
-                                          (fw1-func w) 
+                                          (fw1-func w) ; 4 slots for f(w) functions provided here 
                                           (fw2-func w)
                                           (fw3-func w)
                                           (fw4-func w)))
@@ -468,7 +423,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (set! passed-360-1 #f)
       
       
-      
+
+      ; filter type computation
       
       (cond ((> (/ AR-low AR-high) 2)
              (display "Low-pass filter:")
@@ -483,7 +439,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
              (newline)
              (newline)))    
       
+
       
+      ; bandwidth computation
       
       (cond ((eq? wb1 #f) 
              (display "bandwidth    = (0,inf)"))
@@ -521,7 +479,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       
       
       
-      ; roll-off:
+      ; roll-off computation
       
       (cond ((> (/ AR-low AR-high) 2)
              
@@ -555,7 +513,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
              (display " (log(ΔAR)/log(Δw))")
              (newline)))  
       
+
       
+      ; gain & phase margins computation
       
       (if (not (eq? gain-margin #f))
           (begin (display "gain margin  = ")
@@ -563,8 +523,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                  (newline))
           (begin (display "gain margin  = inf")
                  (newline)))
-      
-      
       
       (if (not (eq? phase-margin #f))
           ;(if (> phase-margin 0)

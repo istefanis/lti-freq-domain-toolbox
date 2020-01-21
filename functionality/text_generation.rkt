@@ -17,6 +17,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 (require "../math_library/symbolic_algebra.rkt")
 (require "../elements/general.rkt")
+(require "display_modes.rkt")
 (provide (all-from-out "../math_library/symbolic_algebra.rkt"))
 (provide (all-from-out "../elements/general.rkt"))
 (provide (all-defined-out))
@@ -308,7 +309,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-; //////////   F. Modifying the format of the circuit's tf value for the interpreter  //////////
+; //////////   F1. Modifying the format of the circuit's tf value for the interpreter  //////////
 
 
 
@@ -483,6 +484,43 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
           (expand-polynomial (cdr (cdr a)))
           (expand-polynomial (cdr (cdr b))))
     ))
+
+
+
+
+
+
+
+
+; //////////   F2. Adding f(w) variables and computing the total block value   //////////
+
+
+(define (get-total-tfs-value block)
+  
+  (display-mode-nil!)
+  (newline)
+  
+  ;(let ((cached-simplification-result (simplify block)))
+  (cons 'λ (cons '(s fw1 fw2 fw3 fw4) 
+                 (list (ratio-to-list (get-simplified-block-value block))))))
+
+
+
+
+; f(w) functions: for adding expressions of w or s to the tf polynomial
+; - use them only in the s-domain:
+
+(define (simple-delay w T) (exp (* (make-rectangular 0 (- w)) T)))
+(define (simple-delay-s s T) (/ 1 (exp (* s T))))
+
+(define (comb-filter w a) (+ 1 (* a (simple-delay w 0.05))))
+
+(define (fw1-func w) (comb-filter w 0.5))
+(define (fw2-func w) (comb-filter w 0.7))
+(define (fw3-func w) (simple-delay w 1))
+(define (fw4-func s) (simple-delay-s s 1))
+
+;(compare (tf '(0.02 fw1) '(1)) (tf '(0.02 fw2) '(1)))
 
 
 

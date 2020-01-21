@@ -31,7 +31,181 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-; //////////   D. circuit examples and elementary blocks  //////////
+; //////////   D1. Predefined circuits   //////////
+
+
+
+; //// Basic components:
+
+(define (integrator block1)
+  (define tf1 (tf '(1) '(1 0) block1))
+  block1)
+
+
+(define (sine block1)
+  (define tf1 (tf '(1) '(1 0 1) block1))
+  block1)
+
+
+(define (phase-delay-circuit block1)  
+  (define tf1 (tf '(5 1) '(8 1) block1))
+  block1)
+
+
+
+; //// Controllers:
+
+(define (pi-controller kp ki block1)
+  (define tf1 (tf (list kp ki)  ; writen this way so as to accept symbols (and so work with tune)
+                  (list 1 0)
+                  block1))
+  block1)
+
+
+(define (pd-controller kp kd block1) 
+  (define tf1 (tf (list kd kp)
+                  '(1)
+                  block1))
+  block1)
+
+
+(define (pid-controller kp ki kd block1)  ; kp=proportional gain, ki=integral gain, kd=derivative gain
+  (define tf1 (tf (list kd kp ki)
+                  (list 1 0)
+                  block1))
+  block1)
+
+
+
+; //// Chebyshev filters:
+
+(define cheb-threshold 1000)
+(define (cheb-threshold! x) (set! cheb-threshold x))
+
+
+
+(define (chebyshev-type1 n e w0 block1)  ; n=polynomial order, e=ripple factor, w0=cutoff frequency
+  
+  (define (theta m)
+    (/ (* pi (- (* 2 m) 1)) (* 2 n)))
+  
+  (define (spm m)
+    (+ (- (* (sinh (/ (asinh (/ 1 e)) n))
+             (sin (theta m))))
+       (* (make-rectangular 0 1.0) (cosh (/ (asinh (/ 1 e)) n)) (cos (theta m)))))
+  
+  
+  (cheb-threshold! (/ 1 (sqrt (+ 1 (* e e)))))
+  
+  ;(define b (block))
+  
+  
+  ;(define tf0 (tf '(1) (list (* (expt 2 (- n 1)) e)) b))
+  (define tf0 (tf '(1) (list (* (expt 2 (- n 1)) e)) block1))
+  ;(define tf1 (tf '(1) (list 1 (- (spm 1))) b))
+  ;(define tf2 (tf '(1) (list 1 (- (spm 2))) b))
+  ;(define tf3 (tf '(1) (list 1 (- (spm 3))) b))
+  
+  
+  (define (connection-function tfm m)
+    (when (< m n)
+      (let ;((f1 (tf '(1) (list 1 (- (spm (+ m 1)))) b)))
+          ((f1 (tf '(1) (list 1 (- (spm (+ m 1)))) block1)))
+        (connect tfm f1)
+        (connection-function f1 (+ m 1)))))
+  
+  (connection-function tf0 0)
+  
+  block1)
+
+
+
+; //// Delay components:
+
+; approximating e-sT using pade functions 
+; (the arithmetic methods fail when trying to model delay by just adding e-sT as a tf):
+
+#|
+(define (pade5 T)
+  (tf (list (* T T T T)
+            (* -120 T T T)
+            (* 1260 T T)
+            (* -6720 T)
+            15120)
+      (list (* T T T T T)
+            (* 25 T T T T)
+            (* 300 T T T)
+            (* 2100 T T)
+            (* 8400 T)
+            15120)))
+|#
+
+
+
+(define (pade m n T block1) ; the higher the m,n, the wider the region of convergence
+  
+  ; the values returned for the greater values of i are rather small,
+  ; so must be multiplied by an appropriate coefficient:
+  (define coeff (/ 1000000 (expt T 5)))
+  
+  (define (p i)
+    ; 100
+    (/ (* coeff
+          (expt -1 i)
+          (factorial (+ m n (- 0 i)))
+          (factorial m))
+       (* (factorial (+ m n))
+          (factorial i)
+          (factorial (- m i)))))
+  
+  (define (q i)
+    (/ (* coeff
+          (factorial (+ m n (- 0 i)))
+          (factorial n))
+       (* (factorial (+ m n))
+          (factorial i)
+          (factorial (- n i)))))
+  
+  #|
+  (displayln (p 0))
+  (displayln (p 1))
+  (displayln (p 2))
+  (displayln (p 3))
+  (displayln (p 4))
+  (displayln (p 5))
+  |#
+  
+  ;(displayln (map (λ (x) (* (p x) (expt T x))) (integers m)))
+  
+  
+  (define tf1 (tf (map (λ (x) (* (p x) (expt T x))) (integers m))  ; integers from 0 to m
+                  (map (λ (x) (* (q x) (expt T x))) (integers n))
+                  block1))
+  
+  tf1)
+
+
+
+(define (pade-delay block1 T) ; time T<7 for a good approximation, if using m,n=6
+  
+  (newline)
+  (displayln "delay approximated using pade(6,6)")
+  
+  (define tf2 (pade 6 6 T block1))
+  
+  (connect tf2 (cadr (get-tfs block1)))
+  
+  block1)
+
+
+
+
+
+
+
+
+; //////////   D2. Circuit examples  //////////
+
 
 
 (define (feedback-loop-test1 block1) ;parent block
@@ -180,191 +354,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   (connect tf6 add4)
   (connect tf6 tf7)
   (connect tf7 add1)
-  
-  block1)
-
-
-
-
-
-
-; //// elementary blocks:
-
-
-(define (phase-delay-circuit block1)  
-  (define tf1 (tf '(5 1) '(8 1) block1))
-  block1)
-
-
-
-
-(define (integrator block1)
-  (define tf1 (tf '(1) '(1 0) block1))
-  block1)
-
-
-
-
-(define (sine block1)
-  (define tf1 (tf '(1) '(1 0 1) block1))
-  block1)
-
-
-
-
-; //// pid controllers:
-
-
-(define (pi-controller kc ti block1)
-  (define tf1 (tf (list (list '* kc ti) kc)  ; writen this way so as to accept symbols (and so work with tune)
-                  (list ti 0)
-                  block1))
-  block1)
-
-
-
-
-(define (pd-controller kc td block1) 
-  (define tf1 (tf (list (list '* td kc) kc)
-                  '(1)
-                  block1))
-  block1)
-
-
-
-
-(define (pid-controller kc ti td block1)
-  (define tf1 (tf (list (list '* kc ti td) (list '* kc ti) kc)
-                  (list ti 0)
-                  block1))
-  block1)
-
-
-
-
-; //// Cheb filters:
-
-(define cheb-threshold 1000)
-
-(define (cheb-threshold! x)
-   (set! cheb-threshold x))
-
-(define (cheb-t1 n e w0 block1)
-  
-  (define (theta m)
-    (/ (* pi (- (* 2 m) 1)) (* 2 n)))
-  
-  (define (spm m)
-    (+ (- (* (sinh (/ (asinh (/ 1 e)) n))
-             (sin (theta m))))
-       (* (make-rectangular 0 1.0) (cosh (/ (asinh (/ 1 e)) n)) (cos (theta m)))))
-  
-  
-  (set! cheb-threshold (/ 1 (sqrt (+ 1 (* e e)))))
-  
-  ;(define b (block))
-  
-  
-  ;(define tf0 (tf '(1) (list (* (expt 2 (- n 1)) e)) b))
-  (define tf0 (tf '(1) (list (* (expt 2 (- n 1)) e)) block1))
-  ;(define tf1 (tf '(1) (list 1 (- (spm 1))) b))
-  ;(define tf2 (tf '(1) (list 1 (- (spm 2))) b))
-  ;(define tf3 (tf '(1) (list 1 (- (spm 3))) b))
-  
-  
-  (define (connection-function tfm m)
-    (when (< m n)
-      (let ;((f1 (tf '(1) (list 1 (- (spm (+ m 1)))) b)))
-          ((f1 (tf '(1) (list 1 (- (spm (+ m 1)))) block1)))
-        (connect tfm f1)
-        (connection-function f1 (+ m 1)))))
-  
-  (connection-function tf0 0)
-  
-  block1)
-
-
-
-
-
-
-; //// time delay blocks:
-
-
-; approximating e-sT using pade functions 
-; (the arithmetic methods fail when trying to model delay by just adding e-sT as a tf):
-
-#|
-(define (pade5 T)
-  (tf (list (* T T T T)
-            (* -120 T T T)
-            (* 1260 T T)
-            (* -6720 T)
-            15120)
-      (list (* T T T T T)
-            (* 25 T T T T)
-            (* 300 T T T)
-            (* 2100 T T)
-            (* 8400 T)
-            15120)))
-|#
-
-
-
-(define (pade m n T block1)
-  
-  ; the values returned for the greater values of i are rather small,
-  ; so must be multiplied by an appropriate coefficient:
-  (define coeff (/ 1000000 (expt T 5)))
-  
-  (define (p i)
-    ; 100
-    (/ (* coeff
-          (expt -1 i)
-          (factorial (+ m n (- 0 i)))
-          (factorial m))
-       (* (factorial (+ m n))
-          (factorial i)
-          (factorial (- m i)))))
-  
-  (define (q i)
-    (/ (* coeff
-          (factorial (+ m n (- 0 i)))
-          (factorial n))
-       (* (factorial (+ m n))
-          (factorial i)
-          (factorial (- n i)))))
-  
-  #|
-  (displayln (p 0))
-  (displayln (p 1))
-  (displayln (p 2))
-  (displayln (p 3))
-  (displayln (p 4))
-  (displayln (p 5))
-  |#
-  
-  ;(displayln (map (λ (x) (* (p x) (expt T x))) (integers m)))
-  
-  
-  (define tf1 (tf (map (λ (x) (* (p x) (expt T x))) (integers m))  ; integers from 0 to m
-                  (map (λ (x) (* (q x) (expt T x))) (integers n))
-                  block1))
-  
-  tf1)
-
-
-
-
-; T<7
-(define (delay block1 T)
-  
-  (newline)
-  (displayln "delay approximated using pade(4,5)")
-  
-  (define tf2 (pade 4 5 T block1))
-  
-  (connect tf2 (cadr (get-tfs block1)))
   
   block1)
 

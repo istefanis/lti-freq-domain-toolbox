@@ -20,7 +20,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (require "../math_library/numerical_analysis.rkt")
 (require "display_modes.rkt")
 (require "text_generation.rkt")
-(require "plot_generation.rkt")
 
 (provide (all-defined-out))
 
@@ -30,7 +29,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-; //////////   H. Time domain response computation and plot functions  //////////
+; //////////   H. Time domain response computation and plot-generating functions  //////////
 
 
 (define tmax 30)
