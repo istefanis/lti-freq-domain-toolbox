@@ -6,4 +6,6 @@
                    "base"
                    "math-lib"
                    "plot-gui-lib"))
+(define build-deps (list "racket-doc"
+                         "scribble-lib"))
 (define scribblings '(("doc/main.scrbl" ())))
