@@ -10,6 +10,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 1) DESCRIPTION
 
+
 The lti-freq-domain-toolbox is a collection of functions written in Racket, which lets Control Systems engineers study LTI (linear time-invariant) dynamical systems - from PID controllers to more complex systems.
 
 It can perform tasks such as:
@@ -25,7 +26,7 @@ It can perform tasks such as:
 
 1. Get Racket from: http://racket-lang.org and install
 
-2. After you run DrRacket, open: File->Install Package
+2. After you run DrRacket, open: File -> Install Package
    and paste: lti-freq-domain-toolbox in the "Package Source" field,
    to automatically download the package
 
@@ -36,57 +37,20 @@ It can perform tasks such as:
 
    to load the package, and run with Ctrl+R
 
-5. Type in the interactions (right/lower part of the screen):
+4. Type in the interactions / REPL (right/lower part of the screen):
 
    (run-examples)
 
-   and press Enter to test all the examples of "main.rkt".
+   and press Enter to test all the examples of "main.rkt", and get a feeling of 
+   how the program works.
+
+5. To read the documentation of the package, open: Help -> Racket Documentation
+   and paste: lti-freq-domain-toolbox in the "search manuals" field
 
 
 
 
-3) HELP/GUIDELINES/NOTES
-
-
-1. Blocks are used to install inside them elements (transfer functions (tfs) and adders), as a means for 
-   achieving abstraction: (define block1 (make-block)). The blocks a, b, c, d are predefined for speed.
-   Blocks themeselves can be installed inside other blocks: (define a1 (make-block a))
-
-2. Elements (tfs and adders) and blocks are connected as follows: (connect tf1 tf2), (connect a1 a2)
-   The connection of two elements has no effect if they are not elements of the same block.
-   If all elements inside a block are not connected, the value of the block's total tf is that of the 
-   latest installed.
-   Implementation assumption: each tf, adder or block has only one input and multiple outputs.
-   Multiple inputs can be achieved by adding in front of it an adder.
-
-3. Elements are named without the use of parentheses: 
-   (define tf1 (tf '(1) '(0.3 0.1 1) a)), (define add1 (make-adder a))
-
-4. The functions provided (bode, compare, nyquist etc) take as inputs the names of the blocks, not 
-   the tfs, always without parentheses: (bode a), (compare b c), (nyquist d)
-   The block's total tf is computed when calling such functions.
-
-5. Open "main.rkt" to find examples and get a feeling of how the program works.
-
-
-Some extra notes:
--  Delay can be modeled in two ways: 
-   i)  by approximating it using pade functions (for both s- and t-domain)
-   ii) by adding delay as a function of w by defining a fw function (mainly for the s-domain)
-
--  As an exception, custom built functions that create circuits, like circuit1 or pid, can be made 
-   so that they return the block, so they can be used directly as inputs to functions:
-   (bode (feedback-loop-test1 a)), instead of: (feedback-loop-test1 a), (bode a)
-   That isn't the case when using tf, because tf does not return the block where it is installed.
-
--  Do not simplify a block that has empty blocks inside it - build new blocks just when they are needed.
-
--  Restart the program before working with new circuits defined on already used blocks.
-
-
-
-
-4) REFERENCES
+3) REFERENCES
 
 
 Parts of the code of the program, as the symbolic algebra package,
