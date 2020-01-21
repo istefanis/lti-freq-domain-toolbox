@@ -23,14 +23,14 @@ To use:
    ```
    to load the package, and run with ```Ctrl+R```
 
-5. Type in the interactions / REPL (right/lower part of the screen):
+4. Type in the interactions / REPL (right/lower part of the screen):
    ```
    (run-examples)
    ```
-   and press ```Enter``` to test all the examples of "main.rkt".
+   and press ```Enter``` to test all the examples of "main.rkt", and get a feeling of how the program works.
 
-Read "USER GUIDE.txt" for more guidelines.
-
+5. To read the documentation of the package, open: ```Help``` -> ```Racket Documentation``` and paste: ```lti-freq-domain-toolbox``` in the "search manuals" field
+   
 =======================
 
 Some plot examples:
