@@ -186,10 +186,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-(define (pade-delay block1 T) ; time T<7 for a good approximation, if using m,n=6
+(define (pade-delay T block1) ; time T<7 for a good approximation, if using m,n=6
   
   (newline)
-  (displayln "delay approximated using pade(6,6)")
+  (displayln "Delay approximated by a Padé [6/6] polynomial")
   
   (define tf2 (pade 6 6 T block1))
   

@@ -24,7 +24,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-; //////////   B0. Selectors & constructors, Contracts, and some general procedures   //////////
+; //////////   B0. Selectors & constructors, "contracts", and some general procedures   //////////
 
 
 ; the elements of circuits (tfs, adders and blocks) are implemented as objects 
