@@ -16,6 +16,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 #lang racket
 
 (require math/base)
+(require math/number-theory)
 (require "elements/general.rkt")
 (require "elements/block.rkt")
 (require "elements/tf.rkt")
