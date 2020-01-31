@@ -1,5 +1,6 @@
 #lang racket
 
+(require "general.rkt")
 (provide (all-defined-out))
 
 
@@ -17,13 +18,14 @@ Structure and Interpretation of Computer Programs second edition.
 The MIT Press with the McGraw-Hill Book Company, 1996
 Harold Abelson and Gerald Jay Sussman with Julie Sussman, foreword by Alan J. Perlis. 
 
-or are modifications of code presented there.
+(noted below as "SICP"), or are modifications of code presented there.
 |#
 
 
 
 
-;///// table
+
+;///// Table storing the available algebraic procedures for all data types, and the operations accompanying it (see: SICP 2.4.3) 
 
 (define global-array '()) 
 
@@ -49,68 +51,45 @@ or are modifications of code presented there.
 (define (get-coercion type1 type2) (get type1 type2))
 
 
-;///// round decimal
-
-(define (round-decimal x digits)
-  
-  ;cheb:
-  (if (not (real? x))
-      (make-rectangular (/ (round (* (expt 10 digits) (real-part x))) (expt 10 digits))
-                        (/ (round (* (expt 10 digits) (imag-part x))) (expt 10 digits)))
-      (let ((number (/ (round (* (expt 10 digits) x)) (expt 10 digits))))
-        (if (integer? number)
-            (inexact->exact number)
-            number))))
 
 
 
 
+;////// Tag attached to a data object in order to indicate the data type (see: SICP 2.4.2)
 
-
-
-
-;///// apply - for two arguments
-
-(define (apply-generic op . args)
-  (let ((type-tags (map type-tag args)))
-    (let ((proc (get op type-tags)))
-      (if proc
-          (apply proc (map contents args))
-          (error "No method for these types"
-                 (list op type-tags))))))
-
-
-
-
-(define (accumulate-or-tree1 initial l)
-  (if (null? l)
-      initial
-      (if (list? (car l))
-          (or (accumulate-or-tree1 initial (car l))
-              (accumulate-or-tree1 initial (cdr l)))    
-          (or (and (symbol? (car l)) (not (or (eq? (car l) '+)
-                                              (eq? (car l) '-)
-                                              (eq? (car l) '*)
-                                              (eq? (car l) '/))))
-              (accumulate-or-tree1 initial (cdr l))))))
-
-(define (contains-symbols?-tree1 l) (accumulate-or-tree1 #f l))
-
-
-
-;////// tag
-
-(define (attach-tag tag z) 
+(define (attach-tag tag z) ;attach tag to contents to create a tagged data object
   (if (eq? tag 'complex)
       z
       (cons tag z)))
 
-(define (type-tag datum)
+
+
+
+(define (contains-algebraic-symbols? tree)
+
+  (define (search-tree-for-symbols result t)
+    (if (null? t)
+        result
+        (if (list? (car t))
+            (or (search-tree-for-symbols result (car t))
+                (search-tree-for-symbols result (cdr t)))    
+            (or (and (symbol? (car t)) (not (or (eq? (car t) '+)
+                                                (eq? (car t) '-)
+                                                (eq? (car t) '*)
+                                                (eq? (car t) '/))))
+                (search-tree-for-symbols result (cdr t))))))
+
+  (search-tree-for-symbols #f tree))
+
+
+
+
+(define (type-tag datum) ;extract tag from the tagged data object
   (if (pair? datum)
-      (if (and (list? datum) (contains-symbols?-tree1 datum) (or (eq? (car datum) '+)
-                                                                 (eq? (car datum) '-)
-                                                                 (eq? (car datum) '*)
-                                                                 (eq? (car datum) '/)))
+      (if (and (list? datum) (contains-algebraic-symbols? datum) (or (eq? (car datum) '+)
+                                                                     (eq? (car datum) '-)
+                                                                     (eq? (car datum) '*)
+                                                                     (eq? (car datum) '/)))
           'symbol
           (car datum)
           )
@@ -123,12 +102,15 @@ or are modifications of code presented there.
              'symbol)
             (error "Bad tagged datum - TYPE-TAG" datum))))
 
-(define (contents datum)
+
+
+
+(define (contents datum) ;extract contents from the tagged data object
   (if (pair? datum)
-      (if (and (list? datum) (contains-symbols?-tree1 datum) (or (eq? (car datum) '+)
-                                                                 (eq? (car datum) '-)
-                                                                 (eq? (car datum) '*)
-                                                                 (eq? (car datum) '/)))
+      (if (and (list? datum) (contains-algebraic-symbols? datum) (or (eq? (car datum) '+)
+                                                                     (eq? (car datum) '-)
+                                                                     (eq? (car datum) '*)
+                                                                     (eq? (car datum) '/)))
           datum
           (cdr datum)
           )
@@ -148,9 +130,7 @@ or are modifications of code presented there.
 
 
 
-
-
-;//////  generic operations
+;//////  Generic (for all data types) operations (see: SICP 2.5.1)
 
 (define (get-numer x) (apply-generic 'get-numer x))
 (define (get-denom x) (apply-generic 'get-denom x))
@@ -180,8 +160,23 @@ or are modifications of code presented there.
 
 
 
+;///// Application of the appropriate procedure to arguments of each data type (see: SICP 2.4.3)
 
-;////// symbolic
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents args))
+          (error "No method for these types"
+                 (list op type-tags))))))
+
+
+
+
+
+
+
+;////// Symbolic algebra package
 
 (define (install-symbolic-package)
   
@@ -250,7 +245,7 @@ or are modifications of code presented there.
 
 
 
-;////// complex
+;////// Complex numbers algebra package
 
 (define (install-complex-package)
   
@@ -282,7 +277,7 @@ or are modifications of code presented there.
 
 
 
-;////// ratio
+;////// Ratios algebra package (see: SICP 2.5.1)
 
 (define (install-ratio-package)
   
@@ -358,7 +353,7 @@ or are modifications of code presented there.
 
 
 
-;////// poly-dense
+;////// Polynomials algebra package (see: SICP 2.5.3)
 
 
 (define (install-poly-dense-package)
@@ -374,7 +369,7 @@ or are modifications of code presented there.
   
   
   
-  ;///////////////////////////// add poly  
+  ;////// add-poly
   
   ; orig
   (define (add-poly p1 p2)
@@ -405,43 +400,9 @@ or are modifications of code presented there.
                      (add-terms (rest-terms L1)
                                 (rest-terms L2)))))))))
   
+
   
-  
-  
-  
-  
-  
-  ;////////////////////////////  mul-poly  
-  
-  ; orig
-  (define (mul-poly p1 p2)
-    (if (same-variable? (variable p1)
-                        (variable p2))
-        (make-poly (variable p1)
-                   (mul-terms (term-list p1)
-                              (term-list p2)))
-        (error "Polys not in same var - MUL-POLY" (list p1 p2))))
-  
-  ; orig
-  (define (mul-terms L1 L2)
-    (if (empty-termlist? L1)
-        (the-empty-termlist)
-        (add-terms (mul-term-by-all-terms (first-term L1) L2)
-                   (mul-terms (rest-terms L1) L2))))
-  
-  ; orig
-  (define (mul-term-by-all-terms t1 L)
-    (if (empty-termlist? L)
-        (the-empty-termlist)
-        (let ((t2 (first-term L)))
-          (adjoin-term (make-term (+ (order t1) (order t2))
-                                  (mul (coeff t1) (coeff t2))) 
-                       (mul-term-by-all-terms t1 (rest-terms L))))))
-  
-  
-  
-  ;//////  2.89  /////// this "adjoin-term" returns ordered lists
-  (define (adjoin-term t1 L)
+  (define (adjoin-term t1 L) ;it returns ordered lists - see: SICP ex. 2.89
     #|
     (newline)
     (display t1)
@@ -472,10 +433,10 @@ or are modifications of code presented there.
             t1)))  ;// ex. '(5 0)
   
   
-  
-  
-  
-  ;//////////////////////////////// sub-poly
+
+
+    
+  ;////// sub-poly
   
   (define (sub-poly p1 p2) 
     (add-poly p1 (neg-poly p2)))
@@ -489,11 +450,42 @@ or are modifications of code presented there.
         '()
         (cons (negation (car L)) (negate-terms (cdr L)))))
   
+
   
   
   
+  ;////// mul-poly  
   
-  ;////// 2.90 //////////////////// div -poly
+  ; orig
+  (define (mul-poly p1 p2)
+    (if (same-variable? (variable p1)
+                        (variable p2))
+        (make-poly (variable p1)
+                   (mul-terms (term-list p1)
+                              (term-list p2)))
+        (error "Polys not in same var - MUL-POLY" (list p1 p2))))
+  
+  ; orig
+  (define (mul-terms L1 L2)
+    (if (empty-termlist? L1)
+        (the-empty-termlist)
+        (add-terms (mul-term-by-all-terms (first-term L1) L2)
+                   (mul-terms (rest-terms L1) L2))))
+  
+  ; orig
+  (define (mul-term-by-all-terms t1 L)
+    (if (empty-termlist? L)
+        (the-empty-termlist)
+        (let ((t2 (first-term L)))
+          (adjoin-term (make-term (+ (order t1) (order t2))
+                                  (mul (coeff t1) (coeff t2))) 
+                       (mul-term-by-all-terms t1 (rest-terms L))))))
+  
+  
+
+  
+  
+  ;////// div-poly (see: SICP ex. 2.90)
   
   ;// it returns only the quotient if the remainder is zero
   
@@ -577,7 +569,7 @@ or are modifications of code presented there.
   
   
   
-  ;//////  2.94  //////
+  ;//////  see: SICP ex. 2.94
   
   (define (gcd-poly p1 p2)
     (if (same-variable? (variable p1) 
@@ -602,7 +594,7 @@ or are modifications of code presented there.
   
   
   
-  ;//////  2.96  //////  
+  ;//////  see: SICP ex. 2.96
   
   (define (pseudoremainder-terms L1 L2) 
     (cadr (div-terms 
@@ -627,7 +619,7 @@ or are modifications of code presented there.
   
   
   
-  ;//////  2.97  //////
+  ;//////  see: SICP ex. 2.97
   
   ; orig
   (define (reduce-poly p1 p2)
@@ -759,8 +751,9 @@ or are modifications of code presented there.
   (put 'mul '(poly-dense poly-dense) (λ (p1 p2) (tag (mul-poly p1 p2))))
   (put 'div '(poly-dense poly-dense) div-poly)
   
-  
-  ;(put '=zero? '(poly-dense) (lambda (p) (=zero?-termlist (term-list p))))  ; it will allow adjoin-term to work for polynomials with coefficients that are themselves polynomials.
+
+  ;// it will allow adjoin-term to work for polynomials with coefficients that are themselves polynomials
+  ;(put '=zero? '(poly-dense) (lambda (p) (=zero?-termlist (term-list p))))
   (put 'negation '(poly-dense) (λ (p) (tag (neg-poly p))))
   
   ;(put 'gcd '(poly-dense poly-dense) gcd-poly)
@@ -781,16 +774,22 @@ or are modifications of code presented there.
 
 
 
+
+
+;///// Installing the algebraic procedures of each package to the table (see: SICP 2.4.3) 
+
 (install-symbolic-package)
 (install-complex-package)
 (install-ratio-package)
 (install-poly-dense-package)
-;(newline)
 
 
 
 
 
+
+
+;///// tests
 
 #|
 (add 1 2)
@@ -810,3 +809,4 @@ r
 (newline)
 (div p1 p2)
 |#
+

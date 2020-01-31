@@ -53,6 +53,23 @@ or are modifications of code presented there.
 
 
 
+; ROUND DECIMAL
+
+(define (round-decimal x digits)
+  
+  ;chebyshev:
+  (if (not (real? x))
+      (make-rectangular (/ (round (* (expt 10 digits) (real-part x))) (expt 10 digits))
+                        (/ (round (* (expt 10 digits) (imag-part x))) (expt 10 digits)))
+      (let ((number (/ (round (* (expt 10 digits) x)) (expt 10 digits))))
+        (if (integer? number)
+            (inexact->exact number)
+            number))))
+
+
+
+
+
 ; EXPONENTATION
 
 #|
