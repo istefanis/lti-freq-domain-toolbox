@@ -43,7 +43,12 @@ or are modifications of code presented there.
 
 (define (add-dx x dx) (+ x dx))
 
-(define (integers x) ; list of integers from 0 to x
+;the trig functions cot(phi) and csc(phi)
+(define (cot phi) (/ 1.0 (tan phi)))
+(define (csc phi) (/ 1.0 (sin phi)))
+
+;list of integers from 0 to x
+(define (integers x)
   (if (= x 0)
       (cons 0 '())
       (cons x
@@ -64,7 +69,7 @@ or are modifications of code presented there.
       (let ((number (/ (round (* (expt 10 digits) x)) (expt 10 digits))))
         (if (integer? number)
             (inexact->exact number)
-            number))))
+            (exact->inexact number)))))
 
 
 

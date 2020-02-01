@@ -51,12 +51,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (define anchor (namespace-anchor->namespace n_anchor))
 
 
-; initialize a, b, c, d blocks
-
+;initialize a, b, c, d blocks
 (define a (block))
 (define b (block))
 (define c (block))
 (define d (block))
+
+
+(newline)
 
 
 
@@ -175,6 +177,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define tf2 (tf '(4 3 6) '(2 1) a))
     (connect tf1 tf2)
     (bode a)
+
+    ;(define tf1 (tf '(5 0) '(1 1 1) a)) ;band-pass filter
+    ;(bode a)
 
     
     ;Compare

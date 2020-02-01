@@ -34,31 +34,25 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 ; The Plot library, by Neil Toronto, is used in all the following plot-creating fuctions
 
-(define tmax 30)
 (plot-font-size 10)
 
 
-
-
-; Talbot algorithm for Laplace inversion
-
-
-
-
-(define shift 0.0)
+(define time-min (/ 1 1000)) ;when writen in this form - instead of 0.001 - the time domain plots are generated faster by the Plot library 
+(define time-max 30)
 
 
 
+
+;///// Talbot algorithm for Laplace inversion
 
 (define (Talbot F t N)
   
   ; stepsize initialization:
-  (let ((h (/ (* 2 pi) N)));
+  (let ((h (/ (* 2 pi) N))
+        (shift 0.0))
     
     
-    (when (= t 0) 
-      (display "error - Inverse transform can not be calculated for t=0 - TALBOT"))
-    
+    (when (= t 0) (display "error - Inverse transform can not be calculated for t=0 - TALBOT"))
     
     
     ; loop is evaluating the Laplace inversion at each point theta which is based on the trapezoidal rule:
@@ -83,18 +77,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-; the trig functions cot(phi) and csc(phi):
-
-(define (cot phi) (/ 1.0 (tan phi)))
-(define (csc phi) (/ 1.0 (sin phi)))
 
 
 
-
-
-
-
-
+;///// Impulse response plot
 
 ; L{d(t)}=1
 
@@ -106,11 +92,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
          ; so that zooming on the figure is plausible:
          (tfs-value-evaluation (eval total-tfs-value anchor))) ;tfs-value-evaluation is a function of s and w
     
-    (define (tfs s) (tfs-value-evaluation s 
-                                          0 
-                                          0
-                                          0
-                                          0))    
+    (define (tfs s) (tfs-value-evaluation s 0 0 0 0)) 
     
     
     
@@ -128,10 +110,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
         (plot (list
                ;(axes)
                (tick-grid)
-               (function (λ (t) (real-part (Talbot tfs t 150))) (/ 1 1000) tmax)
-               (function (λ (t) -10.0) (/ 1 1000) tmax #:color 0 #:style 'dot)
-               (function (λ (t) 10.0) (/ 1 1000) tmax #:color 0 #:style 'dot)
-               (function (λ (t) 0) (/ 1 1000) tmax #:color 0 #:style 'dot))))
+               (function (λ (t) (real-part (Talbot tfs t 150))) time-min time-max)
+               (function (λ (t) -10.0) time-min time-max #:color 0 #:style 'dot)
+               (function (λ (t) 10.0) time-min time-max #:color 0 #:style 'dot)
+               (function (λ (t) 0) time-min time-max #:color 0 #:style 'dot))))
       
       
       (make-space-line 10)))))
@@ -152,11 +134,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
          ; so that zooming on the figure is plausible:
          (tfs-value-evaluation (eval total-tfs-value anchor))) ;tfs-value-evaluation is a function of s and w
     
-    (define (tfs s) (tfs-value-evaluation s 
-                                          0 
-                                          0
-                                          0
-                                          0)) 
+    (define (tfs s) (tfs-value-evaluation s 0 0 0 0))
     
     
     
@@ -174,9 +152,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
         (plot (list
                ;(axes)
                (tick-grid)
-               (function (deriv (λ (t) (real-part (Talbot tfs t 150)))) (/ 1 1000) tmax)
-               (function (λ (t) -10.0) (/ 1 1000) tmax #:color 0 #:style 'dot)
-               (function (λ (t) 10.0) (/ 1 1000) tmax #:color 0 #:style 'dot))))
+               (function (deriv (λ (t) (real-part (Talbot tfs t 150)))) time-min time-max)
+               (function (λ (t) -10.0) time-min time-max #:color 0 #:style 'dot)
+               (function (λ (t) 10.0) time-min time-max #:color 0 #:style 'dot))))
       
       
       (make-space-line 10)))))
@@ -187,8 +165,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-
-
+;///// Trajectory plot
 
 (define (trajectory block)
   
@@ -198,11 +175,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
          ; so that zooming on the figure is plausible:
          (tfs-value-evaluation (eval total-tfs-value anchor))) ;tfs-value-evaluation is a function of s and w
     
-    (define (tfs s) (tfs-value-evaluation s 
-                                          0 
-                                          0
-                                          0
-                                          0)) 
+    (define (tfs s) (tfs-value-evaluation s 0 0 0 0))
     
     
     
@@ -233,8 +206,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-
-
+;///// Step response plot
 
 ; stp<40
 
@@ -284,7 +256,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             (newline)
             (ratio-to-list (make-ratio new-num new-den) 'do-not-display)
             (newline)
-            (displayln 'aaaaaaa)
+            (displayln 'test-1)
             |#
       
       (set! total-tfs-value (cons 'λ (cons '(s fw1 fw2 fw3 fw4) (list (ratio-to-list (make-ratio new-num new-den) 'do-not-display)))))
@@ -313,10 +285,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (plot (list
              (axes)
              (tick-grid)
-             (function (λ (t) (real-part (Talbot tfs t 150))) (/ 1 1000) tmax)
-             (function (λ (t) -10.0) (/ 1 1000) tmax #:color 0 #:style 'dot)
-             (function (λ (t) 10.0) (/ 1 1000) tmax #:color 0 #:style 'dot)
-             (function (λ (t) gain) (/ 1 1000) tmax #:color 0 #:style 'dot)
+             (function (λ (t) (real-part (Talbot tfs t 150))) time-min time-max)
+             (function (λ (t) -10.0) time-min time-max #:color 0 #:style 'dot)
+             (function (λ (t) 10.0) time-min time-max #:color 0 #:style 'dot)
+             (function (λ (t) gain) time-min time-max #:color 0 #:style 'dot)
              )))
     
     

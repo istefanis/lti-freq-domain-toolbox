@@ -35,9 +35,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 ; The Plot library, by Neil Toronto, is used in all the following plot-creating fuctions
 
-(newline)
 (plot-font-size 10)
 
+(define freq-min (/ 1 1000)) ;only when writen in this form - instead of 0.001 - the freq domain plots are generated correctly by the Plot library 
+(define freq-max 500)
 
 
 
@@ -146,7 +147,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   
   (if (and (eq? (had-neg-values? fig) #t) (> ang (/ pi 2)))
       (- ang (* 2 pi))
-      (if (or (< ang 0) (and (= ang 0) (> w 0.001)))
+      (if (or (< ang 0) (and (= ang 0) (> w freq-min)))
           (begin
             (set-had-neg-values-true! fig)
             ang)
@@ -185,7 +186,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
          (- ang (* 2 pi)))
         
         (else
-         (when (or (< ang 0) (and (= ang 0) (> w 0.001)))
+         (when (or (< ang 0) (and (= ang 0) (> w freq-min)))
            (set-had-neg-values-true! fig))
          (when (> (abs ang) (* 0.8 pi))
            (set-passed-180-true! fig))
@@ -197,16 +198,16 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 ;Characteristic numbers computation & text display functions
 
-(define (display-filter-type AR-low AR-high w-bandwidth-2)
-  (cond ((> (/ AR-low AR-high) 2)
+(define (display-filter-type AR-at-freq-min AR-at-freq-max w-bandwidth-2)
+  (cond ((> (/ AR-at-freq-min AR-at-freq-max) 2)
          (display "Low-pass filter:")
          (newline)
          (newline))    
-        ((> (/ AR-high AR-low) 2)
+        ((> (/ AR-at-freq-max AR-at-freq-min) 2)
          (display "High-pass filter:")
          (newline)
          (newline))
-        ((and (< AR-low 0.05) (< AR-high 0.05) (not (eq? w-bandwidth-2 #f)))
+        ((and (< AR-at-freq-min 0.05) (< AR-at-freq-max 0.05) (not (eq? w-bandwidth-2 #f)))
          (display "Band-pass filter:")
          (newline)
          (newline))))
@@ -251,35 +252,35 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-(define (display-roll-off AR-low AR-high AR-100 AR-001 w-bandwidth-2)
+(define (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-100 AR-at-001 w-bandwidth-2)
            
-  (cond ((> (/ AR-low AR-high) 2)
+  (cond ((> (/ AR-at-freq-min AR-at-freq-max) 2)
              
          ;Low-pass filter:
-         (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-100 AR-high))
-                                                            (log (/ 100 500)))) 3))
+         (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-at-100 AR-at-freq-max))
+                                                            (log (/ 100 freq-max)))) 3))
          (display "roll-off     = ")
          (display roll-off)
          (display " (log(ΔAR)/log(Δw))")
          (newline))    
             
-        ((> (/ AR-high AR-low) 2)
+        ((> (/ AR-at-freq-max AR-at-freq-min) 2)
              
          ;High-pass filter:
-         (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-low AR-001))
-                                                            (log (/ 0.001 0.01)))) 3))
+         (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-at-freq-min AR-at-001))
+                                                            (log (/ freq-min 0.01)))) 3))
          (display "roll-off     = ")
          (display roll-off)
          (display " (log(ΔAR)/log(Δw))")
          (newline))
             
-        ((and (< AR-low 0.05) (< AR-high 0.05) (not (eq? w-bandwidth-2 #f)))
+        ((and (< AR-at-freq-min 0.05) (< AR-at-freq-max 0.05) (not (eq? w-bandwidth-2 #f)))
              
          ;Band-pass filter:         
-         (define roll-off-low (round-decimal (exact->inexact (/ (log (/ AR-low AR-001))
-                                                                (log (/ 0.001 0.01)))) 3))
-         (define roll-off-high (round-decimal (exact->inexact (/ (log (/ AR-100 AR-high))
-                                                                 (log (/ 100 500)))) 3))
+         (define roll-off-low (round-decimal (exact->inexact (/ (log (/ AR-at-freq-min AR-at-001))
+                                                                (log (/ freq-min 0.01)))) 3))
+         (define roll-off-high (round-decimal (exact->inexact (/ (log (/ AR-at-100 AR-at-freq-max))
+                                                                 (log (/ 100 freq-max)))) 3))
          (display "roll-off (low)  = ")
          (display roll-off-low)
          (display " (log(ΔAR)/log(Δw))")
@@ -337,35 +338,35 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                           (fw4-func w)))
     
     
-    (let* ((AR-low (magnitude (tfs (/ 1 1000))))
-           (AR-high (magnitude (tfs 500)))
-           (AR-min-value (min AR-low AR-high 0.707 0.099))
-           (AR-100 (magnitude (tfs 100)))
-           (AR-001 (magnitude (tfs 0.01)))
+    (let* ((AR-at-freq-min (magnitude (tfs freq-min)))
+           (AR-at-freq-max (magnitude (tfs freq-max)))
+           (AR-min-value (min AR-at-freq-min AR-at-freq-max 0.707 0.099))
+           (AR-at-001 (magnitude (tfs 0.01)))
+           (AR-at-100 (magnitude (tfs 100)))
            
            
            ;bandwidth parameters computation
-           (bandwidth-threshold (min (max AR-low AR-high) 0.707 chebyshev-threshold))
+           (bandwidth-threshold (min (max AR-at-freq-min AR-at-freq-max) 0.707 chebyshev-threshold))
            
            (f-bandwidth (λ (w) (- (magnitude (tfs w)) bandwidth-threshold)))
            
            (w-bandwidth-init (half-interval-method                            
                               f-bandwidth
-                              0.001
-                              500))
+                              freq-min
+                              freq-max))
            
            (w-bandwidth-1 (if (not (eq? w-bandwidth-init #f))
                               (half-interval-method                            
                                f-bandwidth
-                               0.001
-                               (+ w-bandwidth-init 0.001))
+                               freq-min
+                               (+ w-bandwidth-init freq-min))
                               #f))
            
            (w-bandwidth-2 (if (not (eq? w-bandwidth-1 #f))
                               (half-interval-method                            
                                f-bandwidth
-                               (+ w-bandwidth-init 0.001)
-                               300)
+                               (+ w-bandwidth-init freq-min)
+                               freq-max)
                               #f))
            
            
@@ -378,8 +379,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            
            (w-gain-margin (half-interval-method                            
                            f-gain-margin
-                           0.001
-                           500))
+                           freq-min
+                           freq-max))
            
            (gain-margin (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
                             (begin ;(display wc-g)
@@ -393,8 +394,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            
            (w-phase-margin (half-interval-method                            
                             f-phase-margin
-                            0.001
-                            500))
+                            freq-min
+                            freq-max))
            
            
            (f1 (if (not (eq? w-phase-margin #f)) (angle (tfs w-phase-margin)) #f))
@@ -442,7 +443,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                       
                       ;#|
                       (function (λ (w) (magnitude (tfs w)))
-                                (/ 1 1000) 500 ;#:color 3
+                                freq-min freq-max ;#:color 3
                                 )
                       ;|#                    
                       
@@ -450,7 +451,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                     (function-interval
                      (λ (w) 1)
                      (λ (w) (magnitude (tfs-value-evaluation (make-rectangular 0 w))))
-                     (/ 1 1000) 500 #:color 3 #:line2-color 3 #:line1-style 'transparent)
+                     freq_min freq_max #:color 3 #:line2-color 3 #:line1-style 'transparent)
                     |#                    
                       
                       (function (λ (x) 1) #:color 3 #:style 'dot)
@@ -476,7 +477,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                (plot (list 
                       ;(axes)
                       (tick-grid)
-                      (function (λ (w) (- 180)) (/ 1 1000) 500  #:color 3 #:style 'dot)
+                      (function (λ (w) (- 180)) freq-min freq-max  #:color 3 #:style 'dot)
                       ;#|
                       (function (λ (w) (* 180 (/ 1 pi)
                                           (let ((f1 (angle (tfs w))))
@@ -484,7 +485,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                             f1
                                             
                                             )))
-                                (/ 1 1000) 500  #:color 3 #:style 'dot
+                                freq-min freq-max  #:color 3 #:style 'dot
                                 )
                       ;|#
                       (function (λ (w) (* 180 (/ 1 pi)
@@ -495,7 +496,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                             (unwarp-angle-elaborate! f1 w 1)
                                             
                                             )))
-                                (/ 1 1000) 500  ;#:color 3
+                                freq-min freq-max  ;#:color 3
                                 )
                       #|
                     (function-interval (λ (w) 0)
@@ -509,7 +510,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                                    
                                                    )))
                                        ;|#
-                                       (/ 1 1000) 500  #:color 1 #:line2-color 1 #:line1-style 'transparent)
+                                       freq_min freq_max  #:color 1 #:line2-color 1 #:line1-style 'transparent)
                     |#
                       
                       (if (not (eq? w-phase-margin #f)) 
@@ -528,13 +529,13 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (initialize-angle-params-fig-1!)
       
       ;filter type computation & text display
-      (display-filter-type AR-low AR-high w-bandwidth-2)
+      (display-filter-type AR-at-freq-min AR-at-freq-max w-bandwidth-2)
       
       ;bandwidth computation & text display
       (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold)
       
       ;roll-off computation & text display
-      (display-roll-off AR-low AR-high AR-100 AR-001 w-bandwidth-2)
+      (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-100 AR-at-001 w-bandwidth-2)
            
       ;gain & phase margins computation & text display
       (display-gain-phase-margins gain-margin phase-margin)
@@ -592,10 +593,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
         (plot (list ;(axes)
                (tick-grid)
                (function (λ (w) (magnitude (tfs1 w)))
-                         (/ 1 1000) 500
+                         freq-min freq-max
                          #:label "tf1")
                (function (λ (w) (magnitude (tfs2 w)))
-                         (/ 1 1000) 500
+                         freq-min freq-max
                          #:color 3 
                          #:label "tf2")
                (function (λ (x) 1) #:color 0 #:style 'dot)
@@ -618,7 +619,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                             
                             )))                        
                 
-                (/ 1 1000) 500
+                freq-min freq-max
                 #:label "tf1")
                (function
                 (λ (w) (* 180 (/ 1 pi)
@@ -629,11 +630,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                             
                             )))              
                 
-                (/ 1 1000) 500
+                freq-min freq-max
                 #:color 3 
                 #:label "tf2")
                (function (λ (x) 0) #:color 0 #:style 'dot)
-               (function (λ (w) (- 180)) (/ 1 1000) 500  #:color 3 #:style 'dot))))
+               (function (λ (w) (- 180)) freq-min freq-max  #:color 3 #:style 'dot))))
       
       (make-space-line 10))
      
@@ -690,7 +691,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                             (plot (list ;(axes)
                                    (tick-grid)
                                    (function (λ (w) (magnitude (tfs1 w)))
-                                             (/ 1 1000) 500
+                                             freq-min freq-max
                                              #:label "tf")
                                    (function (λ (x) 1) #:color 0 #:style 'dot)
                                    (function (λ (x) 0.707) #:color 0 #:style 'dot))))
@@ -702,12 +703,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                             
                             (plot (list ;(axes)
                                    (tick-grid)
-                                   (function (λ (w) (* 180 (/ 1 pi)
-                                                       (angle (tfs1 w))))
-                                             (/ 1 1000) 500
-                                             #:label "tf1")
+                                   (function (λ (w) (* 180 (/ 1 pi) (angle (tfs1 w))))
+                                             freq-min freq-max
+                                             #:label "tf")
                                    (function (λ (x) 0) #:color 0 #:style 'dot)
-                                   (function (λ (w) (- 180)) (/ 1 1000) 500  #:color 3 #:style 'dot))))
+                                   (function (λ (w) (- 180)) freq-min freq-max  #:color 3 #:style 'dot))))
                           
                           (make-space-line 10))
                     ))
@@ -736,12 +736,12 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                        (plot (list ;(axes)
                               (tick-grid)
                               (function (λ (w) (magnitude (tfs1 w)))
-                                        (/ 1 1000) 500
+                                        freq-min freq-max
                                         #:label "tf")
                               (function (λ (w) (magnitude (tfs-temp w)))
-                                        (/ 1 1000) 500
+                                        freq-min freq-max
                                         #:color 0 #:style 'dot
-                                        #:label "last-tf")
+                                        #:label "previous tf")
                               (function (λ (x) 1) #:color 0 #:style 'dot)
                               (function (λ (x) 0.707) #:color 0 #:style 'dot))
                              
@@ -755,15 +755,15 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                               (tick-grid)
                               (function (λ (w) (* 180 (/ 1 pi)
                                                   (angle (tfs1 w))))
-                                        (/ 1 1000) 500
-                                        #:label "tf1")
+                                        freq-min freq-max
+                                        #:label "tf")
                               (function (λ (w) (* 180 (/ 1 pi)
                                                   (angle (tfs-temp w))))
-                                        (/ 1 1000) 500
+                                        freq-min freq-max
                                         #:color 0 #:style 'dot
-                                        #:label "last-tf")
+                                        #:label "previous tf")
                               (function (λ (x) 0) #:color 0 #:style 'dot)
-                              (function (λ (w) (- 180)) (/ 1 1000) 500  #:color 3 #:style 'dot))))
+                              (function (λ (w) (- 180)) freq-min freq-max  #:color 3 #:style 'dot))))
                      
                      (make-space-line 10))
                ))
@@ -856,7 +856,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                                                                  (fw2-func w)
                                                                                  (fw3-func w)
                                                                                  (fw4-func w))))
-                                        (/ 1 1000) 500)
+                                        freq-min freq-max)
                               (function (λ (x) 1) #:color 0 #:style 'dot)
                               (function (λ (x) 0.707) #:color 0 #:style 'dot))))
                      
@@ -873,10 +873,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                                                                 (fw2-func w)
                                                                                 (fw3-func w)
                                                                                 (fw4-func w)))))
-                                        (/ 1 1000) 500)
+                                        freq-min freq-max)
                               
                               (function (λ (x) 0) #:color 0 #:style 'dot)
-                              (function (λ (w) (- 180)) (/ 1 1000) 500  #:color 3 #:style 'dot))))
+                              (function (λ (w) (- 180)) freq-min freq-max  #:color 3 #:style 'dot))))
                      
                      
                      (make-space-line 10))
@@ -932,7 +932,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                                                                             (fw2-func w)
                                                                                             (fw3-func w)
                                                                                             (fw4-func w))))
-                                                   (/ 1 1000) 500)
+                                                   freq-min freq-max)
                                          (function (λ (x) 1) #:color 0 #:style 'dot)
                                          (function (λ (x) 0.707) #:color 0 #:style 'dot))))
                                 
@@ -950,9 +950,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                                                                            (fw2-func w)
                                                                                            (fw3-func w)
                                                                                            (fw4-func w)))))
-                                                   (/ 1 1000) 500)
+                                                   freq-min freq-max)
                                          (function (λ (x) 0) #:color 0 #:style 'dot)
-                                         (function (λ (w) (- 180)) (/ 1 1000) 500  #:color 3 #:style 'dot))))
+                                         (function (λ (w) (- 180)) freq-min freq-max  #:color 3 #:style 'dot))))
                                 
                                 (make-space-line 10))
                                
@@ -992,34 +992,34 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                           (fw4-func w)))
     
     
-    (let* ((AR-low (magnitude (tfs (/ 1 1000))))
-           (AR-high (magnitude (tfs 500)))
-           (AR-min-value (min AR-low AR-high 0.707 0.099))
-           (AR-100 (magnitude (tfs 100)))
-           (AR-001 (magnitude (tfs 0.01)))
+    (let* ((AR-at-freq-min (magnitude (tfs freq-min)))
+           (AR-at-freq-max (magnitude (tfs freq-max)))
+           (AR-min-value (min AR-at-freq-min AR-at-freq-max 0.707 0.099))
+           (AR-at-001 (magnitude (tfs 0.01)))
+           (AR-at-100 (magnitude (tfs 100)))
            
            
            ;bandwidth parameters computation
-           (bandwidth-threshold (min (max AR-low AR-high) 0.707 chebyshev-threshold))
+           (bandwidth-threshold (min (max AR-at-freq-min AR-at-freq-max) 0.707 chebyshev-threshold))
            
            (f-bandwidth (λ (w) (- (magnitude (tfs w)) bandwidth-threshold)))
            
            (w-bandwidth-init (half-interval-method                            
                               f-bandwidth
-                              0.001
-                              500))
+                              freq-min
+                              freq-max))
            
            (w-bandwidth-1 (if (not (eq? w-bandwidth-init #f))
                               (half-interval-method                            
                                f-bandwidth
-                               0.001
-                               (+ w-bandwidth-init 0.001))
+                               freq-min
+                               (+ w-bandwidth-init freq-min))
                               #f))
            
            (w-bandwidth-2 (if (not (eq? w-bandwidth-1 #f))
                               (half-interval-method                            
                                f-bandwidth
-                               (+ w-bandwidth-init 0.001)
+                               (+ w-bandwidth-init freq-min)
                                300)
                               #f))
            
@@ -1033,8 +1033,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            
            (w-gain-margin (half-interval-method                            
                            f-gain-margin
-                           0.001
-                           500))
+                           freq-min
+                           freq-max))
            
            (gain-margin (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
                             (begin ;(display wc-g)
@@ -1048,8 +1048,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            
            (w-phase-margin (half-interval-method                            
                             f-phase-margin
-                            0.001
-                            500))
+                            freq-min
+                            freq-max))
            
            
            (f1 (if (not (eq? w-phase-margin #f)) (angle (tfs w-phase-margin)) #f))
@@ -1156,13 +1156,13 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (initialize-angle-params-fig-1!)
             
       ;filter type computation & text display
-      (display-filter-type AR-low AR-high w-bandwidth-2)
+      (display-filter-type AR-at-freq-min AR-at-freq-max w-bandwidth-2)
       
       ;bandwidth computation & text display
       (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold)
       
       ;roll-off computation & text display
-      (display-roll-off AR-low AR-high AR-100 AR-001 w-bandwidth-2)
+      (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-100 AR-at-001 w-bandwidth-2)
            
       ;gain & phase margins computation & text display
       (display-gain-phase-margins gain-margin phase-margin)
