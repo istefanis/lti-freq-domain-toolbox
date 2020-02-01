@@ -32,6 +32,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 ; //////////   H. Time domain response computation and plot-generating functions  //////////
 
 
+; The Plot library, by Neil Toronto, is used in all the following plot-creating fuctions
+
 (define tmax 30)
 (plot-font-size 10)
 

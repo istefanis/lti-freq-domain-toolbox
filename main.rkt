@@ -252,7 +252,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     ;Method I: using Pade functions:
     (displayc "> (step (pade-delay 2 (sine a)) 2)")
     (step (pade-delay 2 (sine a)) 2)
-    ;(step (pade-delay 1 (pade-delay 1 (sine a))) 2) ; that also works, but is very slow with pade[6/6]
+    ;(step (pade-delay 1 (pade-delay 1 (sine a))) 2) ;that also works, but is very slow with pade[6/6]
     
     ;Method II: using f(w) functions - they work only in the s-domain:
     ;(define tf1 (tf '((* 5 fw3)) '(1 1) a))
@@ -261,7 +261,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     ;Methods comparison:
     (displayc "> (compare (pade-delay 1 (sine b)) a)")
     (define tf1 (tf '(1) '(1 0 1) a))
-    (define fw-delay1 (tf '(fw3) '(1) a)) ;// fw3 is defined in: ../functionality/text_generation.rkt
+    (define fw-delay1 (tf '(fw3) '(1) a)) ;fw3 is defined in: ../functionality/text_generation.rkt
     (connect fw-delay1 tf1)
     (compare (pade-delay 1 (sine b)) a)
     
@@ -319,8 +319,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     ;(simplify a)
     
     (bode a)
-    (compare a a1)
-    
+    (compare a a1)    
 
 |#
 

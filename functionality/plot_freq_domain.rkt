@@ -33,12 +33,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 ; //////////   G. Frequency domain plot-generating functions  //////////
 
 
-; the PLoT library, by Neil Toronto <neil.toronto@gmail.com>, 
-; is used for generating the following plots
-
-; in all the following plot-creating fuctions, block is a circuit building expression 
-; that returns the block to be simplified, such as: (circuit1 a) or: (pi-controller 7 5 a)
-
+; The Plot library, by Neil Toronto, is used in all the following plot-creating fuctions
 
 (newline)
 (plot-font-size 10)
@@ -49,12 +44,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
+;///// F(s) plot
+
 (define (F block)  ; tf is evaluated here
   
   (let* ((total-tfs-value (get-total-tfs-value block))
          (tfs-value-evaluation (eval total-tfs-value anchor)))
     
-    (define (tfs s) (tfs-value-evaluation s 0 0 0 0))
+    (define (tfs s) (tfs-value-evaluation s 0 0 0 0)) ; no slots for f(w) functions provided here 
     ;(fw1-func 0) 
     ;(fw2-func w)
     ;(fw3-func w)
@@ -88,19 +85,20 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
+
+;///// Bode plots auxiliary functions
+
+
+;Common plot parameters for all Bode plot-creating functions
+
 (define (bode-plot-parameters)
   (plot-height 200)
-  ;(plot-title "Bode plot")
-  ;(plot-title (string-append (make-space-line 10) "Bode plot"))
   (plot-title (string-append (make-space-line 7) "Bode plot"))
-  (plot-x-label "Frequency [rad/s]")
-  )
+  (plot-x-label "Frequency [rad/s]"))
 
 
 
-
-
-; angle unwarping - from (-180 < angle < 180) to (-540 < angle < 180):
+;Angle unwarping: from (-180 < angle < 180) to (-540 < angle < 180), in Figures 1 & 2
 
 (define had-neg-values-1 #f)
 (define passed-180-1 #f)
@@ -111,72 +109,60 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (define passed-360-2 #f)
 
 
+(define (had-neg-values? fig)
+  (if (= fig 1) had-neg-values-1 had-neg-values-2))
 
-(define (get-had-neg-values id)
-  (if (= id 1)
-      had-neg-values-1
-      had-neg-values-2))
-(define (set-had-neg-values-t id)
-  (if (= id 1)
-      (set! had-neg-values-1 #t)
-      (set! had-neg-values-2 #t)))
+(define (passed-180? fig)
+  (if (= fig 1) passed-180-1 passed-180-2))
 
-
-(define (get-passed-180 id)
-  (if (= id 1)
-      passed-180-1
-      passed-180-2))
-(define (set-passed-180-t id)
-  (if (= id 1)
-      (set! passed-180-1 #t)
-      (set! passed-180-2 #t)))
+(define (passed-360? fig)
+  (if (= fig 1) passed-360-1 passed-360-2))
 
 
-(define (get-passed-360 id)
-  (if (= id 1)
-      passed-360-1
-      passed-360-2))
-(define (set-passed-360-t id)
-  (if (= id 1)
-      (set! passed-360-1 #t)
-      (set! passed-360-2 #t)))
+(define (set-had-neg-values-true! fig)
+  (if (= fig 1) (set! had-neg-values-1 #t) (set! had-neg-values-2 #t)))
+
+(define (set-passed-180-true! fig)
+  (if (= fig 1) (set! passed-180-1 #t) (set! passed-180-2 #t)))
+
+(define (set-passed-360-true! fig)
+  (if (= fig 1) (set! passed-360-1 #t) (set! passed-360-2 #t)))
+
+
+(define (initialize-angle-params-fig-1!)
+  (set! had-neg-values-1 #f)
+  (set! passed-180-1 #f)
+  (set! passed-360-1 #f))
+
+(define (initialize-angle-params-fig-2!)
+  (set! had-neg-values-2 #f)
+  (set! passed-180-2 #f)
+  (set! passed-360-2 #f))
 
 
 
-#|
-(define (unwarp-angle-simple ang w id)
+
+(define (unwarp-angle-simple! ang w fig)
   
-  (if (and (eq? (get-had-neg-values id) #t) (> ang 0)) ;cheb: (> ang (/ pi 2)))
+  (if (and (eq? (had-neg-values? fig) #t) (> ang (/ pi 2)))
       (- ang (* 2 pi))
       (if (or (< ang 0) (and (= ang 0) (> w 0.001)))
           (begin
-            (set-had-neg-values-t id)
-            ang)
-          ang))
-  )
-|#
-
-(define (unwarp-angle-simple-2 ang w id)
-  
-  (if (and (eq? (get-had-neg-values id) #t) (> ang (/ pi 2)))
-      (- ang (* 2 pi))
-      (if (or (< ang 0) (and (= ang 0) (> w 0.001)))
-          (begin
-            (set-had-neg-values-t id)
+            (set-had-neg-values-true! fig)
             ang)
           ang))
   )
 
 
-(define (unwarp-angle ang w id)
+(define (unwarp-angle-elaborate! ang w fig)
   
-  (cond ((and (eq? (get-had-neg-values id) #t) (eq? (get-passed-360 id) #t) 
+  (cond ((and (eq? (had-neg-values? fig) #t) (eq? (passed-360? fig) #t) 
               (> (+ ang (* 2 pi)) 0)
               )
          (- ang (* 2 pi)))
         
         ;#|
-        ((and (eq? (get-had-neg-values id) #t) (not (eq? (get-passed-180 id) #t))
+        ((and (eq? (had-neg-values? fig) #t) (not (eq? (passed-180? fig) #t))
               (> ang 0) 
               (< ang (/ pi 2)))
          ;works for pid:
@@ -186,24 +172,146 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
          )
         ;|#
         
-        ((and (eq? (get-had-neg-values id) #t) ;(eq? (get-passed-180 id) #t)
+        ((and (eq? (had-neg-values? fig) #t) ;(eq? (get-passed-180 id) #t)
               (> ang 0))
          (when ;(< (- ang (* 2 pi)) (* (- 1.8) pi))
-             (and (eq? (get-passed-180 id) #t) (< (- ang (* 2 pi)) 0))
-           (set-passed-360-t id))
+             (and (eq? (passed-180? fig) #t) (< (- ang (* 2 pi)) 0))
+           (set-passed-360-true! fig))
          
          ;change:
          (when (> (abs (- ang (* 2 pi))) (* 0.8 pi))
-           (set-passed-180-t id))
+           (set-passed-180-true! fig))
          
          (- ang (* 2 pi)))
         
         (else
          (when (or (< ang 0) (and (= ang 0) (> w 0.001)))
-           (set-had-neg-values-t id))
+           (set-had-neg-values-true! fig))
          (when (> (abs ang) (* 0.8 pi))
-           (set-passed-180-t id))
+           (set-passed-180-true! fig))
          ang))
+  )
+
+
+
+
+;Characteristic numbers computation & text display functions
+
+(define (display-filter-type AR-low AR-high w-bandwidth-2)
+  (cond ((> (/ AR-low AR-high) 2)
+         (display "Low-pass filter:")
+         (newline)
+         (newline))    
+        ((> (/ AR-high AR-low) 2)
+         (display "High-pass filter:")
+         (newline)
+         (newline))
+        ((and (< AR-low 0.05) (< AR-high 0.05) (not (eq? w-bandwidth-2 #f)))
+         (display "Band-pass filter:")
+         (newline)
+         (newline))))
+      
+
+
+(define (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold)          
+  (cond ((eq? w-bandwidth-1 #f) 
+         (display "bandwidth    = (0,∞)"))
+        ((eq? w-bandwidth-2 #f)
+         (if (eq? (round-decimal w-bandwidth-1 2) 0)
+             (begin 
+               (display "bandwidth    = (0,∞)"))
+             (begin
+               (display "bandwidth    = (0,")
+               (display (round-decimal w-bandwidth-1 2))
+               (display "] [rad/s]"))))
+        ((> (round-decimal w-bandwidth-2 2) (round-decimal w-bandwidth-1 2))
+         (if (eq? (round-decimal w-bandwidth-1 2) 0)
+             (begin 
+               (display "bandwidth    = (0,")
+               (display (round-decimal w-bandwidth-2 2))
+               (display "] [rad/s]"))
+             (begin
+               (display "bandwidth    = [")
+               (display (round-decimal w-bandwidth-1 2))
+               (display ",")
+               (display (round-decimal w-bandwidth-2 2))
+               (display "] [rad/s]"))))
+        (else
+         (if (eq? (round-decimal w-bandwidth-1 2) 0)
+             (begin 
+               (display "bandwidth    = (0,∞)"))
+             (begin
+               (display "bandwidth    = (0,")
+               (display (round-decimal w-bandwidth-1 2))
+               (display "] [rad/s]")))))
+  
+  (display ", thresh. = ")
+  (display (round-decimal bandwidth-threshold 3))
+  (newline))
+
+
+
+(define (display-roll-off AR-low AR-high AR-100 AR-001 w-bandwidth-2)
+           
+  (cond ((> (/ AR-low AR-high) 2)
+             
+         ;Low-pass filter:
+         (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-100 AR-high))
+                                                            (log (/ 100 500)))) 3))
+         (display "roll-off     = ")
+         (display roll-off)
+         (display " (log(ΔAR)/log(Δw))")
+         (newline))    
+            
+        ((> (/ AR-high AR-low) 2)
+             
+         ;High-pass filter:
+         (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-low AR-001))
+                                                            (log (/ 0.001 0.01)))) 3))
+         (display "roll-off     = ")
+         (display roll-off)
+         (display " (log(ΔAR)/log(Δw))")
+         (newline))
+            
+        ((and (< AR-low 0.05) (< AR-high 0.05) (not (eq? w-bandwidth-2 #f)))
+             
+         ;Band-pass filter:         
+         (define roll-off-low (round-decimal (exact->inexact (/ (log (/ AR-low AR-001))
+                                                                (log (/ 0.001 0.01)))) 3))
+         (define roll-off-high (round-decimal (exact->inexact (/ (log (/ AR-100 AR-high))
+                                                                 (log (/ 100 500)))) 3))
+         (display "roll-off (low)  = ")
+         (display roll-off-low)
+         (display " (log(ΔAR)/log(Δw))")
+         (newline)
+         (display "roll-off (high) = ")
+         (display roll-off-high)
+         (display " (log(ΔAR)/log(Δw))")
+         (newline)))
+  )
+
+
+
+(define (display-gain-phase-margins gain-margin phase-margin)
+   
+  (if (not (eq? gain-margin #f))
+      (begin (display "gain margin  = ")
+             (display (round-decimal gain-margin 2))
+             (newline))
+      (begin (display "gain margin  = ∞")
+             (newline)))
+      
+  (if (not (eq? phase-margin #f))
+      ;(if (> phase-margin 0)
+      (begin (display "phase margin = ")
+             (display (round-decimal phase-margin 2))
+             (display " [deg]")
+             (newline)
+             (newline))
+      ;   (begin (newline)))
+      (begin (display "phase margin = ∞")
+             (newline)
+             (newline)))
   )
 
 
@@ -212,9 +320,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-
-
-;///// Bode plot
+;///// Basic Bode plot
 
 (define (bode block)
   
@@ -238,57 +344,61 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            (AR-001 (magnitude (tfs 0.01)))
            
            
-           ; bandwidth
-           (b-threshold (min (max AR-low AR-high) 0.707 cheb-threshold))
+           ;bandwidth parameters computation
+           (bandwidth-threshold (min (max AR-low AR-high) 0.707 chebyshev-threshold))
            
-           (fb (λ (w) (- (magnitude (tfs w)) b-threshold)))
+           (f-bandwidth (λ (w) (- (magnitude (tfs w)) bandwidth-threshold)))
            
-           (wb-init (half-interval-method                            
-                     fb
-                     0.001 500))
+           (w-bandwidth-init (half-interval-method                            
+                              f-bandwidth
+                              0.001
+                              500))
            
-           (wb1 (if (not (eq? wb-init #f))
-                    (half-interval-method                            
-                     fb
-                     0.001 (+ wb-init 0.001))
-                    #f))
+           (w-bandwidth-1 (if (not (eq? w-bandwidth-init #f))
+                              (half-interval-method                            
+                               f-bandwidth
+                               0.001
+                               (+ w-bandwidth-init 0.001))
+                              #f))
            
-           (wb2 (if (not (eq? wb1 #f))
-                    (half-interval-method                            
-                     fb
-                     (+ wb-init 0.001) 300)
-                    #f))
+           (w-bandwidth-2 (if (not (eq? w-bandwidth-1 #f))
+                              (half-interval-method                            
+                               f-bandwidth
+                               (+ w-bandwidth-init 0.001)
+                               300)
+                              #f))
            
            
-           ;gain margin
-           (fc-g (λ (w) (- (let ((f1 (angle (tfs w))))
+           ;gain margin parameters computation
+           (f-gain-margin (λ (w) (- (let ((f1 (angle (tfs w))))
                              
-                             (unwarp-angle-simple-2 f1 w 1)
-                             ;(unwarp-angle f1 w 1)
+                                      (unwarp-angle-simple! f1 w 1)
                              
-                             ) (- pi))))
+                                      ) (- pi))))
            
-           (wc-g (half-interval-method                            
-                  fc-g
-                  0.001 500))
+           (w-gain-margin (half-interval-method                            
+                           f-gain-margin
+                           0.001
+                           500))
            
-           (gain-margin (if (not (or (eq? wc-g #f) (eq? wc-g 0)))
+           (gain-margin (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
                             (begin ;(display wc-g)
-                              (/ 1 (magnitude (tfs wc-g))))
+                              (/ 1 (magnitude (tfs w-gain-margin))))
                             (begin ;(display wc-g)
                               #f)))
            
            
-           ; phase margin
-           (fc-p (λ (w) (- (magnitude (tfs w)) 1)))
+           ;phase margin parameters computation
+           (f-phase-margin (λ (w) (- (magnitude (tfs w)) 1)))
            
-           (wc-p (half-interval-method                            
-                  fc-p
-                  0.001 500))
+           (w-phase-margin (half-interval-method                            
+                            f-phase-margin
+                            0.001
+                            500))
            
            
-           (f1 (if (not (eq? wc-p #f)) (angle (tfs wc-p)) #f))
-           (phase-margin (if (not (eq? wc-p #f))
+           (f1 (if (not (eq? w-phase-margin #f)) (angle (tfs w-phase-margin)) #f))
+           (phase-margin (if (not (eq? w-phase-margin #f))
                              (+ 180 
                                 (* 180 (/ 1 pi)
                                    
@@ -311,13 +421,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       
       
       
-      (cheb-threshold! 1000)
-      (set! had-neg-values-1 #f)
-      (set! passed-180-1 #f)
-      (set! passed-360-1 #f)
-      
-      
+      (set-chebyshev-threshold! 1000)
+      (initialize-angle-params-fig-1!)          
       (bode-plot-parameters) 
+
       
       (for-each 
        displayln
@@ -347,14 +454,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                     |#                    
                       
                       (function (λ (x) 1) #:color 3 #:style 'dot)
-                      (function (λ (x) b-threshold) #:color 3 #:style 'dot #:y-min 0.099 #:y-max 10.001)
+                      (function (λ (x) bandwidth-threshold) #:color 3 #:style 'dot #:y-min 0.099 #:y-max 10.001)
                       
                       ;#|
-                      (if (not (or (eq? wc-g #f) (eq? wc-g 0)))
+                      (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
                           (error-bars (list 
-                                       (vector wc-g
-                                               (/ (+ 1 (magnitude (tfs wc-g))) 2)
-                                               (/ (- 1 (magnitude (tfs wc-g))) 2))))
+                                       (vector w-gain-margin
+                                               (/ (+ 1 (magnitude (tfs w-gain-margin))) 2)
+                                               (/ (- 1 (magnitude (tfs w-gain-margin))) 2))))
                           '())
                       ;|#
                       
@@ -385,7 +492,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                             
                                             ;f1
                                             ;(unwarp-angle-simple f1 w 1)
-                                            (unwarp-angle f1 w 1)
+                                            (unwarp-angle-elaborate! f1 w 1)
                                             
                                             )))
                                 (/ 1 1000) 500  ;#:color 3
@@ -405,9 +512,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                        (/ 1 1000) 500  #:color 1 #:line2-color 1 #:line1-style 'transparent)
                     |#
                       
-                      (if (not (eq? wc-p #f)) 
+                      (if (not (eq? w-phase-margin #f)) 
                           (error-bars (list 
-                                       (vector wc-p (+ (- 180) (/ phase-margin 2)) (/ phase-margin 2))))
+                                       (vector w-phase-margin (+ (- 180) (/ phase-margin 2)) (/ phase-margin 2))))
                           '())
                       
                       
@@ -418,124 +525,21 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       
       
       
-      (set! had-neg-values-1 #f)
-      (set! passed-180-1 #f)
-      (set! passed-360-1 #f)
+      (initialize-angle-params-fig-1!)
       
+      ;filter type computation & text display
+      (display-filter-type AR-low AR-high w-bandwidth-2)
       
+      ;bandwidth computation & text display
+      (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold)
+      
+      ;roll-off computation & text display
+      (display-roll-off AR-low AR-high AR-100 AR-001 w-bandwidth-2)
+           
+      ;gain & phase margins computation & text display
+      (display-gain-phase-margins gain-margin phase-margin)
 
-      ; filter type computation
-      
-      (cond ((> (/ AR-low AR-high) 2)
-             (display "Low-pass filter:")
-             (newline)
-             (newline))    
-            ((> (/ AR-high AR-low) 2)
-             (display "High-pass filter:")
-             (newline)
-             (newline))
-            ((and (< AR-low 0.05) (< AR-high 0.05) (not (eq? wb2 #f)))
-             (display "Band-pass filter:")
-             (newline)
-             (newline)))    
-      
-
-      
-      ; bandwidth computation
-      
-      (cond ((eq? wb1 #f) 
-             (display "bandwidth    = (0,inf)"))
-            ((eq? wb2 #f)
-             (if (eq? (round-decimal wb1 2) 0)
-                 (begin 
-                   (display "bandwidth    = (0,inf)"))
-                 (begin
-                   (display "bandwidth    = (0,")
-                   (display (round-decimal wb1 2))
-                   (display "] [rad/s]"))))
-            ((> (round-decimal wb2 2) (round-decimal wb1 2))
-             (if (eq? (round-decimal wb1 2) 0)
-                 (begin 
-                   (display "bandwidth    = (0,")
-                   (display (round-decimal wb2 2))
-                   (display "] [rad/s]"))
-                 (begin
-                   (display "bandwidth    = [")
-                   (display (round-decimal wb1 2))
-                   (display ",")
-                   (display (round-decimal wb2 2))
-                   (display "] [rad/s]"))))
-            (else
-             (if (eq? (round-decimal wb1 2) 0)
-                 (begin 
-                   (display "bandwidth    = (0,inf)"))
-                 (begin
-                   (display "bandwidth    = (0,")
-                   (display (round-decimal wb1 2))
-                   (display "] [rad/s]")))))
-      (display " - thresh.: ")
-      (display (round-decimal b-threshold 3))
-      (newline)
-      
-      
-      
-      ; roll-off computation
-      
-      (cond ((> (/ AR-low AR-high) 2)
-             
-             ;Low-pass filter:
-             (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-100 AR-high)) (log (/ 100 500)))) 3))
-             (display "roll-off     = ")
-             (display roll-off)
-             (display " (log(ΔAR)/log(Δw))")
-             (newline))    
-            
-            ((> (/ AR-high AR-low) 2)
-             
-             ;High-pass filter:
-             (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-low AR-001)) (log (/ 0.001 0.01)))) 3))
-             (display "roll-off     = ")
-             (display roll-off)
-             (display " (log(ΔAR)/log(Δw))")
-             (newline))
-            
-            ((and (< AR-low 0.05) (< AR-high 0.05) (not (eq? wb2 #f)))
-             
-             ;Band-pass filter:         
-             (define roll-off-low (round-decimal (exact->inexact (/ (log (/ AR-low AR-001)) (log (/ 0.001 0.01)))) 3))
-             (define roll-off-high (round-decimal (exact->inexact (/ (log (/ AR-100 AR-high)) (log (/ 100 500)))) 3))
-             (display "roll-off (low)  = ")
-             (display roll-off-low)
-             (display " (log(ΔAR)/log(Δw))")
-             (newline)
-             (display "roll-off (high) = ")
-             (display roll-off-high)
-             (display " (log(ΔAR)/log(Δw))")
-             (newline)))  
-      
-
-      
-      ; gain & phase margins computation
-      
-      (if (not (eq? gain-margin #f))
-          (begin (display "gain margin  = ")
-                 (display (round-decimal gain-margin 2))
-                 (newline))
-          (begin (display "gain margin  = inf")
-                 (newline)))
-      
-      (if (not (eq? phase-margin #f))
-          ;(if (> phase-margin 0)
-          (begin (display "phase margin = ")
-                 (display (round-decimal phase-margin 2))
-                 (display " [deg]")
-                 (newline)
-                 (newline))
-          ;   (begin (newline)))
-          (begin (display "phase margin = inf")
-                 (newline)
-                 (newline)))
-      
+         
       ))
   
   )
@@ -546,7 +550,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-;///// Compare two systems Bode plot
+;///// Compare two blocks Bode plot
 
 (define (compare block1 block2)  ; tf1 and tf2 appropriate functions so that after the simplification two functions will remain 
   
@@ -610,7 +614,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                           (let ((f1 (angle (tfs1 w))))
                             
                             ;f1
-                            (unwarp-angle f1 w 1)
+                            (unwarp-angle-elaborate! f1 w 1)
                             
                             )))                        
                 
@@ -621,7 +625,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                           (let ((f1 (angle (tfs2 w))))
                             
                             ;f1
-                            (unwarp-angle f1 w 2)
+                            (unwarp-angle-elaborate! f1 w 2)
                             
                             )))              
                 
@@ -635,13 +639,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
      
      )
     
-    (set! had-neg-values-1 #f)
-    (set! passed-180-1 #f)
-    (set! passed-360-1 #f)
-    
-    (set! had-neg-values-2 #f)
-    (set! passed-180-2 #f)
-    (set! passed-360-2 #f)
+
+    (initialize-angle-params-fig-1!)
+    (initialize-angle-params-fig-2!)
+
     
     ))
 
@@ -998,57 +999,61 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            (AR-001 (magnitude (tfs 0.01)))
            
            
-           ; bandwidth
-           (b-threshold (min (max AR-low AR-high) 0.707 cheb-threshold))
+           ;bandwidth parameters computation
+           (bandwidth-threshold (min (max AR-low AR-high) 0.707 chebyshev-threshold))
            
-           (fb (λ (w) (- (magnitude (tfs w)) b-threshold)))
+           (f-bandwidth (λ (w) (- (magnitude (tfs w)) bandwidth-threshold)))
            
-           (wb-init (half-interval-method                            
-                     fb
-                     0.001 500))
+           (w-bandwidth-init (half-interval-method                            
+                              f-bandwidth
+                              0.001
+                              500))
            
-           (wb1 (if (not (eq? wb-init #f))
-                    (half-interval-method                            
-                     fb
-                     0.001 (+ wb-init 0.001))
-                    #f))
+           (w-bandwidth-1 (if (not (eq? w-bandwidth-init #f))
+                              (half-interval-method                            
+                               f-bandwidth
+                               0.001
+                               (+ w-bandwidth-init 0.001))
+                              #f))
            
-           (wb2 (if (not (eq? wb1 #f))
-                    (half-interval-method                            
-                     fb
-                     (+ wb-init 0.001) 300)
-                    #f))
+           (w-bandwidth-2 (if (not (eq? w-bandwidth-1 #f))
+                              (half-interval-method                            
+                               f-bandwidth
+                               (+ w-bandwidth-init 0.001)
+                               300)
+                              #f))
            
            
-           ;gain margin
-           (fc-g (λ (w) (- (let ((f1 (angle (tfs w))))
+           ;gain margin parameters computation
+           (f-gain-margin (λ (w) (- (let ((f1 (angle (tfs w))))
                              
-                             (unwarp-angle-simple-2 f1 w 1)
-                             ;(unwarp-angle f1 w 1)
+                                      (unwarp-angle-simple! f1 w 1)
                              
-                             ) (- pi))))
+                                      ) (- pi))))
            
-           (wc-g (half-interval-method                            
-                  fc-g
-                  0.001 500))
+           (w-gain-margin (half-interval-method                            
+                           f-gain-margin
+                           0.001
+                           500))
            
-           (gain-margin (if (not (or (eq? wc-g #f) (eq? wc-g 0)))
+           (gain-margin (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
                             (begin ;(display wc-g)
-                              (/ 1 (magnitude (tfs wc-g))))
+                              (/ 1 (magnitude (tfs w-gain-margin))))
                             (begin ;(display wc-g)
                               #f)))
            
            
-           ; phase margin
-           (fc-p (λ (w) (- (magnitude (tfs w)) 1)))
+           ;phase margin parameters computation
+           (f-phase-margin (λ (w) (- (magnitude (tfs w)) 1)))
            
-           (wc-p (half-interval-method                            
-                  fc-p
-                  0.001 500))
+           (w-phase-margin (half-interval-method                            
+                            f-phase-margin
+                            0.001
+                            500))
            
            
-           (f1 (if (not (eq? wc-p #f)) (angle (tfs wc-p)) #f))
-           (phase-margin (if (not (eq? wc-p #f))
+           (f1 (if (not (eq? w-phase-margin #f)) (angle (tfs w-phase-margin)) #f))
+           (phase-margin (if (not (eq? w-phase-margin #f))
                              (+ 180 
                                 (* 180 (/ 1 pi)
                                    
@@ -1071,10 +1076,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       
       
       
-      (cheb-threshold! 1000)
-      (set! had-neg-values-1 #f)
-      (set! passed-180-1 #f)
-      (set! passed-360-1 #f)
+      (set-chebyshev-threshold! 1000)
+      (initialize-angle-params-fig-1!)
       
       
       (plot-height 400)
@@ -1100,7 +1103,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                              0.0000001 10
                              #:x-min -10 #:x-max 10 #:y-min -10 #:y-max 10
                              #:color 3
-                             #:label "0<=w<oo"
+                             #:label "0 < w < ∞"
                              )
                  (parametric (λ (w) (vector (real-part (tfs w))
                                             (imag-part (tfs w))
@@ -1115,7 +1118,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                              -10 0.0000001
                              ;#:x-min -1.5 #:x-max 1.5 #:y-min -1.5 #:y-max 1.5
                              #:color 2
-                             #:label "-oo<w<=0"
+                             #:label "-∞ < w ≤ 0"
                              )
                  (parametric (λ (w) (vector (real-part (tfs w))
                                             (imag-part (tfs w))
@@ -1150,120 +1153,20 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       
       
       
-      (set! had-neg-values-1 #f)
-      (set! passed-180-1 #f)
-      (set! passed-360-1 #f)
-      
-      
-      
-      
-      (cond ((> (/ AR-low AR-high) 2)
-             (display "Low-pass filter:")
-             (newline)
-             (newline))    
-            ((> (/ AR-high AR-low) 2)
-             (display "High-pass filter:")
-             (newline)
-             (newline))
-            ((and (< AR-low 0.05) (< AR-high 0.05) (not (eq? wb2 #f)))
-             (display "Band-pass filter:")
-             (newline)
-             (newline)))    
-      
-      
-      
-      (cond ((eq? wb1 #f) 
-             (display "bandwidth    = (0,inf)"))
-            ((eq? wb2 #f)
-             (if (eq? (round-decimal wb1 2) 0)
-                 (begin 
-                   (display "bandwidth    = (0,inf)"))
-                 (begin
-                   (display "bandwidth    = (0,")
-                   (display (round-decimal wb1 2))
-                   (display "] [rad/s]"))))
-            ((> (round-decimal wb2 2) (round-decimal wb1 2))
-             (if (eq? (round-decimal wb1 2) 0)
-                 (begin 
-                   (display "bandwidth    = (0,")
-                   (display (round-decimal wb2 2))
-                   (display "] [rad/s]"))
-                 (begin
-                   (display "bandwidth    = [")
-                   (display (round-decimal wb1 2))
-                   (display ",")
-                   (display (round-decimal wb2 2))
-                   (display "] [rad/s]"))))
-            (else
-             (if (eq? (round-decimal wb1 2) 0)
-                 (begin 
-                   (display "bandwidth    = (0,inf)"))
-                 (begin
-                   (display "bandwidth    = (0,")
-                   (display (round-decimal wb1 2))
-                   (display "] [rad/s]")))))
-      (display " - thresh.: ")
-      (display (round-decimal b-threshold 3))
-      (newline)
-      
-      
-      
-      ; roll-off:
-      
-      (cond ((> (/ AR-low AR-high) 2)
-             
-             ;Low-pass filter:
-             (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-100 AR-high)) (log (/ 100 500)))) 3))
-             (display "roll-off     = ")
-             (display roll-off)
-             (display " (log(ΔAR)/log(Δw))")
-             (newline))    
+      (initialize-angle-params-fig-1!)
             
-            ((> (/ AR-high AR-low) 2)
-             
-             ;High-pass filter:
-             (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-low AR-001)) (log (/ 0.001 0.01)))) 3))
-             (display "roll-off     = ")
-             (display roll-off)
-             (display " (log(ΔAR)/log(Δw))")
-             (newline))
-            
-            ((and (< AR-low 0.05) (< AR-high 0.05) (not (eq? wb2 #f)))
-             
-             ;Band-pass filter:         
-             (define roll-off-low (round-decimal (exact->inexact (/ (log (/ AR-low AR-001)) (log (/ 0.001 0.01)))) 3))
-             (define roll-off-high (round-decimal (exact->inexact (/ (log (/ AR-100 AR-high)) (log (/ 100 500)))) 3))
-             (display "roll-off (low)  = ")
-             (display roll-off-low)
-             (display " (log(ΔAR)/log(Δw))")
-             (newline)
-             (display "roll-off (high) = ")
-             (display roll-off-high)
-             (display " (log(ΔAR)/log(Δw))")
-             (newline)))  
+      ;filter type computation & text display
+      (display-filter-type AR-low AR-high w-bandwidth-2)
       
+      ;bandwidth computation & text display
+      (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold)
       
+      ;roll-off computation & text display
+      (display-roll-off AR-low AR-high AR-100 AR-001 w-bandwidth-2)
+           
+      ;gain & phase margins computation & text display
+      (display-gain-phase-margins gain-margin phase-margin)
       
-      (if (not (eq? gain-margin #f))
-          (begin (display "gain margin  = ")
-                 (display (round-decimal gain-margin 2))
-                 (newline))
-          (begin (display "gain margin  = inf")
-                 (newline)))
-      
-      
-      
-      (if (not (eq? phase-margin #f))
-          ;(if (> phase-margin 0)
-          (begin (display "phase margin = ")
-                 (display (round-decimal phase-margin 2))
-                 (display " [deg]")
-                 (newline)
-                 (newline))
-          ;   (begin (newline)))
-          (begin (display "phase margin = inf")
-                 (newline)
-                 (newline)))
       
       ))
   

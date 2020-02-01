@@ -80,8 +80,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 ; //// Chebyshev filters:
 
-(define cheb-threshold 1000)
-(define (cheb-threshold! x) (set! cheb-threshold x))
+(define chebyshev-threshold 1000)
+(define (set-chebyshev-threshold! x) (set! chebyshev-threshold x))
 
 
 
@@ -96,7 +96,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
        (* (make-rectangular 0 1.0) (cosh (/ (asinh (/ 1 e)) n)) (cos (theta m)))))
   
   
-  (cheb-threshold! (/ 1 (sqrt (+ 1 (* e e)))))
+  (set-chebyshev-threshold! (/ 1 (sqrt (+ 1 (* e e)))))
   
   ;(define b (block))
   
