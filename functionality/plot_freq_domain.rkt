@@ -200,56 +200,79 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 ;Characteristic numbers computation & text display functions [SHOULD BE IMPROVED]
 
-(define (display-filter-type AR-at-freq-min AR-at-freq-max w-bandwidth-2)
-  (cond ((> (/ AR-at-freq-min AR-at-freq-max) 2)
-         (display "Low-pass filter:")
+(define (display-filter-type AR-at-freq-min AR-at-freq-max bandwidth-threshold w-bandwidth-2)
+  (cond ((and (> (/ AR-at-freq-min AR-at-freq-max) 1.5)
+              (> AR-at-freq-min bandwidth-threshold)
+              (not (> AR-at-freq-max (* 3 bandwidth-threshold))))
+         (display "Low-pass filter")
          (newline)
          (newline))    
-        ((> (/ AR-at-freq-max AR-at-freq-min) 2)
-         (display "High-pass filter:")
+        ((and (> (/ AR-at-freq-max AR-at-freq-min) 1.5)
+              (> AR-at-freq-max bandwidth-threshold)
+              (not (> AR-at-freq-min (* 3 bandwidth-threshold))))
+         (display "High-pass filter")
          (newline)
          (newline))
-        ((and (< AR-at-freq-min 0.05) (< AR-at-freq-max 0.05) (not (eq? w-bandwidth-2 #f)))
-         (display "Band-pass filter:")
+        ((and (< AR-at-freq-min bandwidth-threshold)
+              (< AR-at-freq-max bandwidth-threshold)
+              (not (eq? w-bandwidth-2 #f)))
+         (display "Band-pass filter")
          (newline)
          (newline))))
       
 
 
-(define (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold)          
+(define (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold bandwidth-inverted?)          
   (cond ((eq? w-bandwidth-1 #f) 
-         (display "bandwidth    = (0,∞)"))
+         (display "bandwidth    = (0,∞) [rad/s]")
+         (display ", thresh. = ")
+         (display (round-decimal bandwidth-threshold 3)))
         ((eq? w-bandwidth-2 #f)
          (if (eq? (round-decimal w-bandwidth-1 2) 0)
              (begin 
-               (display "bandwidth    = (0,∞)"))
+               (display "bandwidth    = (0,∞) [rad/s]"))            
              (begin
                (display "bandwidth    = (0,")
                (display (round-decimal w-bandwidth-1 2))
-               (display "] [rad/s]"))))
+               (display "] [rad/s]")))
+         (display ", thresh. = ")
+         (display (round-decimal bandwidth-threshold 3)))
         ((> (round-decimal w-bandwidth-2 2) (round-decimal w-bandwidth-1 2))
          (if (eq? (round-decimal w-bandwidth-1 2) 0)
              (begin 
                (display "bandwidth    = (0,")
                (display (round-decimal w-bandwidth-2 2))
-               (display "] [rad/s]"))
+               (display "] [rad/s]")
+               (display ", thresh. = ")
+               (display (round-decimal bandwidth-threshold 3)))             
              (begin
-               (display "bandwidth    = [")
-               (display (round-decimal w-bandwidth-1 2))
-               (display ",")
-               (display (round-decimal w-bandwidth-2 2))
-               (display "] [rad/s]"))))
+               (if (eq? bandwidth-inverted? #t)
+                   (begin (display "bandwidth    = (0,")
+                          (display (round-decimal w-bandwidth-1 2))
+                          (display "] ∪ [")
+                          (display (round-decimal w-bandwidth-2 2))
+                          (display ",∞) [rad/s]")
+                          (display ","))
+                   (begin
+                     (display "bandwidth    = [")
+                     (display (round-decimal w-bandwidth-1 2))
+                     (display ",")
+                     (display (round-decimal w-bandwidth-2 2))
+                     (display "] [rad/s]")
+                     (display ",")))
+               (newline)
+               (display "threshold    = ")
+               (display (round-decimal bandwidth-threshold 3)))))
         (else
          (if (eq? (round-decimal w-bandwidth-1 2) 0)
              (begin 
-               (display "bandwidth    = (0,∞)"))
+               (display "bandwidth    = (0,∞) [rad/s]"))
              (begin
                (display "bandwidth    = (0,")
                (display (round-decimal w-bandwidth-1 2))
-               (display "] [rad/s]")))))
-  
-  (display ", thresh. = ")
-  (display (round-decimal bandwidth-threshold 3))
+               (display "] [rad/s]")))
+         (display ", thresh. = ")
+         (display (round-decimal bandwidth-threshold 3))))
   (newline))
 
 
@@ -350,14 +373,32 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            ;[SHOULD BE IMPROVED]
            
            ;bandwidth parameters computation
-           (bandwidth-threshold (min (max AR-at-freq-min AR-at-freq-max) 0.707 chebyshev-threshold))
+           (bandwidth-threshold (min 0.707 chebyshev-threshold))
            
            (f-bandwidth (λ (w) (- (magnitude (tfs w)) bandwidth-threshold)))
-           
-           (w-bandwidth-init (half-interval-method                            
-                              f-bandwidth
-                              w-min
-                              w-max))
+
+           ;orig
+           ;(w-bandwidth-init (half-interval-method                            
+           ;                   f-bandwidth
+           ;                   w-min
+           ;                   w-max))
+
+           (w-bandwidth-init (or (half-interval-method                            
+                                  f-bandwidth
+                                  w-min
+                                  w-max)
+                                 (newton-meth-for-solv-eq                            
+                                  f-bandwidth
+                                  0.011)
+                                 (newton-meth-for-solv-eq                            
+                                  f-bandwidth
+                                  0.101)
+                                 (newton-meth-for-solv-eq                            
+                                  f-bandwidth
+                                  1.001)
+                                 (newton-meth-for-solv-eq                            
+                                  f-bandwidth
+                                  10.01)))
            
            (w-bandwidth-1 (if (not (eq? w-bandwidth-init #f))
                               (half-interval-method                            
@@ -372,6 +413,13 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                (+ w-bandwidth-init w-min)
                                w-max)
                               #f))
+
+           (bandwidth-inverted? (if (not (eq? (and w-bandwidth-1 w-bandwidth-2) #f))
+                                    (if (< (f-bandwidth (average w-bandwidth-1 w-bandwidth-2))
+                                           (f-bandwidth w-bandwidth-1))
+                                        #t
+                                        #f)
+                                    #f))
            
            
            ;gain margin parameters computation
@@ -533,10 +581,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (initialize-angle-params-fig-1!)
       
       ;filter type computation & text display
-      (display-filter-type AR-at-freq-min AR-at-freq-max w-bandwidth-2)
+      (display-filter-type AR-at-freq-min AR-at-freq-max bandwidth-threshold w-bandwidth-2)
       
       ;bandwidth computation & text display
-      (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold)
+      (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold bandwidth-inverted?)
       
       ;roll-off computation & text display
       (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-100 AR-at-001 w-bandwidth-2)
@@ -1006,14 +1054,32 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            ;[SHOULD BE IMPROVED]
            
            ;bandwidth parameters computation
-           (bandwidth-threshold (min (max AR-at-freq-min AR-at-freq-max) 0.707 chebyshev-threshold))
+           (bandwidth-threshold (min 0.707 chebyshev-threshold))
            
            (f-bandwidth (λ (w) (- (magnitude (tfs w)) bandwidth-threshold)))
-           
-           (w-bandwidth-init (half-interval-method                            
-                              f-bandwidth
-                              w-min
-                              w-max))
+
+           ;orig
+           ;(w-bandwidth-init (half-interval-method                            
+           ;                   f-bandwidth
+           ;                   w-min
+           ;                   w-max))
+
+           (w-bandwidth-init (or (half-interval-method                            
+                                  f-bandwidth
+                                  w-min
+                                  w-max)
+                                 (newton-meth-for-solv-eq                            
+                                  f-bandwidth
+                                  0.011)
+                                 (newton-meth-for-solv-eq                            
+                                  f-bandwidth
+                                  0.101)
+                                 (newton-meth-for-solv-eq                            
+                                  f-bandwidth
+                                  1.001)
+                                 (newton-meth-for-solv-eq                            
+                                  f-bandwidth
+                                  10.01)))
            
            (w-bandwidth-1 (if (not (eq? w-bandwidth-init #f))
                               (half-interval-method                            
@@ -1028,6 +1094,13 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                (+ w-bandwidth-init w-min)
                                300)
                               #f))
+
+           (bandwidth-inverted? (if (not (eq? (and w-bandwidth-1 w-bandwidth-2) #f))
+                                    (if (< (f-bandwidth (average w-bandwidth-1 w-bandwidth-2))
+                                           (f-bandwidth w-bandwidth-1))
+                                        #t
+                                        #f)
+                                    #f))
            
            
            ;gain margin parameters computation
@@ -1162,10 +1235,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (initialize-angle-params-fig-1!)
             
       ;filter type computation & text display
-      (display-filter-type AR-at-freq-min AR-at-freq-max w-bandwidth-2)
+      (display-filter-type AR-at-freq-min AR-at-freq-max bandwidth-threshold w-bandwidth-2)
       
       ;bandwidth computation & text display
-      (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold)
+      (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold bandwidth-inverted?)
       
       ;roll-off computation & text display
       (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-100 AR-at-001 w-bandwidth-2)

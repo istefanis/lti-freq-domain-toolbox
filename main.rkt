@@ -77,7 +77,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (displayc s)
       (newline)
       (newline)
-      (display "________________________________________")
+      (display "_________________________________________________")
       (newline)
       (newline)
       (display s)
@@ -178,8 +178,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (connect tf1 tf2)
     (bode a)
 
-    ;(define tf1 (tf '(5 0) '(1 1 1) a)) ;band-pass filter
-    ;(bode a)
+    (displayc "> (bode a)")
+    (define tf1 (tf '(5 0) '(1 1 1) a)) ;band-pass filter
+    (bode a)
 
     
     ;Compare

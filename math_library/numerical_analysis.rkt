@@ -28,6 +28,9 @@ or are modifications of code presented there.
 
 ; ROOT-FINDING METHODS FOR NON-LINEAR FUNCTIONS OF ONE VARIABLE
 
+(define max-loop-counter 0)
+
+
 
 ; 1. Newton's method (input: a first guess)
 
@@ -39,14 +42,20 @@ or are modifications of code presented there.
     (< (abs (- a b)) tolerance))
   
   (define (try guess)
-    (let ((next (f guess)))
-      ;(display next)
-      ;(newline)
-      (if (close-enough? guess next)
-          next
-          (if (eqv? +nan.0 next)
-              #f
-              (try next)))))
+    (if (eq? f #f)
+        #f
+        (let ((next (f guess)))
+          ;(display next)
+          ;(newline)
+          (if (or (close-enough? guess next)
+                  (> max-loop-counter 5000))
+              next
+              (if (eqv? +nan.0 next)
+                  #f
+                  (begin (set! max-loop-counter (+ max-loop-counter 1))
+                         (try next)))))))
+
+  (set! max-loop-counter 0)
   (try first-guess))
 
 
@@ -58,10 +67,13 @@ or are modifications of code presented there.
 
 (define dx 0.01)
 
-(define (deriv g) (lambda (x) (/ (- (g (+ x dx)) (g x)) dx)))  
+(define (deriv g)
+  (lambda (x) (/ (- (g (+ x dx)) (g x)) dx)))
 
 (define (newton-function-f g)
-  (lambda (x) (- x (/ (g x) ((deriv g) x)))))
+  (lambda (x) (if (eq? 0 ((deriv g) x))
+                  #f
+                  (- x (/ (g x) ((deriv g) x))))))
 
 (define (newton-meth-for-solv-eq g guess)
   (fixed-point (newton-function-f g) guess))
@@ -73,7 +85,6 @@ or are modifications of code presented there.
 
 (define e 0.0001)
 (define M 10000000)
-(define max-loop-counter 0)
 
 (define (half-interval-method f a b)
   
