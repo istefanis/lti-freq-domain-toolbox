@@ -32,13 +32,16 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 ; //////////   H. Time domain response computation and plot-generating functions  //////////
 
 
-; The Plot library, by Neil Toronto, is used in all the following plot-creating fuctions
+;The Plot library, by Neil Toronto, is used in all the following plot-creating fuctions
 
 (plot-font-size 10)
 
 
-(define time-min (/ 1 1000)) ;when writen in this form - instead of 0.001 - the time domain plots are generated faster by the Plot library 
-(define time-max 30)
+;min & max time [s]
+(define t-min (/ 1 1000)) ;when writen in this form - instead of 0.001 - the time domain plots are generated faster by the Plot library 
+(define t-max 30)
+
+
 
 
 
@@ -110,10 +113,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
         (plot (list
                ;(axes)
                (tick-grid)
-               (function (λ (t) (real-part (Talbot tfs t 150))) time-min time-max)
-               (function (λ (t) -10.0) time-min time-max #:color 0 #:style 'dot)
-               (function (λ (t) 10.0) time-min time-max #:color 0 #:style 'dot)
-               (function (λ (t) 0) time-min time-max #:color 0 #:style 'dot))))
+               (function (λ (t) (real-part (Talbot tfs t 150))) t-min t-max)
+               (function (λ (t) -10.0) t-min t-max #:color 0 #:style 'dot)
+               (function (λ (t) 10.0) t-min t-max #:color 0 #:style 'dot)
+               (function (λ (t) 0) t-min t-max #:color 0 #:style 'dot))))
       
       
       (make-space-line 10)))))
@@ -152,9 +155,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
         (plot (list
                ;(axes)
                (tick-grid)
-               (function (deriv (λ (t) (real-part (Talbot tfs t 150)))) time-min time-max)
-               (function (λ (t) -10.0) time-min time-max #:color 0 #:style 'dot)
-               (function (λ (t) 10.0) time-min time-max #:color 0 #:style 'dot))))
+               (function (deriv (λ (t) (real-part (Talbot tfs t 150)))) t-min t-max)
+               (function (λ (t) -10.0) t-min t-max #:color 0 #:style 'dot)
+               (function (λ (t) 10.0) t-min t-max #:color 0 #:style 'dot))))
       
       
       (make-space-line 10)))))
@@ -285,10 +288,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (plot (list
              (axes)
              (tick-grid)
-             (function (λ (t) (real-part (Talbot tfs t 150))) time-min time-max)
-             (function (λ (t) -10.0) time-min time-max #:color 0 #:style 'dot)
-             (function (λ (t) 10.0) time-min time-max #:color 0 #:style 'dot)
-             (function (λ (t) gain) time-min time-max #:color 0 #:style 'dot)
+             (function (λ (t) (real-part (Talbot tfs t 150))) t-min t-max)
+             (function (λ (t) -10.0) t-min t-max #:color 0 #:style 'dot)
+             (function (λ (t) 10.0) t-min t-max #:color 0 #:style 'dot)
+             (function (λ (t) gain) t-min t-max #:color 0 #:style 'dot)
              )))
     
     
