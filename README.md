@@ -40,13 +40,6 @@ Some plot examples:
 
 =======================
 
-Internal dependencies diagram:
-
-![dependencies diagram](https://github.com/iastefan/lti-freq-domain-toolbox/blob/master/dependencies.png)
-
-
-=======================
-
 lti-freq-domain-toolbox (c) 2014-2020 Ioannis Stefanis <iastefan@outlook.com>
 
 lti-freq-domain-toolbox is distributed under the GNU Lesser General Public License Version 3 (LGPLv3). 
