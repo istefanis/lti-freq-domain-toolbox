@@ -17,9 +17,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 #lang racket
 
 (require "../math_library/symbolic_algebra.rkt")
-(require "../functionality/display_modes.rkt")
+(require "../auxiliary/display_modes.rkt")
 (require "general.rkt")
-
 (provide (all-defined-out))
 
 

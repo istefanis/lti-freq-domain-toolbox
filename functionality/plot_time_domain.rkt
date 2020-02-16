@@ -18,9 +18,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (require plot)
 (require "../math_library/general.rkt")
 (require "../math_library/numerical_analysis.rkt")
-(require "display_modes.rkt")
+(require "../math_library/symbolic_algebra.rkt")
+(require "../elements/general.rkt")
+(require "../auxiliary/display_modes.rkt")
 (require "text_generation.rkt")
-
 (provide (all-defined-out))
 
 

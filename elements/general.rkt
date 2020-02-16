@@ -15,7 +15,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 #lang racket
 
-(require "../functionality/display_modes.rkt")
+(require "../auxiliary/display_modes.rkt")
 (provide (all-defined-out))
 
 

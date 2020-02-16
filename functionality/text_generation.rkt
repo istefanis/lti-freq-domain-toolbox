@@ -18,9 +18,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (require "../math_library/general.rkt")
 (require "../math_library/symbolic_algebra.rkt")
 (require "../elements/general.rkt")
-(require "display_modes.rkt")
-(provide (all-from-out "../math_library/symbolic_algebra.rkt"))
-(provide (all-from-out "../elements/general.rkt"))
+(require "../auxiliary/display_modes.rkt")
 (provide (all-defined-out))
 
 
