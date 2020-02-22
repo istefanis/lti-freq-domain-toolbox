@@ -223,84 +223,119 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       
 
 
-(define (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold bandwidth-inverted?)          
-  (cond ((eq? w-bandwidth-1 #f) 
-         (display "bandwidth    = (0,∞) [rad/s]")
-         (display ", thresh. = ")
-         (display (round-decimal bandwidth-threshold 3)))
-        ((eq? w-bandwidth-2 #f)
-         (if (eq? (round-decimal w-bandwidth-1 2) 0)
-             (begin 
-               (display "bandwidth    = (0,∞) [rad/s]"))            
-             (begin
-               (display "bandwidth    = (0,")
-               (display (round-decimal w-bandwidth-1 2))
-               (display "] [rad/s]")))
-         (display ", thresh. = ")
-         (display (round-decimal bandwidth-threshold 3)))
-        ((> (round-decimal w-bandwidth-2 2) (round-decimal w-bandwidth-1 2))
-         (if (eq? (round-decimal w-bandwidth-1 2) 0)
-             (begin 
-               (display "bandwidth    = (0,")
-               (display (round-decimal w-bandwidth-2 2))
-               (display "] [rad/s]")
-               (display ", thresh. = ")
-               (display (round-decimal bandwidth-threshold 3)))             
-             (begin
-               (if (eq? bandwidth-inverted? #t)
-                   (begin (display "bandwidth    = (0,")
-                          (display (round-decimal w-bandwidth-1 2))
-                          (display "] ∪ [")
-                          (display (round-decimal w-bandwidth-2 2))
-                          (display ",∞) [rad/s]")
-                          (display ","))
-                   (begin
-                     (display "bandwidth    = [")
-                     (display (round-decimal w-bandwidth-1 2))
-                     (display ",")
-                     (display (round-decimal w-bandwidth-2 2))
-                     (display "] [rad/s]")
-                     (display ",")))
-               (newline)
-               (display "threshold    = ")
-               (display (round-decimal bandwidth-threshold 3)))))
-        (else
-         (if (eq? (round-decimal w-bandwidth-1 2) 0)
-             (begin 
-               (display "bandwidth    = (0,∞) [rad/s]"))
-             (begin
-               (display "bandwidth    = (0,")
-               (display (round-decimal w-bandwidth-1 2))
-               (display "] [rad/s]")))
-         (display ", thresh. = ")
-         (display (round-decimal bandwidth-threshold 3))))
-  (newline))
+(define (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold bandwidth-inverted?)
+  (let ((bandwidth-threshold-rounded (round-decimal bandwidth-threshold 3)))
+    
+    (cond ((eq? w-bandwidth-1 #f) 
+           (display "bandwidth    = (0,∞) [rad/s],")
+           (if (= bandwidth-threshold-rounded 0.707)
+               (begin (newline)
+                      (display "threshold    = ")
+                      (display bandwidth-threshold-rounded)
+                      (display " = -3 [dB]"))
+               (begin (display " thresh. = ")
+                      (display bandwidth-threshold-rounded))))
+          
+          ((eq? w-bandwidth-2 #f)
+           (if (= (round-decimal w-bandwidth-1 2) 0)
+               (begin (display "bandwidth    = (0,∞) [rad/s],"))            
+               (begin (display "bandwidth    = (0,")
+                      (display (round-decimal w-bandwidth-1 2))
+                      (display "] [rad/s],")))
+           (if (= bandwidth-threshold-rounded 0.707)
+               (begin (newline)
+                      (display "threshold    = ")
+                      (display bandwidth-threshold-rounded)
+                      (display " = -3 [dB]"))
+               (begin (display " thresh. = ")
+                      (display bandwidth-threshold-rounded))))
+          
+          ((> (round-decimal w-bandwidth-2 2) (round-decimal w-bandwidth-1 2))
+           (if (eq? (round-decimal w-bandwidth-1 2) 0)
+               (begin (display "bandwidth    = (0,")
+                      (display (round-decimal w-bandwidth-2 2))
+                      (display "] [rad/s],")
+                      (if (= bandwidth-threshold-rounded 0.707)
+                          (begin (newline)
+                                 (display "threshold    = ")
+                                 (display bandwidth-threshold-rounded)
+                                 (display " = -3 [dB]"))
+                          (begin (display " thresh. = ")
+                                 (display bandwidth-threshold-rounded))))             
+               (begin
+                 (if (eq? bandwidth-inverted? #t)
+                     (begin (display "bandwidth    = (0,")
+                            (display (round-decimal w-bandwidth-1 2))
+                            (display "] ∪ [")
+                            (display (round-decimal w-bandwidth-2 2))
+                            (display ",∞) [rad/s],"))
+                     (begin (display "bandwidth    = [")
+                            (display (round-decimal w-bandwidth-1 2))
+                            (display ",")
+                            (display (round-decimal w-bandwidth-2 2))
+                            (display "] [rad/s],")))
+                 (newline)
+                 (display "threshold    = ")
+                 (display bandwidth-threshold-rounded)
+                 (cond ((= bandwidth-threshold-rounded 0.707)
+                        (display " = -3 [dB]"))))))
+          
+          (else
+           (if (eq? (round-decimal w-bandwidth-1 2) 0)
+               (begin (display "bandwidth    = (0,∞) [rad/s],"))
+               (begin (display "bandwidth    = (0,")
+                      (display (round-decimal w-bandwidth-1 2))
+                      (display "] [rad/s],")))
+           (if (= bandwidth-threshold-rounded 0.707)
+               (begin (newline)
+                      (display "threshold    = ")
+                      (display bandwidth-threshold-rounded)
+                      (display " = -3 [dB]"))
+               (begin (display " thresh. = ")
+                      (display bandwidth-threshold-rounded)))))
+    
+    (newline)))
 
 
 
-(define (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-100 AR-at-001 w-bandwidth-2)
+(define (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-bandwidth-2)
            
-  (cond ((> (/ AR-at-freq-min AR-at-freq-max) 2)
+  (cond ((and (> (/ AR-at-freq-min AR-at-freq-max) 1.5)
+              (> AR-at-freq-min bandwidth-threshold)
+              (not (> AR-at-freq-max (* 3 bandwidth-threshold))))
              
          ;Low-pass filter:
          (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-at-100 AR-at-freq-max))
                                                             (log (/ 100 w-max)))) 3))
          (display "roll-off     = ")
-         (display roll-off)
-         (display " (log(ΔAR)/log(Δw))")
-         (newline))    
+         (display roll-off) ;(log(AR2/AR1)/log(w2/w1))
+         (cond ((not (= roll-off 0))
+                (begin 
+                  (display "    = ")
+                  (display (* 20 roll-off))
+                  (display " [dB/dec]")
+                  )))
+         (newline))
             
-        ((> (/ AR-at-freq-max AR-at-freq-min) 2)
+        ((and (> (/ AR-at-freq-max AR-at-freq-min) 1.5)
+              (> AR-at-freq-max bandwidth-threshold)
+              (not (> AR-at-freq-min (* 3 bandwidth-threshold))))
              
          ;High-pass filter:
          (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-at-freq-min AR-at-001))
                                                             (log (/ w-min 0.01)))) 3))
          (display "roll-off     = ")
-         (display roll-off)
-         (display " (log(ΔAR)/log(Δw))")
+         (display roll-off) ;(log(AR2/AR1)/log(w2/w1))
+         (cond ((not (= roll-off 0))
+                (begin 
+                  (display "    = ")
+                  (display (* 20 roll-off))
+                  (display " [dB/dec]"))))
          (newline))
             
-        ((and (< AR-at-freq-min 0.05) (< AR-at-freq-max 0.05) (not (eq? w-bandwidth-2 #f)))
+        ((and (< AR-at-freq-min bandwidth-threshold)
+              (< AR-at-freq-max bandwidth-threshold)
+              (not (eq? w-bandwidth-2 #f)))
              
          ;Band-pass filter:         
          (define roll-off-low (round-decimal (exact->inexact (/ (log (/ AR-at-freq-min AR-at-001))
@@ -308,12 +343,20 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
          (define roll-off-high (round-decimal (exact->inexact (/ (log (/ AR-at-100 AR-at-freq-max))
                                                                  (log (/ 100 w-max)))) 3))
          (display "roll-off (low)  = ")
-         (display roll-off-low)
-         (display " (log(ΔAR)/log(Δw))")
+         (display roll-off-low) ;(log(AR2/AR1)/log(w2/w1))
+         (cond ((not (= roll-off-low 0))
+                (begin 
+                  (display "    = ")
+                  (display (* 20 roll-off-low))
+                  (display " [dB/dec]"))))
          (newline)
          (display "roll-off (high) = ")
-         (display roll-off-high)
-         (display " (log(ΔAR)/log(Δw))")
+         (display roll-off-high) ;(log(AR2/AR1)/log(w2/w1))
+         (cond ((not (= roll-off-high 0))
+                (begin 
+                  (display "   = ")
+                  (display (* 20 roll-off-high))
+                  (display " [dB/dec]"))))
          (newline)))
   )
 
@@ -588,7 +631,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold bandwidth-inverted?)
       
       ;roll-off computation & text display
-      (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-100 AR-at-001 w-bandwidth-2)
+      (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-bandwidth-2)
            
       ;gain & phase margins computation & text display
       (display-gain-phase-margins gain-margin phase-margin)
@@ -1242,7 +1285,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold bandwidth-inverted?)
       
       ;roll-off computation & text display
-      (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-100 AR-at-001 w-bandwidth-2)
+      (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-bandwidth-2)
            
       ;gain & phase margins computation & text display
       (display-gain-phase-margins gain-margin phase-margin)
