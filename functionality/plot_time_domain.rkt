@@ -36,6 +36,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 ;The Plot library, by Neil Toronto, is used in all the following plot-creating fuctions
 
 (plot-font-size 10)
+(plot-width 420)
 
 
 ;min & max time [s]
@@ -106,10 +107,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
      (list 
       
       (parameterize ([plot-title "Time response f(t) plot"]
-                     [plot-width    400]
                      [plot-height   200]
                      [plot-x-label  "t [s]"]
-                     [plot-y-label  "f(t)"])
+                     [plot-y-label  "f(t)"]
+                     [plot-y-far-tick-labels? #t])
         
         (plot (list
                ;(axes)
@@ -148,10 +149,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
      (list
       
       (parameterize ([plot-title "t - df/dt plot"]
-                     [plot-width    400]
                      [plot-height   200]
                      [plot-x-label  "t [s]"]
-                     [plot-y-label  "df/dt"])
+                     [plot-y-label  "df/dt"]
+                     [plot-y-far-tick-labels? #t])
         
         (plot (list
                ;(axes)
@@ -191,10 +192,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
        
        (list 
         (parameterize ([plot-title "Time domain df(t)/dt - f(t) trajectory plot"]
-                       [plot-width    400]
                        [plot-height   200]
                        [plot-x-label  "df(t)/dt"]
-                       [plot-y-label  "f(t)"])
+                       [plot-y-label  "f(t)"]
+                       [plot-y-far-tick-labels? #t])
           
           (plot (list
                  (axes)
@@ -281,10 +282,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
    (list 
     
     (parameterize ([plot-title "Time response f(t) plot"]
-                   [plot-width    400]
                    [plot-height   200]
                    [plot-x-label  "t [s]"]
-                   [plot-y-label  "f(t)"])
+                   [plot-y-label  "f(t)"]
+                   [plot-y-far-tick-labels? #t])
       
       (plot (list
              (axes)

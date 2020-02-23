@@ -37,6 +37,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 ;The Plot library, by Neil Toronto, is used in all the following plot-creating fuctions
 
 (plot-font-size 10)
+(plot-width 420)
 
 
 ;min & max frequency [rad/s]
@@ -71,6 +72,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
      
      (list (parameterize ([plot-x-label      "s"]
                           [plot-y-label      "F(s)"]
+                          [plot-y-far-tick-labels? #t]
                           ;the log transform is not defined on negative arguments, so:
                           ;[plot-x-transform cbrt-transform])
                           [plot-x-transform  (stretch-transform -5 5 10)])
@@ -526,11 +528,20 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (for-each 
        displayln
        
-       (list (parameterize ([plot-y-label "Magnitude (abs)"]
+       (list (parameterize ([plot-y-label "Magnitude"]
                             [plot-y-transform log-transform]
                             [plot-y-ticks (log-ticks)]
+                            [plot-y-far-label "[dB]"]
+                            [plot-y-far-ticks  (ticks-scale (plot-y-ticks)
+                                                            (invertible-compose
+                                                             (linear-scale 8.68589) ;Neper to dB conversion factor
+                                                             (invertible-inverse (invertible-function exp log))))]
                             [plot-x-transform log-transform]
                             [plot-x-ticks (log-ticks)]
+                            ;[plot-x-far-label "[Hz]"]
+                            ;[plot-x-far-ticks  (ticks-scale (plot-x-ticks)
+                            ;                                (linear-scale (/ 1 (* 2 pi))))]
+                            
                             )
                
                (plot (list 
@@ -568,6 +579,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
              (parameterize ([plot-y-label "Phase [deg]"]
                             [plot-x-transform log-transform]
                             [plot-x-ticks (log-ticks)]
+                            [plot-y-far-label "[rad]"]
+                            [plot-y-far-ticks (ticks-scale (plot-y-ticks)
+                                                           (linear-scale (/ pi 180)))]
                             )
                
                (plot (list 
@@ -679,9 +693,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
      
      (list 
       
-      (parameterize ([plot-y-label      "Magnitude (abs)"]
+      (parameterize ([plot-y-label      "Magnitude"]
                      [plot-y-transform  log-transform]
                      [plot-y-ticks      (log-ticks)]
+                     [plot-y-far-label "[dB]"]
+                     [plot-y-far-ticks  (ticks-scale (plot-y-ticks)
+                                                     (invertible-compose
+                                                      (linear-scale 8.68589) ;Neper to dB conversion factor
+                                                      (invertible-inverse (invertible-function exp log))))]
                      [plot-x-transform  log-transform]
                      [plot-x-ticks      (log-ticks)]
                      )
@@ -702,7 +721,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       
       (parameterize ([plot-y-label      "Phase [deg]"]
                      [plot-x-transform  log-transform]
-                     [plot-x-ticks      (log-ticks)])
+                     [plot-x-ticks      (log-ticks)]
+                     [plot-y-far-label "[rad]"]
+                     [plot-y-far-ticks (ticks-scale (plot-y-ticks)
+                                                    (linear-scale (/ pi 180)))])
         
         (plot (list ;(axes)
                (tick-grid)
@@ -778,9 +800,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                    (for-each
                     displayln
                     
-                    (list (parameterize ([plot-y-label      "Magnitude (abs)"]
+                    (list (parameterize ([plot-y-label      "Magnitude"]
                                          [plot-y-transform  log-transform]
                                          [plot-y-ticks      (log-ticks)]
+                                         [plot-y-far-label "[dB]"]
+                                         [plot-y-far-ticks  (ticks-scale (plot-y-ticks)
+                                                                         (invertible-compose
+                                                                          (linear-scale 8.68589) ;Neper to dB conversion factor
+                                                                          (invertible-inverse (invertible-function exp log))))]
                                          [plot-x-transform  log-transform]
                                          [plot-x-ticks      (log-ticks)])
                             
@@ -795,7 +822,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                           
                           (parameterize ([plot-y-label      "Phase [deg]"]
                                          [plot-x-transform  log-transform]
-                                         [plot-x-ticks      (log-ticks)])
+                                         [plot-x-ticks      (log-ticks)]
+                                         [plot-y-far-label "[rad]"]
+                                         [plot-y-far-ticks (ticks-scale (plot-y-ticks)
+                                                                        (linear-scale (/ pi 180)))])
                             
                             (plot (list ;(axes)
                                    (tick-grid)
@@ -823,9 +853,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
               (for-each
                displayln
                
-               (list (parameterize ([plot-y-label      "Magnitude (abs)"]
+               (list (parameterize ([plot-y-label      "Magnitude"]
                                     [plot-y-transform  log-transform]
                                     [plot-y-ticks      (log-ticks)]
+                                    [plot-y-far-label "[dB]"]
+                                    [plot-y-far-ticks  (ticks-scale (plot-y-ticks)
+                                                                    (invertible-compose
+                                                                     (linear-scale 8.68589) ;Neper to dB conversion factor
+                                                                     (invertible-inverse (invertible-function exp log))))]
                                     [plot-x-transform  log-transform]
                                     [plot-x-ticks      (log-ticks)])
                        
@@ -845,7 +880,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                      
                      (parameterize ([plot-y-label      "Phase [deg]"]
                                     [plot-x-transform  log-transform]
-                                    [plot-x-ticks      (log-ticks)])
+                                    [plot-x-ticks      (log-ticks)]
+                                    [plot-y-far-label "[rad]"]
+                                    [plot-y-far-ticks (ticks-scale (plot-y-ticks)
+                                                                   (linear-scale (/ pi 180)))])
                        
                        (plot (list ;(axes)
                               (tick-grid)
@@ -938,9 +976,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                     
                     (list 
                      
-                     (parameterize ([plot-y-label      "Magnitude (abs)"]
+                     (parameterize ([plot-y-label      "Magnitude"]
                                     [plot-y-transform  log-transform]
                                     [plot-y-ticks      (log-ticks)]
+                                    [plot-y-far-label "[dB]"]
+                                    [plot-y-far-ticks  (ticks-scale (plot-y-ticks)
+                                                                    (invertible-compose
+                                                                     (linear-scale 8.68589) ;Neper to dB conversion factor
+                                                                     (invertible-inverse (invertible-function exp log))))]
                                     [plot-x-transform  log-transform]
                                     [plot-x-ticks      (log-ticks)])
                        
@@ -959,7 +1002,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                      
                      (parameterize ([plot-y-label      "Phase [deg]"]
                                     [plot-x-transform  log-transform]
-                                    [plot-x-ticks      (log-ticks)])
+                                    [plot-x-ticks      (log-ticks)]
+                                    [plot-y-far-label "[rad]"]
+                                    [plot-y-far-ticks (ticks-scale (plot-y-ticks)
+                                                                   (linear-scale (/ pi 180)))])
                        
                        (plot (list ;(axes)
                               (tick-grid)
@@ -1015,9 +1061,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                
                                (list 
                                 
-                                (parameterize ([plot-y-label      "Magnitude (abs)"]
+                                (parameterize ([plot-y-label      "Magnitude"]
                                                [plot-y-transform  log-transform]
                                                [plot-y-ticks      (log-ticks)]
+                                               [plot-y-far-label "[dB]"]
+                                               [plot-y-far-ticks  (ticks-scale (plot-y-ticks)
+                                                                               (invertible-compose
+                                                                                (linear-scale 8.68589) ;Neper to dB conversion factor
+                                                                                (invertible-inverse (invertible-function exp log))))]
                                                [plot-x-transform  log-transform]
                                                [plot-x-ticks      (log-ticks)])
                                   
@@ -1035,7 +1086,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                 
                                 (parameterize ([plot-y-label      "Phase [deg]"]
                                                [plot-x-transform  log-transform]
-                                               [plot-x-ticks      (log-ticks)])
+                                               [plot-x-ticks      (log-ticks)]
+                                               [plot-y-far-label "[rad]"]
+                                               [plot-y-far-ticks (ticks-scale (plot-y-ticks)
+                                                                              (linear-scale (/ pi 180)))])
                                   
                                   (plot (list ;(axes)
                                          (tick-grid)
@@ -1216,7 +1270,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
         (parameterize (;[plot-x-transform cbrt-transform]
                        ;[plot-y-transform cbrt-transform])
                        [plot-x-transform  (stretch-transform -1.5 1.5 20)]
-                       [plot-y-transform  (stretch-transform -1.5 1.5 20)])
+                       [plot-y-transform  (stretch-transform -1.5 1.5 20)]
+                       [plot-y-far-tick-labels? #t])
           (plot (list 
                  (axes)
                  (tick-grid)

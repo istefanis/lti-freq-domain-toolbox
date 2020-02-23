@@ -77,7 +77,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (displayc s)
       (newline)
       (newline)
-      (display "_________________________________________________")
+      (display "____________________________________________________")
       (newline)
       (newline)
       (display s)
