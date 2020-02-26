@@ -203,8 +203,21 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 ;Characteristic numbers computation & text display functions [SHOULD BE IMPROVED]
 
-(define (display-filter-type AR-at-freq-min AR-at-freq-max bandwidth-threshold w-bandwidth-2)
-  (cond ((and (> (/ AR-at-freq-min AR-at-freq-max) 1.5)
+(define (display-filter-type AR-at-freq-min AR-at-freq-max bandwidth-threshold w-upper-cutoff band-stop-filter?)
+  (cond ((and (< AR-at-freq-min bandwidth-threshold)
+              (< AR-at-freq-max bandwidth-threshold)
+              (not (eq? w-upper-cutoff #f)))
+         (display "Band-pass filter")
+         (newline)
+         (newline))
+        ((and (> AR-at-freq-min bandwidth-threshold)
+              (> AR-at-freq-max bandwidth-threshold)
+              (not (eq? w-upper-cutoff #f))
+              (eq? band-stop-filter? #t))
+         (display "Band-stop filter")
+         (newline)
+         (newline))
+        ((and (> (/ AR-at-freq-min AR-at-freq-max) 1.5)
               (> AR-at-freq-min bandwidth-threshold)
               (not (> AR-at-freq-max (* 3 bandwidth-threshold))))
          (display "Low-pass filter")
@@ -216,19 +229,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
          (display "High-pass filter")
          (newline)
          (newline))
-        ((and (< AR-at-freq-min bandwidth-threshold)
-              (< AR-at-freq-max bandwidth-threshold)
-              (not (eq? w-bandwidth-2 #f)))
-         (display "Band-pass filter")
-         (newline)
-         (newline))))
+        ))
       
 
 
-(define (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold bandwidth-inverted?)
+(define (display-bandwidth bandwidth-threshold w-lower-cutoff w-upper-cutoff band-stop-filter?)
   (let ((bandwidth-threshold-rounded (round-decimal bandwidth-threshold 3)))
     
-    (cond ((eq? w-bandwidth-1 #f) 
+    (cond ((eq? w-lower-cutoff #f) 
            (display "bandwidth    = (0,∞) [rad/s],")
            (if (= bandwidth-threshold-rounded 0.707)
                (begin (newline)
@@ -238,11 +246,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                (begin (display " thresh. = ")
                       (display bandwidth-threshold-rounded))))
           
-          ((eq? w-bandwidth-2 #f)
-           (if (= (round-decimal w-bandwidth-1 2) 0)
+          ((eq? w-upper-cutoff #f)
+           (if (= (round-decimal w-lower-cutoff 2) 0)
                (begin (display "bandwidth    = (0,∞) [rad/s],"))            
                (begin (display "bandwidth    = (0,")
-                      (display (round-decimal w-bandwidth-1 2))
+                      (display (round-decimal w-lower-cutoff 2))
                       (display "] [rad/s],")))
            (if (= bandwidth-threshold-rounded 0.707)
                (begin (newline)
@@ -252,10 +260,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                (begin (display " thresh. = ")
                       (display bandwidth-threshold-rounded))))
           
-          ((> (round-decimal w-bandwidth-2 2) (round-decimal w-bandwidth-1 2))
-           (if (eq? (round-decimal w-bandwidth-1 2) 0)
+          ((> (round-decimal w-upper-cutoff 2) (round-decimal w-lower-cutoff 2))
+           (if (eq? (round-decimal w-lower-cutoff 2) 0)
                (begin (display "bandwidth    = (0,")
-                      (display (round-decimal w-bandwidth-2 2))
+                      (display (round-decimal w-upper-cutoff 2))
                       (display "] [rad/s],")
                       (if (= bandwidth-threshold-rounded 0.707)
                           (begin (newline)
@@ -265,16 +273,16 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                           (begin (display " thresh. = ")
                                  (display bandwidth-threshold-rounded))))             
                (begin
-                 (if (eq? bandwidth-inverted? #t)
+                 (if (eq? band-stop-filter? #t)
                      (begin (display "bandwidth    = (0,")
-                            (display (round-decimal w-bandwidth-1 2))
+                            (display (round-decimal w-lower-cutoff 2))
                             (display "] ∪ [")
-                            (display (round-decimal w-bandwidth-2 2))
+                            (display (round-decimal w-upper-cutoff 2))
                             (display ",∞) [rad/s],"))
                      (begin (display "bandwidth    = [")
-                            (display (round-decimal w-bandwidth-1 2))
+                            (display (round-decimal w-lower-cutoff 2))
                             (display ",")
-                            (display (round-decimal w-bandwidth-2 2))
+                            (display (round-decimal w-upper-cutoff 2))
                             (display "] [rad/s],")))
                  (newline)
                  (display "threshold    = ")
@@ -283,10 +291,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                         (display " = -3 [dB]"))))))
           
           (else
-           (if (eq? (round-decimal w-bandwidth-1 2) 0)
+           (if (eq? (round-decimal w-lower-cutoff 2) 0)
                (begin (display "bandwidth    = (0,∞) [rad/s],"))
                (begin (display "bandwidth    = (0,")
-                      (display (round-decimal w-bandwidth-1 2))
+                      (display (round-decimal w-lower-cutoff 2))
                       (display "] [rad/s],")))
            (if (= bandwidth-threshold-rounded 0.707)
                (begin (newline)
@@ -300,7 +308,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-(define (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-bandwidth-2)
+(define (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
            
   (cond ((and (> (/ AR-at-freq-min AR-at-freq-max) 1.5)
               (> AR-at-freq-min bandwidth-threshold)
@@ -337,7 +345,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             
         ((and (< AR-at-freq-min bandwidth-threshold)
               (< AR-at-freq-max bandwidth-threshold)
-              (not (eq? w-bandwidth-2 #f)))
+              (not (eq? w-upper-cutoff #f)))
              
          ;Band-pass filter:         
          (define roll-off-low (round-decimal (exact->inexact (/ (log (/ AR-at-freq-min AR-at-001))
@@ -374,13 +382,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
              (newline)))
       
   (if (not (eq? phase-margin #f))
-      ;(if (> phase-margin 0)
       (begin (display "phase margin = ")
              (display (round-decimal phase-margin 2))
              (display " [deg]")
              (newline)
              (newline))
-      ;   (begin (newline)))
       (begin (display "phase margin = ∞")
              (newline)
              (newline)))
@@ -429,56 +435,35 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            ;                   w-min
            ;                   w-max))
 
-           (w-bandwidth-init (or (half-interval-method                            
-                                  f-bandwidth
-                                  w-min
-                                  w-max)
-                                 (newton-meth-for-solv-eq                            
-                                  f-bandwidth
-                                  0.011)
-                                 (newton-meth-for-solv-eq                            
-                                  f-bandwidth
-                                  0.101)
-                                 (newton-meth-for-solv-eq                            
-                                  f-bandwidth
-                                  1.001)
-                                 (newton-meth-for-solv-eq                            
-                                  f-bandwidth
-                                  10.01)))
+           (w-bandwidth-init (or (half-interval-method f-bandwidth w-min w-max)
+                                 (newton-meth-for-solv-eq f-bandwidth 0.011)
+                                 (newton-meth-for-solv-eq f-bandwidth 0.101)
+                                 (newton-meth-for-solv-eq f-bandwidth 1.001)
+                                 (newton-meth-for-solv-eq f-bandwidth 10.01)))
            
-           (w-bandwidth-1 (if (not (eq? w-bandwidth-init #f))
-                              (half-interval-method                            
-                               f-bandwidth
-                               w-min
-                               (+ w-bandwidth-init w-min))
-                              #f))
+           (w-lower-cutoff (if (not (eq? w-bandwidth-init #f))
+                               (half-interval-method f-bandwidth w-min (+ w-bandwidth-init w-min))
+                               #f))
            
-           (w-bandwidth-2 (if (not (eq? w-bandwidth-1 #f))
-                              (half-interval-method                            
-                               f-bandwidth
-                               (+ w-bandwidth-init w-min)
-                               w-max)
-                              #f))
+           (w-upper-cutoff (if (not (eq? w-lower-cutoff #f))
+                               (half-interval-method f-bandwidth (+ w-bandwidth-init w-min) w-max)
+                               #f))
 
-           (bandwidth-inverted? (if (not (eq? (and w-bandwidth-1 w-bandwidth-2) #f))
-                                    (if (< (f-bandwidth (average w-bandwidth-1 w-bandwidth-2))
-                                           (f-bandwidth w-bandwidth-1))
-                                        #t
-                                        #f)
-                                    #f))
+           (band-stop-filter? (if (not (eq? (and w-lower-cutoff w-upper-cutoff) #f))
+                                  (if (< (f-bandwidth (average w-lower-cutoff w-upper-cutoff))
+                                         (f-bandwidth w-lower-cutoff))
+                                      #t
+                                      #f)
+                                  #f))
            
            
            ;gain margin parameters computation
            (f-gain-margin (λ (w) (- (let ((f1 (angle (tfs w))))
-                             
-                                      (unwarp-angle-simple! f1 w 1)
-                             
-                                      ) (- pi))))
+                                      (unwarp-angle-simple! f1 w 1))
+                                    
+                                    (- pi))))
            
-           (w-gain-margin (half-interval-method                            
-                           f-gain-margin
-                           w-min
-                           w-max))
+           (w-gain-margin (half-interval-method f-gain-margin w-min w-max))
            
            (gain-margin (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
                             (begin ;(display wc-g)
@@ -490,10 +475,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            ;phase margin parameters computation
            (f-phase-margin (λ (w) (- (magnitude (tfs w)) 1)))
            
-           (w-phase-margin (half-interval-method                            
-                            f-phase-margin
-                            w-min
-                            w-max))
+           (w-phase-margin (half-interval-method f-phase-margin w-min w-max))
            
            
            (f1 (if (not (eq? w-phase-margin #f)) (angle (tfs w-phase-margin)) #f))
@@ -549,11 +531,17 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                       (tick-grid)
                       
                       ;#|
-                      (function (λ (w) (magnitude (tfs w)))
-                                w-min w-max ;#:color 3
-                                )
-                      ;|#                    
-                      
+                      (function (λ (w) (magnitude (tfs w))) w-min w-max) ;#:color 3
+                      ;|#
+
+                      ;cutoff-frequences vertical lines
+                      (if (not (eq? w-lower-cutoff #f))
+                           (vrule w-lower-cutoff #:color 3 #:style 'dot #:width 0.5)
+                          '())
+                      (if (not (eq? w-upper-cutoff #f))
+                           (vrule w-upper-cutoff #:color 3 #:style 'dot #:width 0.5)
+                          '())
+                                            
                       #|
                     (function-interval
                      (λ (w) 1)
@@ -595,7 +583,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                             f1
                                             
                                             )))
-                                w-min w-max  #:color 3 #:style 'dot
+                                w-min w-max  #:color 3 #:style 'dot #:width 0.5
                                 )
                       ;|#
                       (function (λ (w) (* 180 (/ 1 pi)
@@ -639,13 +627,13 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (initialize-angle-params-fig-1!)
       
       ;filter type computation & text display
-      (display-filter-type AR-at-freq-min AR-at-freq-max bandwidth-threshold w-bandwidth-2)
+      (display-filter-type AR-at-freq-min AR-at-freq-max bandwidth-threshold w-upper-cutoff band-stop-filter?)
       
       ;bandwidth computation & text display
-      (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold bandwidth-inverted?)
+      (display-bandwidth bandwidth-threshold w-lower-cutoff w-upper-cutoff band-stop-filter?)
       
       ;roll-off computation & text display
-      (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-bandwidth-2)
+      (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
            
       ;gain & phase margins computation & text display
       (display-gain-phase-margins gain-margin phase-margin)
@@ -1162,56 +1150,35 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            ;                   w-min
            ;                   w-max))
 
-           (w-bandwidth-init (or (half-interval-method                            
-                                  f-bandwidth
-                                  w-min
-                                  w-max)
-                                 (newton-meth-for-solv-eq                            
-                                  f-bandwidth
-                                  0.011)
-                                 (newton-meth-for-solv-eq                            
-                                  f-bandwidth
-                                  0.101)
-                                 (newton-meth-for-solv-eq                            
-                                  f-bandwidth
-                                  1.001)
-                                 (newton-meth-for-solv-eq                            
-                                  f-bandwidth
-                                  10.01)))
+           (w-bandwidth-init (or (half-interval-method f-bandwidth w-min w-max)
+                                 (newton-meth-for-solv-eq f-bandwidth 0.011)
+                                 (newton-meth-for-solv-eq f-bandwidth 0.101)
+                                 (newton-meth-for-solv-eq f-bandwidth 1.001)
+                                 (newton-meth-for-solv-eq f-bandwidth 10.01)))
            
-           (w-bandwidth-1 (if (not (eq? w-bandwidth-init #f))
-                              (half-interval-method                            
-                               f-bandwidth
-                               w-min
-                               (+ w-bandwidth-init w-min))
-                              #f))
+           (w-lower-cutoff (if (not (eq? w-bandwidth-init #f))
+                               (half-interval-method f-bandwidth w-min (+ w-bandwidth-init w-min))
+                               #f))
            
-           (w-bandwidth-2 (if (not (eq? w-bandwidth-1 #f))
-                              (half-interval-method                            
-                               f-bandwidth
-                               (+ w-bandwidth-init w-min)
-                               300)
-                              #f))
+           (w-upper-cutoff (if (not (eq? w-lower-cutoff #f))
+                               (half-interval-method f-bandwidth (+ w-bandwidth-init w-min) w-max)
+                               #f))
 
-           (bandwidth-inverted? (if (not (eq? (and w-bandwidth-1 w-bandwidth-2) #f))
-                                    (if (< (f-bandwidth (average w-bandwidth-1 w-bandwidth-2))
-                                           (f-bandwidth w-bandwidth-1))
-                                        #t
-                                        #f)
-                                    #f))
+           (band-stop-filter? (if (not (eq? (and w-lower-cutoff w-upper-cutoff) #f))
+                                  (if (< (f-bandwidth (average w-lower-cutoff w-upper-cutoff))
+                                         (f-bandwidth w-lower-cutoff))
+                                      #t
+                                      #f)
+                                  #f))
            
            
            ;gain margin parameters computation
            (f-gain-margin (λ (w) (- (let ((f1 (angle (tfs w))))
-                             
-                                      (unwarp-angle-simple! f1 w 1)
-                             
-                                      ) (- pi))))
+                                      (unwarp-angle-simple! f1 w 1))
+
+                                    (- pi))))
            
-           (w-gain-margin (half-interval-method                            
-                           f-gain-margin
-                           w-min
-                           w-max))
+           (w-gain-margin (half-interval-method f-gain-margin w-min w-max))
            
            (gain-margin (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
                             (begin ;(display wc-g)
@@ -1223,10 +1190,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            ;phase margin parameters computation
            (f-phase-margin (λ (w) (- (magnitude (tfs w)) 1)))
            
-           (w-phase-margin (half-interval-method                            
-                            f-phase-margin
-                            w-min
-                            w-max))
+           (w-phase-margin (half-interval-method f-phase-margin w-min w-max))
            
            
            (f1 (if (not (eq? w-phase-margin #f)) (angle (tfs w-phase-margin)) #f))
@@ -1334,13 +1298,13 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (initialize-angle-params-fig-1!)
             
       ;filter type computation & text display
-      (display-filter-type AR-at-freq-min AR-at-freq-max bandwidth-threshold w-bandwidth-2)
+      (display-filter-type AR-at-freq-min AR-at-freq-max bandwidth-threshold w-upper-cutoff band-stop-filter?)
       
       ;bandwidth computation & text display
-      (display-bandwidth w-bandwidth-1 w-bandwidth-2 bandwidth-threshold bandwidth-inverted?)
+      (display-bandwidth bandwidth-threshold w-lower-cutoff w-upper-cutoff band-stop-filter?)
       
       ;roll-off computation & text display
-      (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-bandwidth-2)
+      (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
            
       ;gain & phase margins computation & text display
       (display-gain-phase-margins gain-margin phase-margin)
