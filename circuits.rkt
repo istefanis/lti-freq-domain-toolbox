@@ -23,6 +23,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (require "elements/block.rkt")
 (require "elements/tf.rkt")
 (require "elements/adder.rkt")
+(require "functionality/plot_freq_domain.rkt")
 (provide (all-defined-out))
 
 
@@ -78,10 +79,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 ; //// Chebyshev filters:
-
-(define chebyshev-threshold 1000)
-(define (set-chebyshev-threshold! x) (set! chebyshev-threshold x))
-
 
 
 (define (chebyshev-type1 n e w0 block1)  ; n=polynomial order, e=ripple factor, w0=cutoff frequency

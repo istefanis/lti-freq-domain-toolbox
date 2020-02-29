@@ -21,7 +21,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (require "../elements/general.rkt")
 (require "../auxiliary/display_modes.rkt")
 (require "text_generation.rkt")
-(require "../circuits.rkt")
 (provide (all-defined-out))
 
 
@@ -200,6 +199,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
+;bandwidth thresholds
+
+(define half-power-threshold 0.707)
+
+(define chebyshev-threshold 1000)
+(define (set-chebyshev-threshold! x) (set! chebyshev-threshold x))
+
+
 
 ;Characteristic numbers computation & text display functions [SHOULD BE IMPROVED]
 
@@ -238,7 +245,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     (cond ((eq? w-lower-cutoff #f) 
            (display "bandwidth    = (0,∞) [rad/s],")
-           (if (= bandwidth-threshold-rounded 0.707)
+           (if (= bandwidth-threshold-rounded half-power-threshold)
                (begin (newline)
                       (display "threshold    = ")
                       (display bandwidth-threshold-rounded)
@@ -252,7 +259,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                (begin (display "bandwidth    = (0,")
                       (display (round-decimal w-lower-cutoff 2))
                       (display "] [rad/s],")))
-           (if (= bandwidth-threshold-rounded 0.707)
+           (if (= bandwidth-threshold-rounded half-power-threshold)
                (begin (newline)
                       (display "threshold    = ")
                       (display bandwidth-threshold-rounded)
@@ -265,7 +272,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                (begin (display "bandwidth    = (0,")
                       (display (round-decimal w-upper-cutoff 2))
                       (display "] [rad/s],")
-                      (if (= bandwidth-threshold-rounded 0.707)
+                      (if (= bandwidth-threshold-rounded half-power-threshold)
                           (begin (newline)
                                  (display "threshold    = ")
                                  (display bandwidth-threshold-rounded)
@@ -287,7 +294,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                  (newline)
                  (display "threshold    = ")
                  (display bandwidth-threshold-rounded)
-                 (cond ((= bandwidth-threshold-rounded 0.707)
+                 (cond ((= bandwidth-threshold-rounded half-power-threshold)
                         (display " = -3 [dB]"))))))
           
           (else
@@ -296,7 +303,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                (begin (display "bandwidth    = (0,")
                       (display (round-decimal w-lower-cutoff 2))
                       (display "] [rad/s],")))
-           (if (= bandwidth-threshold-rounded 0.707)
+           (if (= bandwidth-threshold-rounded half-power-threshold)
                (begin (newline)
                       (display "threshold    = ")
                       (display bandwidth-threshold-rounded)
@@ -372,11 +379,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-(define (display-gain-phase-margins gain-margin phase-margin)
+(define (display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)
    
   (if (not (eq? gain-margin #f))
       (begin (display "gain margin  = ")
              (display (round-decimal gain-margin 2))
+             (display " at ")
+             (display (round-decimal w-gain-margin 2))
+             (display " [rad/s]")
              (newline))
       (begin (display "gain margin  = ∞")
              (newline)))
@@ -384,7 +394,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   (if (not (eq? phase-margin #f))
       (begin (display "phase margin = ")
              (display (round-decimal phase-margin 2))
-             (display " [deg]")
+             (display " [deg] at ")
+             (display (round-decimal w-phase-margin 2))
+             (display " [rad/s]")
              (newline)
              (newline))
       (begin (display "phase margin = ∞")
@@ -417,7 +429,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     (let* ((AR-at-freq-min (magnitude (tfs w-min)))
            (AR-at-freq-max (magnitude (tfs w-max)))
-           (AR-min-value (min AR-at-freq-min AR-at-freq-max 0.707 0.099))
+           (AR-min-value (min AR-at-freq-min AR-at-freq-max half-power-threshold 0.099))
            (AR-at-001 (magnitude (tfs 0.01)))
            (AR-at-100 (magnitude (tfs 100)))
            
@@ -425,17 +437,12 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            ;[SHOULD BE IMPROVED]
            
            ;bandwidth parameters computation
-           (bandwidth-threshold (min 0.707 chebyshev-threshold))
+           (bandwidth-threshold (min half-power-threshold chebyshev-threshold))
            
            (f-bandwidth (λ (w) (- (magnitude (tfs w)) bandwidth-threshold)))
 
-           ;orig
-           ;(w-bandwidth-init (half-interval-method                            
-           ;                   f-bandwidth
-           ;                   w-min
-           ;                   w-max))
 
-           (w-bandwidth-init (or (half-interval-method f-bandwidth w-min w-max)
+           (w-bandwidth-init (or (half-interval-method f-bandwidth w-min w-max) ;orig
                                  (newton-meth-for-solv-eq f-bandwidth 0.011)
                                  (newton-meth-for-solv-eq f-bandwidth 0.101)
                                  (newton-meth-for-solv-eq f-bandwidth 1.001)
@@ -466,19 +473,18 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            (w-gain-margin (half-interval-method f-gain-margin w-min w-max))
            
            (gain-margin (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
-                            (begin ;(display wc-g)
-                              (/ 1 (magnitude (tfs w-gain-margin))))
-                            (begin ;(display wc-g)
-                              #f)))
+                            (/ 1 (magnitude (tfs w-gain-margin)))
+                            #f))
            
            
            ;phase margin parameters computation
            (f-phase-margin (λ (w) (- (magnitude (tfs w)) 1)))
            
            (w-phase-margin (half-interval-method f-phase-margin w-min w-max))
+
            
-           
-           (f1 (if (not (eq? w-phase-margin #f)) (angle (tfs w-phase-margin)) #f))
+           (f1 (if (not (eq? w-phase-margin #f))
+                   (angle (tfs w-phase-margin)) #f))
            (phase-margin (if (not (eq? w-phase-margin #f))
                              (+ 180 
                                 (* 180 (/ 1 pi)
@@ -530,16 +536,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                       ;(axes)
                       (tick-grid)
                       
-                      ;#|
                       (function (λ (w) (magnitude (tfs w))) w-min w-max) ;#:color 3
-                      ;|#
-
+                      
                       ;cutoff-frequences vertical lines
                       (if (not (eq? w-lower-cutoff #f))
-                           (vrule w-lower-cutoff #:color 3 #:style 'dot #:width 0.5)
+                          (vrule w-lower-cutoff #:color 3 #:style 'dot #:width 0.5)
                           '())
                       (if (not (eq? w-upper-cutoff #f))
-                           (vrule w-upper-cutoff #:color 3 #:style 'dot #:width 0.5)
+                          (vrule w-upper-cutoff #:color 3 #:style 'dot #:width 0.5)
                           '())
                                             
                       #|
@@ -576,7 +580,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                       ;(axes)
                       (tick-grid)
                       (function (λ (w) (- 180)) w-min w-max  #:color 3 #:style 'dot)
-                      ;#|
+
+                      ;not unwarped angle:
+                      #|
                       (function (λ (w) (* 180 (/ 1 pi)
                                           (let ((f1 (angle (tfs w))))
                                             
@@ -585,7 +591,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                             )))
                                 w-min w-max  #:color 3 #:style 'dot #:width 0.5
                                 )
-                      ;|#
+                      |#
+
                       (function (λ (w) (* 180 (/ 1 pi)
                                           (let ((f1 (angle (tfs w))))
                                             
@@ -636,7 +643,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
            
       ;gain & phase margins computation & text display
-      (display-gain-phase-margins gain-margin phase-margin)
+      (display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)
 
          
       ))
@@ -703,7 +710,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                          #:color 3 
                          #:label "tf2")
                (function (λ (x) 1) #:color 0 #:style 'dot)
-               (function (λ (x) 0.707) #:color 0 #:style 'dot))
+               (function (λ (x) half-power-threshold) #:color 0 #:style 'dot))
               ))
       
       
@@ -805,7 +812,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                              w-min w-max
                                              #:label "tf")
                                    (function (λ (x) 1) #:color 0 #:style 'dot)
-                                   (function (λ (x) 0.707) #:color 0 #:style 'dot))))
+                                   (function (λ (x) half-power-threshold) #:color 0 #:style 'dot))))
                           
                           
                           (parameterize ([plot-y-label      "Phase [deg]"]
@@ -862,7 +869,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                         #:color 0 #:style 'dot
                                         #:label "previous tf")
                               (function (λ (x) 1) #:color 0 #:style 'dot)
-                              (function (λ (x) 0.707) #:color 0 #:style 'dot))
+                              (function (λ (x) half-power-threshold) #:color 0 #:style 'dot))
                              
                              ))
                      
@@ -985,7 +992,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                                                                  (fw4-func w))))
                                         w-min w-max)
                               (function (λ (x) 1) #:color 0 #:style 'dot)
-                              (function (λ (x) 0.707) #:color 0 #:style 'dot))))
+                              (function (λ (x) half-power-threshold) #:color 0 #:style 'dot))))
                      
                      
                      (parameterize ([plot-y-label      "Phase [deg]"]
@@ -1069,7 +1076,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                                                                             (fw4-func w))))
                                                    w-min w-max)
                                          (function (λ (x) 1) #:color 0 #:style 'dot)
-                                         (function (λ (x) 0.707) #:color 0 #:style 'dot))))
+                                         (function (λ (x) half-power-threshold) #:color 0 #:style 'dot))))
                                 
                                 
                                 (parameterize ([plot-y-label      "Phase [deg]"]
@@ -1132,7 +1139,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     (let* ((AR-at-freq-min (magnitude (tfs w-min)))
            (AR-at-freq-max (magnitude (tfs w-max)))
-           (AR-min-value (min AR-at-freq-min AR-at-freq-max 0.707 0.099))
+           (AR-min-value (min AR-at-freq-min AR-at-freq-max half-power-threshold 0.099))
            (AR-at-001 (magnitude (tfs 0.01)))
            (AR-at-100 (magnitude (tfs 100)))
            
@@ -1140,17 +1147,12 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            ;[SHOULD BE IMPROVED]
            
            ;bandwidth parameters computation
-           (bandwidth-threshold (min 0.707 chebyshev-threshold))
+           (bandwidth-threshold (min half-power-threshold chebyshev-threshold))
            
            (f-bandwidth (λ (w) (- (magnitude (tfs w)) bandwidth-threshold)))
 
-           ;orig
-           ;(w-bandwidth-init (half-interval-method                            
-           ;                   f-bandwidth
-           ;                   w-min
-           ;                   w-max))
 
-           (w-bandwidth-init (or (half-interval-method f-bandwidth w-min w-max)
+           (w-bandwidth-init (or (half-interval-method f-bandwidth w-min w-max) ;orig
                                  (newton-meth-for-solv-eq f-bandwidth 0.011)
                                  (newton-meth-for-solv-eq f-bandwidth 0.101)
                                  (newton-meth-for-solv-eq f-bandwidth 1.001)
@@ -1181,10 +1183,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            (w-gain-margin (half-interval-method f-gain-margin w-min w-max))
            
            (gain-margin (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
-                            (begin ;(display wc-g)
-                              (/ 1 (magnitude (tfs w-gain-margin))))
-                            (begin ;(display wc-g)
-                              #f)))
+                            (/ 1 (magnitude (tfs w-gain-margin)))
+                            #f))
            
            
            ;phase margin parameters computation
@@ -1193,7 +1193,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
            (w-phase-margin (half-interval-method f-phase-margin w-min w-max))
            
            
-           (f1 (if (not (eq? w-phase-margin #f)) (angle (tfs w-phase-margin)) #f))
+           (f1 (if (not (eq? w-phase-margin #f))
+                   (angle (tfs w-phase-margin)) #f))
            (phase-margin (if (not (eq? w-phase-margin #f))
                              (+ 180 
                                 (* 180 (/ 1 pi)
@@ -1307,7 +1308,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
            
       ;gain & phase margins computation & text display
-      (display-gain-phase-margins gain-margin phase-margin)
+      (display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)
       
       
       ))
