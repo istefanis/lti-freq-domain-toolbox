@@ -17,6 +17,12 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 (require math/base)
 (require math/number-theory)
+
+;for testing:
+;(require "math_library/general.rkt")
+;(require "math_library/numerical_analysis.rkt")
+;(require "math_library/symbolic_algebra.rkt")
+
 (require "elements/general.rkt")
 (require "elements/block.rkt")
 (require "elements/tf.rkt")

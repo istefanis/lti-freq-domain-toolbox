@@ -36,7 +36,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-; a function that tranforms a list structure to a simple list of strings of each element:
+; list-to-list-of-strings tranforms an expanded polynomial expression in (prefix notation) list format
+; to a simple list of strings of each element of the expression in infix notation, ex.:
+;
+;     '(+ (* 1 (expt s 1)) (+ (* 1.6 (expt s 0)) 0))    =>    '("s^" "1" " + " "1.6")
+
 
 (define (list-to-list-of-strings lst)
   
@@ -192,7 +196,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-; a function that appends a list of strings to a string:
+; list-of-strings-to-string appends a list of strings to a string, ex.:
+;
+;     '("s^" "1" " + " "1.6")   =>   "s^1 + 1.6"
 
 (define (list-of-strings-to-string l)
   (if (> (length l) 1)
@@ -200,15 +206,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (car l)))
 
 
-(define (make-space-line length) (make-string length #\ ))
-
-(define (make-ratio-line length) (make-string length #\-))
 
 
 
-
-
-; display tf handles the display process - after all the format transformations are done:
+; display-tf handles the display process, after all the format transformations are done:
 
 (define (display-tf nom-string den-string)
   (let ((l1 (string-length nom-string))
@@ -236,11 +237,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                (newline)))))))
 
 
+(define (make-space-line length) (make-string length #\ ))
+(define (make-ratio-line length) (make-string length #\-))
 
 
 
 
-; //// display tests:
+
+; display tests:
 
 #|
 (define test '(/ (+ (* 6 (expt s 10)) 
@@ -308,14 +312,24 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-; //////////   F1. Modifying the format of the circuit's tf value for the interpreter  //////////
+; //////////   F1. Modifying the format of the circuit's tf value for display and evaluation  //////////
 
 
 
 ; fast-display procedure displays a circuit's simplified tf in three formats - for testing:
+;
+;     (ratio (poly-dense s 5 8) (poly-dense s 1 0))
+;
+;           s^1 + 1.6
+;     tf:   ---------
+;            0.2*s^1
+;
+;     (/ (+ (* 1 (expt s 1)) (+ (* 1.6 (expt s 0)) 0))
+;        (+ (* 0.2 (expt s 1)) (+ (* 0 (expt s 0)) 0)))
 
 (define (fast-display block)
   (let ((res (get-simplified-block-value block)))
+    (newline)
     (display res)
     (newline)
     (newline)
@@ -326,7 +340,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 
-; map-with-s expands lists of the poly format, to polynomials:
+; map-with-s expands lists of the poly format:
+;
+;     '(poly-dense s 1 1.6)    =>    '(+ (* 1 (expt s 1)) (+ (* 1.6 (expt s 0)) 0))
 
 (define (expand-polynomial list-orig)
   
@@ -394,32 +410,60 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 
 ; ratio-to-list:
-; i)   gets as input the simplified value in the poly format
-; ii)  performs the reduction of the polynomial using reduce from the symbolic algebra package
-; iii) expands the result using expand-polynomial
-; iv)  transforms the latter to the string format ready for display using
-;      list-to-list-of-strings and then list-of-strings-to-string
-; v)   displays the tf string
-; vi)  returns the expanded value to the calling function, ready for evaluation
+; (i)   gets as input the simplified value in the poly format, ex.:
+;
+;       > (bode (pi-controller 5 8 a))
+;       > (get-simplified-block-value a)
+;       '(ratio (poly-dense s 5 8) (poly-dense s 1 0))
+;
+; (ii)  performs the reduction of the polynomial using reduce from the symbolic algebra package, ex.:
+;
+;       '((poly-dense s 1 1.6) (poly-dense s 0.2 0))
+;
+; (iii) expands the result using expand-polynomial, ex:
+;
+;       '(+ (* 1 (expt s 1)) (+ (* 1.6 (expt s 0)) 0))
+;       '(+ (* 0.2 (expt s 1)) (+ (* 0 (expt s 0)) 0))
+;
+; (iv)  transforms the latter to the string format ready for display using
+;       list-to-list-of-strings and then list-of-strings-to-string, and finally displays it, ex.:
+;
+;       '("s^" "1" " + " "1.6")
+;       '("0.2" "*s^" "1")
+;
+;       "s^1 + 1.6"
+;       "0.2*s^1"
+;
+;             s^1 + 1.6
+;       tf:   ---------
+;              0.2*s^1
+;
+; (v)   returns the expanded value (iii) to the calling function, ready for evaluation, ex.:
+;
+;       '(/
+;         (+ (* 1 (expt s 1)) (+ (* 1.6 (expt s 0)) 0))
+;         (+ (* 0.2 (expt s 1)) (+ (* 0 (expt s 0)) 0)))
 
 
-(define (ratio-to-list value . disp)
-  (let ((a (get-numer value))
+(define (ratio-to-list value . disp) ;(i)
+  (let ((a (get-numer value)) ;'(poly-dense s 5 8)
         (b (get-denom value)))
-    (let ((a-term-list (cdr (cdr a)))
+    (let ((a-term-list (cdr (cdr a))) ;'(5 8)
           (b-term-list (cdr (cdr b))))
-      ;(newline)
-      ;(newline)
-      ;(display a-term-list)
-      ;(newline)
-      ;(display b-term-list)
-      ;(newline)
-      (let* ((res (or (contains-symbols?-tree a-term-list)
-                      (contains-symbols?-tree b-term-list)
-                      ))
+      #|
+      (newline)
+      (newline)
+      (display a-term-list)
+      (newline)
+      (display b-term-list)
+      (newline)
+      |#
+      (let* ((res (or (contains-symbols?-tree a-term-list) ;(ii)
+                      (contains-symbols?-tree b-term-list)))
              
              (division (if res
-                           ; no reduction in this case - so numbers bust be rounded
+                           
+                           ;no reduction in this case - so numbers must be rounded
                            (list (make-poly-dense 's (map (λ (x) (if (list? x)
                                                                      (if (contains-symbols?-tree x)
                                                                          (round-decimal-tree x)
@@ -428,6 +472,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                                                          (round-decimal (eval x anchor) 3)
                                                                          x))) 
                                                           a-term-list))
+
                                  (make-poly-dense 's (map (λ (x) (if (list? x)
                                                                      (if (contains-symbols?-tree x)
                                                                          (round-decimal-tree x)
@@ -436,39 +481,45 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                                                          (round-decimal (eval x anchor) 3)
                                                                          x)))
                                                           b-term-list)))
+
+                           ;reduction
                            (reduce (make-poly-dense 's (map (λ(x) (eval x anchor)) a-term-list))
                                    (make-poly-dense 's (map (λ(x) (eval x anchor)) b-term-list)))))
-             (nom (expand-polynomial (cdr (cdr (car division)))))
+             
+             (nom (expand-polynomial (cdr (cdr (car division))))) ;(iii)
              (den (expand-polynomial (cdr (cdr (cadr division))))))
-        
-        ;(let ((nom (map-with-s a-term-list))
-        ;      (den (map-with-s b-term-list)))
-        
-        ;(newline) 
-        ;(display a-term-list)
-        ;(display division)
-        ;(display nom)
-        ;(newline)
-        ;(display den)
-        ;(newline)
-        
-        ; cheb:
-        ;#|
-        ;(newline)
-        ;(display den)
-        ;(newline)
-        ;(display (list-to-printable-list nom))
-        ;(newline)
-        ;(display (list-to-printable-list den))
-        ;(newline)
-        (when (null? disp)
-          (display-tf (list-of-strings-to-string (list-to-list-of-strings nom))
-                      (list-of-strings-to-string (list-to-list-of-strings den))))
-        ;|#
-        
-        ;(newline)
-        (list '/ nom den)))))
 
+        #|
+        (let ((nom (map-with-s a-term-list))
+              (den (map-with-s b-term-list)))
+        
+        (newline) 
+        (display a-term-list)
+        (display division)
+        (display nom)
+        (newline)
+        (display den)
+        (newline)
+        |#
+        
+        ;chebyshev:
+        #|
+        (newline)
+        (display den)
+        (newline)
+        (display (list-to-printable-list nom))
+        (newline)
+        (display (list-to-printable-list den))
+        (newline)
+        |#
+        
+        (when (null? disp)
+          (display-tf (list-of-strings-to-string (list-to-list-of-strings nom)) ;(iv)
+                      (list-of-strings-to-string (list-to-list-of-strings den))))
+
+        
+        ;(newline)
+        (list '/ nom den))))) ;(v)
 
 
 

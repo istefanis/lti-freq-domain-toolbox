@@ -109,7 +109,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 (define passed-180-1 #f)
 (define passed-360-1 #f)
 
-(define had-neg-values-2 #f)
+(define had-neg-values-2 #f) ;used in compare function
 (define passed-180-2 #f)
 (define passed-360-2 #f)
 
@@ -139,7 +139,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   (set! passed-180-1 #f)
   (set! passed-360-1 #f))
 
-(define (initialize-angle-params-fig-2!)
+(define (initialize-angle-params-fig-2!) ;used in compare function
   (set! had-neg-values-2 #f)
   (set! passed-180-2 #f)
   (set! passed-360-2 #f))
@@ -642,7 +642,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       ;roll-off computation & text display
       (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
            
-      ;gain & phase margins computation & text display
+      ;gain & phase margins text display
       (display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)
 
          
@@ -1307,7 +1307,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       ;roll-off computation & text display
       (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
            
-      ;gain & phase margins computation & text display
+      ;gain & phase margins text display
       (display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)
       
       
