@@ -69,8 +69,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     (define (process-set-input i)
       (if (not (null? input))
-          (handle-display (lambda () (display "- input substitution") (newline))
-                          'test)
+          (log-single-message "input substitution - block" 'tests)
           'do-nothing)
       (set! input i))
     
@@ -199,37 +198,29 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             
             (begin (if (and (eq? (length (append tfs blocks)) 1) (null? adders))
                        
-                       (handle-display (lambda () 
-                                         (newline)
-                                         (display "FULL"))
-                                       'results)
-                       
-                       (handle-display (lambda () 
-                                         (newline)
-                                         (display "PARTIAL"))
-                                       'results))
+                       (log-single-message "FULL SIMPLIFICATION COMPLETED " 'results)
+
+                       (log-single-message "PARTIAL SIMPLIFICATION COMPLETED " 'results))
                    
-                   (handle-display (lambda () 
-                                     (display " SIMPLIFICATION COMPLETED")
-                                     (newline)
-                                     (newline)
-                                     (display "simplifications done: ")
-                                     (display simplifications-done)
-                                     (newline)
-                                     (display "algorithms run: ")
-                                     (display algorithms-run)
-                                     (newline)
-                                     (newline)
-                                     (newline)
-                                     ;(display "adders:")
-                                     ;(newline)
-                                     ;(display adders)
-                                     ;(newline)
-                                     ;(newline)                                 
-                                     ;(display "simplified tf:")
-                                     ;(newline)
-                                     )
-                                   'results)
+                   (log-messages (lambda ()
+                                   (newline)
+                                   (display "simplifications done: ")
+                                   (display simplifications-done)
+                                   (newline)
+                                   (display "algorithms run: ")
+                                   (display algorithms-run)
+                                   (newline)
+                                   (newline)
+                                   (newline)
+                                   ;(display "adders:")
+                                   ;(newline)
+                                   ;(display adders)
+                                   ;(newline)
+                                   ;(newline)                                 
+                                   ;(display "simplified tf:")
+                                   ;(newline)
+                                   )
+                                 'results)
                    
                    
                    (set! i-am-simplified #t)
@@ -289,9 +280,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
           (begin (set! i-am-simplified #t)
                  (set! value ((car (append tfs blocks)) 'get-value))
                  ;(newline)
-                 (handle-single-display " NO SIMPLIFICATIONS TO BE DONE" 'results))
+                 (log-single-message "NO SIMPLIFICATIONS TO BE DONE" 'results))
           
-          (begin ;(handle-display (lambda () 
+          (begin ;(log-messages (lambda () 
             ;                  (newline)
             ;                  )
             ;                'results)
@@ -322,13 +313,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             (begin (when (not (equal? (length adders) (length so-far)))
                      (begin (update-simplifications-counters!)
                             (set! adders so-far)
-                            (handle-display (lambda () (display "adders now:")
-                                              (newline)
-                                              (display (map (lambda (x) (get-value x)) adders))
-                                              (newline)
-                                              (newline))
-                                            'simplifications)))
-                   (handle-single-display "DONE - UNUSED ADDERS REMOVED" 'results))
+                            (log-messages (lambda () (display "adders now:")
+                                            (newline)
+                                            (newline)
+                                            (display (map (lambda (x) (get-value x)) adders))
+                                            (newline)
+                                            (newline))
+                                          'simplifications)))
+                   (log-single-message "DONE - UNUSED ADDERS REMOVED" 'results))
             
             (if (or (has-input? (car set))
                     (has-outputs? (car set)))
@@ -356,11 +348,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                       
                       (else (remove (cdr set) (cons (car set) so-far)))) ; retain adder
                 
-                (begin (handle-display (lambda () (display (get-value (car set)))
-                                         (display " removed")
-                                         (newline)
-                                         (newline))
-                                       'test)
+                (begin (log-messages (lambda () (display (get-value (car set)))
+                                       (display " removed")
+                                       (newline)
+                                       (newline))
+                                     'tests)
                        (remove (cdr set) so-far))))) ; remove adder - not connected
       (remove adders '()))
     
@@ -374,7 +366,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (create-single-output-tfs current-pair)
       (if (null? current-pair)
           
-          (handle-single-display "DONE - SINGLE OUTPUT TFS CREATED" 'results)
+          (log-single-message "DONE - SINGLE OUTPUT TFS CREATED" 'results)
           
           (check-tf-for-outputs (get-tf-from-pair current-pair) current-pair)))
     
@@ -383,7 +375,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (let ((outputs (get-outputs tf)))
         (if (null? outputs)
             
-            (handle-single-display "no-outputs-to-separate" 'test)
+            (log-single-message "no-outputs-to-separate" 'tests)
             
             (create-separate-tfs-from-tf tf outputs))
         
@@ -415,19 +407,23 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                   (connect-serially new-block first-output)
                   
                   (update-simplifications-counters!)
-                  (handle-display (lambda () 
-                                    (display "separate single output tf created:")
-                                    (newline)
-                                    (display "tfs now:")
-                                    (newline)
-                                    (display (map (lambda (x) (get-value x)) tfs))
-                                    (newline)
-                                    (display "adders now:")
-                                    (newline)
-                                    (display adders)
-                                    (newline)
-                                    (newline))
-                                  'simplifications)
+                  (log-messages (lambda () 
+                                  (display "separate single output tf created: ")
+                                  (newline)
+                                  (newline)
+                                  (display "tfs now: ")
+                                  (newline)
+                                  (newline)
+                                  (display (map (lambda (x) (get-value x)) tfs))
+                                  (newline)
+                                  (newline)
+                                  (display "adders now: ")
+                                  (newline)
+                                  (newline)
+                                  (display adders)
+                                  (newline)
+                                  (newline))
+                                'simplifications)
                   
                   (create-separate-tfs-from-tf tf (cdr outputs)))
                 
@@ -444,7 +440,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (parallel-merging-tfs current-pair)
       (if (null? current-pair)
           
-          (handle-single-display "DONE - PARALLEL TFS MERGED" 'results)
+          (log-single-message "DONE - PARALLEL TFS MERGED" 'results)
           
           (check-adder (get-adder-from-pair current-pair) current-pair)))
     
@@ -453,7 +449,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (let ((inputs (get-input adder)))
         (if (null? inputs)
             
-            (handle-single-display "no-inputs-for-this-adder" 'test)
+            (log-single-message "no-inputs-for-this-adder" 'tests)
             
             (check-adder-inputs adder inputs))
         
@@ -469,19 +465,15 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             
             (if (and (not (adder? input1)) (single-output? input1))
                 
-                (begin (handle-display (lambda () 
-                                         (display "check-input1")
-                                         (newline)
-                                         (newline))
-                                       'test)
+                (begin (log-single-message "check-input1" 'tests)
                        (check-input1 adder input1 (cdr inputs)))
                 
-                (begin (handle-display (lambda () 
-                                         (display "no-single-output: ")
-                                         (display (get-value input1))
-                                         (newline)
-                                         (newline))
-                                       'test)
+                (begin (log-messages (lambda () 
+                                       (display "no-single-output: ")
+                                       (display (get-value input1))
+                                       (newline)
+                                       (newline))
+                                     'tests)
                        (check-adder-inputs adder (cdr inputs)))))))
     
     
@@ -517,34 +509,36 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                              
                                              
                                              (update-simplifications-counters!)
-                                             (handle-display (lambda () 
-                                                               (display "parallel tfs merging done:")
-                                                               (newline)
-                                                               (display "tfs now:")
-                                                               (newline)
-                                                               (display (map (lambda (x) (get-value x)) tfs))
-                                                               (newline)
-                                                               (newline))
-                                                             'simplifications)
+                                             (log-messages (lambda () 
+                                                             (display "parallel tfs merging done:")
+                                                             (newline)
+                                                             (newline)
+                                                             (display "tfs now:")
+                                                             (newline)
+                                                             (newline)
+                                                             (display (map (lambda (x) (get-value x)) tfs))
+                                                             (newline)
+                                                             (newline))
+                                                           'simplifications)
                                              
                                              (check-adder-inputs adder inputs))
                                       
-                                      (begin (handle-single-display "eq? adder1 adder2" 'test)
+                                      (begin (log-single-message "eq? adder1 adder2" 'tests)
                                              (check-input1 adder input1 (cdr inputs)))))
                                 
-                                (begin (handle-single-display "(adder? (get-input input2))" 'test)
+                                (begin (log-single-message "(adder? (get-input input2))" 'tests)
                                        (check-input1 adder input1 (cdr inputs))))
                             
-                            (begin (handle-single-display "(has-input? input2)" 'test)
+                            (begin (log-single-message "(has-input? input2)" 'tests)
                                    (check-input1 adder input1 (cdr inputs))))
                         
-                        (begin (handle-single-display "(single-output? input2)" 'test)
+                        (begin (log-single-message "(single-output? input2)" 'tests)
                                (check-input1 adder input1 (cdr inputs)))))
                   
-                  (begin (handle-single-display "(adder? (get-input input1))" 'test)
+                  (begin (log-single-message "(adder? (get-input input1))" 'tests)
                          (check-adder-inputs adder (cdr inputs))))
               
-              (begin (handle-single-display "(has-input? input1)" 'test)
+              (begin (log-single-message "(has-input? input1)" 'tests)
                      (check-adder-inputs adder (cdr inputs))))))
     ;|#
     
@@ -558,7 +552,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (feedback-loop-merging current-pair)
       (if (null? current-pair)
           
-          (handle-single-display "DONE - FEEDBACK LOOPS SIMPLIFIED" 'results)
+          (log-single-message "DONE - FEEDBACK LOOPS SIMPLIFIED" 'results)
           
           (check-tf (get-tf-from-pair current-pair) current-pair)))
     
@@ -567,7 +561,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (let ((outputs (get-outputs tf)))
         (if (null? outputs)
             
-            (handle-single-display "no-outputs" 'test)
+            (log-single-message "no-outputs" 'tests)
             
             (check-tf-output tf outputs))
         
@@ -637,29 +631,33 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                   )
                               
                               (update-simplifications-counters!)
-                              (handle-display (lambda () 
-                                                (display "feedback loop merging with no feedback tf done:")
-                                                (newline)
-                                                (display "tfs now:")
-                                                (newline)
-                                                (display (map (lambda (x) (get-value x)) tfs))
-                                                (newline)
-                                                (display "adders now:")
-                                                (newline)
-                                                (display adders)
-                                                (newline)
-                                                (newline))
-                                              'simplifications)
+                              (log-messages (lambda () 
+                                              (display "feedback loop merging with no feedback tf done:")
+                                              (newline)
+                                              (newline)
+                                              (display "tfs now:")
+                                              (newline)
+                                              (newline)
+                                              (display (map (lambda (x) (get-value x)) tfs))
+                                              (newline)
+                                              (newline)
+                                              (display "adders now:")
+                                              (newline)
+                                              (newline)
+                                              (display adders)
+                                              (newline)
+                                              (newline))
+                                            'simplifications)
                               
                               (check-tf-output tf (cdr outputs)))
                             
-                            (begin (handle-single-display "no-loop-here (eq? adder-output tf) - no feedback tf" 'test)
+                            (begin (log-single-message "no-loop-here (eq? adder-output tf) - no feedback tf" 'tests)
                                    (check-tf-output tf (cdr outputs))))
                         
                         ))
                     
                     
-                    (begin (handle-single-display "no-loop-here (single-output? first-adder)" 'test)
+                    (begin (log-single-message "no-loop-here (single-output? first-adder)" 'tests)
                            (check-tf-output tf (cdr outputs)))
                     
                     ))
@@ -744,39 +742,43 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                               )
                                           
                                           (update-simplifications-counters!)
-                                          (handle-display (lambda () 
-                                                            (display "feedback loop merging with feedback tf done:")
-                                                            (newline)
-                                                            (display "tfs now:")
-                                                            (newline)
-                                                            (display (map (lambda (x) (get-value x)) tfs))
-                                                            (newline)
-                                                            (display "adders now:")
-                                                            (newline)
-                                                            (display adders)
-                                                            (newline)
-                                                            (newline))
-                                                          'simplifications)
+                                          (log-messages (lambda () 
+                                                          (display "feedback loop merging with feedback tf done:")
+                                                          (newline)
+                                                          (newline)
+                                                          (display "tfs now:")
+                                                          (newline)
+                                                          (newline)
+                                                          (display (map (lambda (x) (get-value x)) tfs))
+                                                          (newline)
+                                                          (newline)
+                                                          (display "adders now:")
+                                                          (newline)
+                                                          (newline)
+                                                          (display adders)
+                                                          (newline)
+                                                          (newline))
+                                                        'simplifications)
                                           
                                           (check-tf-output tf (cdr outputs)))
                                         
-                                        (begin (handle-single-display "no-loop-here (eq? adder-output tf)" 'test)
+                                        (begin (log-single-message "no-loop-here (eq? adder-output tf)" 'tests)
                                                (check-tf-output tf (cdr outputs)))
                                         
                                         )))
                                 
-                                (begin (handle-single-display "no-loop-here (single-output? first-adder)" 'test)
+                                (begin (log-single-message "no-loop-here (single-output? first-adder)" 'tests)
                                        (check-tf-output tf (cdr outputs)))
                                 
                                 ))          
                           
                           
-                          (begin (handle-single-display "no-loop-here (adder? feedback-tf-output)" 'test)
+                          (begin (log-single-message "no-loop-here (adder? feedback-tf-output)" 'tests)
                                  (check-tf-output tf (cdr outputs)))
                           
                           ))
                     
-                    (begin (handle-single-display "no-loop-here (single-output? feedback-tf)" 'test)
+                    (begin (log-single-message "no-loop-here (single-output? feedback-tf)" 'tests)
                            (check-tf-output tf (cdr outputs)))
                     
                     ))
@@ -792,7 +794,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (serial-merging-tfs current-pair)
       (if (null? current-pair)
           
-          (handle-single-display "DONE - SERIAL TFS MERGED" 'results)
+          (log-single-message "DONE - SERIAL TFS MERGED" 'results)
           
           (let ((tf (get-tf-from-pair current-pair))
                 (next-pair (get-next-pair current-pair)))  ; current, next and previous pairs of tfs
@@ -814,22 +816,24 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                 (let ((second-tf (car (get-outputs tf))))
                   (if (adder? second-tf)
                       
-                      (begin (handle-display (lambda () (display "no-serial-merging-tfs-here (adder?)")
-                                               (newline)
-                                               (newline))
-                                             'test)
+                      (begin (log-single-message "no-serial-merging-tfs-here (adder?)" 'tests)
                              (serial-merging-tfs next-pair))
                       
                       (begin (update-simplifications-counters!)
-                             (handle-display (lambda () 
-                                               (display (get-value tf))
-                                               (display " and")
-                                               (newline)
-                                               (display (get-value second-tf))
-                                               (display " merged")
-                                               (newline)
-                                               (newline))
-                                             'simplifications)
+                             (log-messages (lambda () 
+                                             (display (get-value tf))
+                                             (newline)
+                                             (newline)
+                                             (display "and")
+                                             (newline)
+                                             (newline)
+                                             (display (get-value second-tf))
+                                             (newline)
+                                             (newline)
+                                             (display "merged")
+                                             (newline)
+                                             (newline))
+                                           'simplifications)
                              
                              
                              ; store the merged value at second-tf:
@@ -870,21 +874,25 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                              (display (get-value a))
                              |#
                              
-                             (handle-display (lambda () 
-                                               (display "tfs now:")
-                                               (newline)
-                                               (display (map (lambda (x) (get-value x)) tfs))
-                                               (newline)
-                                               (newline))
-                                             'simplifications)
+                             (log-messages (lambda () 
+                                             (display "tfs now:")
+                                             (newline)
+                                             (newline)
+                                             (display (map (lambda (x) (get-value x)) tfs))
+                                             (newline)
+                                             (newline))
+                                           'simplifications)
                              
                              (serial-merging-tfs next-pair))))
                 
-                (begin (handle-display (lambda () (display "no-serial-merging-tfs-here (single-output?) ")
-                                         (display (get-value tf))
-                                         (newline)
-                                         (newline))
-                                       'test)
+                (begin (log-messages (lambda ()
+                                       (display "no-serial-merging-tfs-here (single-output?) ")
+                                       (newline)
+                                       (newline)
+                                       (display (get-value tf))
+                                       (newline)
+                                       (newline))
+                                     'tests)
                        (serial-merging-tfs next-pair))))
           
           ))
@@ -897,7 +905,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (serial-merging-adders current-pair)
       (if (null? current-pair)
           
-          (handle-single-display "DONE - SERIAL ADDERS MERGED" 'results)
+          (log-single-message "DONE - SERIAL ADDERS MERGED" 'results)
           
           (let ((adder (get-adder-from-pair current-pair))
                 (next-pair (get-next-pair current-pair)))  ; current, next and previous pairs of adders
@@ -906,25 +914,25 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                 (let ((second-adder (car (get-outputs adder))))
                   (if (not (adder? second-adder))
                       
-                      (begin (handle-single-display "no-serial-merging-adders-here (adder?)" 'test)
+                      (begin (log-single-message "no-serial-merging-adders-here (adder?)" 'tests)
                              (serial-merging-adders next-pair))
                       
                       (if (not (single-input? second-adder))
                           
-                          (begin (handle-single-display "no-serial-merging-adders-here (single-input?)" 'test)
+                          (begin (log-single-message "no-serial-merging-adders-here (single-input?)" 'tests)
                                  (serial-merging-adders next-pair))
                           
                           
                           (begin (update-simplifications-counters!)
-                                 (handle-display (lambda () 
-                                                   (display (get-value adder))
-                                                   (display " and")
-                                                   (newline)
-                                                   (display (get-value second-adder))
-                                                   (display " merged")
-                                                   (newline)
-                                                   (newline))
-                                                 'simplifications)
+                                 (log-messages (lambda () 
+                                                 (display (get-value adder))
+                                                 (display " and")
+                                                 (newline)
+                                                 (display (get-value second-adder))
+                                                 (display " merged")
+                                                 (newline)
+                                                 (newline))
+                                               'simplifications)
                                  
                                  
                                  ; rearrange connections:
@@ -938,22 +946,25 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                  ; delete adder from adders:
                                  (process-remove-from-adders! adder)
                                  
-                                 (handle-display (lambda () (display "adders now:")
-                                                   (newline)
-                                                   (display (map (lambda (x) (get-value x)) adders))
-                                                   (newline)
-                                                   (newline))
-                                                 'simplifications)
+                                 (log-messages (lambda () (display "adders now:")
+                                                 (newline)
+                                                 (display (map (lambda (x) (get-value x)) adders))
+                                                 (newline)
+                                                 (newline))
+                                               'simplifications)
                                  
                                  (serial-merging-adders next-pair))
                           
                           )))
                 
-                (begin (handle-display (lambda () (display "no-serial-merging-adders-here (single-output?) ")
-                                         (display (get-value adder))
-                                         (newline)
-                                         (newline))
-                                       'test)
+                (begin (log-messages (lambda ()
+                                       (display "no-serial-merging-adders-here (single-output?) ")
+                                       (newline)
+                                       (newline)
+                                       (display (get-value adder))
+                                       (newline)
+                                       (newline))
+                                     'tests)
                        (serial-merging-adders next-pair))))
           
           ))

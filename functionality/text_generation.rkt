@@ -215,7 +215,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   (let ((l1 (string-length nom-string))
         (l2 (string-length den-string)))
     (cond ((or (> l1 40) (> l2 40))
-           (newline)
+           ;(newline)
            (displayln "tf:")
            (newline)
            (displayln nom-string)
@@ -450,6 +450,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
         (b (get-denom value)))
     (let ((a-term-list (cdr (cdr a))) ;'(5 8)
           (b-term-list (cdr (cdr b))))
+
       #|
       (newline)
       (newline)
@@ -514,11 +515,11 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
         |#
         
         (when (null? disp)
+          (newline)
+          (newline)
           (display-tf (list-of-strings-to-string (list-to-list-of-strings nom)) ;(iv)
                       (list-of-strings-to-string (list-to-list-of-strings den))))
 
-        
-        ;(newline)
         (list '/ nom den))))) ;(v)
 
 
@@ -547,8 +548,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 (define (get-total-tfs-value block)
   
-  (display-mode-nil!)
-  (newline)
+  ;(set-logger-mode! 'nil)
+  ;(newline)
   
   ;(let ((cached-simplification-result (simplify block)))
   (cons 'λ (cons '(s fw1 fw2 fw3 fw4) 

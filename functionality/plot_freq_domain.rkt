@@ -660,7 +660,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 (define (compare block1 block2)  ; tf1 and tf2 appropriate functions so that after the simplification two functions will remain 
   
-  (display-mode-nil!)
+  ;(set-logger-mode! 'nil)
   
   (let* ((total-tfs-value1 (cons 'λ (cons '(s fw1 fw2 fw3 fw4) (list (ratio-to-list (get-simplified-block-value block1))))))
          (tfs-value-evaluation1 (eval total-tfs-value1 anchor))                               ;change: cadr
@@ -772,8 +772,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     (lambda (block1)
       
-      (newline)
-      (display-mode-nil!)
+      ;(newline)
+      ;(set-logger-mode! 'nil)
       
       (let* ((total-tfs-value1 (cons 'λ (cons '(s fw1 fw2 fw3 fw4) (list (ratio-to-list (get-simplified-block-value block1))))))
              (tfs-value-evaluation1 (eval total-tfs-value1 anchor)))
@@ -913,7 +913,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   (define m1 0)
   (define m2 0)
   
-  (display-mode-nil!)
+  ;(set-logger-mode! 'nil)
   
   ;change:
   ;(let ((simplification-result (simplify block)))
@@ -923,7 +923,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   ;(if (void? simplification-result)
   
   ;change:
-  (newline)
+  ;(newline)
   
   (set! total-tfs-value (cons 'λ (cons '(y) (list (ratio-to-list (get-simplified-block-value block))))))
   ;ratio-to-list-lite
@@ -956,10 +956,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                    
                    (define tfs-value-evaluation1 (eval (list (cons 'λ (cons '(y) (list (cons 'λ (cons '(s fw1 fw2 fw3 fw4) (list (caddr total-tfs-value))))))) m1) anchor))
                    
-                   ;(newline)
                    (display "y = ")
                    (display (round-decimal m1 3)) 
-                   (newline)
                    (newline)
                    (newline)
                    
@@ -1043,7 +1041,6 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                        
                        (begin (display "y = ")
                               (display (round-decimal m2 3))                                
-                              (newline)
                               (newline)
                               (newline)
                               

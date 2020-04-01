@@ -83,11 +83,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (displayc s)
       (newline)
       (newline)
-      (display "____________________________________________________")
+      (display (make-string 52 #\_))
       (newline)
       (newline)
       (display s)
-      (newline)
       (newline))
 
 
@@ -345,11 +344,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 (define (run-examples . speed)
   (if (and (not (null? speed)) (eq? (car speed) 'slow))
-      (begin (map (λ (x) (newline)
-                    (newline)
-                    (displayln x)
+      (begin (map (λ (x)
                     (eval x anchor)
-                    (sleep 10))
+                    (sleep 5))
                   examples_list) 'all_examples_run)
       (begin (map (λ(x) (eval x anchor)) examples_list)
              'all_examples_run)))

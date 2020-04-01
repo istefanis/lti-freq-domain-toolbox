@@ -219,8 +219,8 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   
   (define total-tfs-value '())
   
-  (newline)
-  (display-mode-nil!)
+  ;(newline)
+  ;(set-logger-mode! 'nil)
   
   
   (let ((num (get-numer (get-simplified-block-value block)))
@@ -250,7 +250,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       ; just for displaying:
       (ratio-to-list (get-simplified-block-value block))
       (newline)
-      (displayln "with gain:")
+      (display "with gain:")
       (newline)
       (ratio-to-list (make-ratio new-num new-den))
       
