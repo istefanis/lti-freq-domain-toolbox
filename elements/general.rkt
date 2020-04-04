@@ -86,7 +86,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (begin (simplify block)
              (if (is-simplified? block)
                  (block 'get-value)
-                 (begin (log-single-message "Block not fully simplified - GET-BLOCK-VALUE" 'tests)
+                 (begin (log-single-message "[CP-99] Block not fully simplified - GET-BLOCK-VALUE" 'checkpoints)
                         (block 'get-value))))))
 
 

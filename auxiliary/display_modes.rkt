@@ -29,7 +29,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 ; logger-mode adjusts the volume of information printed, in terms of the following levels:
 ;
-; 'nil, 'results, 'simplifications, 'tests
+; 'nil, 'algorithms (AL), 'simplifications (SF), 'checkpoints (CP)
 ;
 ;       more information printed -->
 
@@ -44,23 +44,23 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 
 (define (log-messages proc attr)
   (cond ((eq? logger-mode 'nil) (display ""))
-        ((eq? attr 'results)
-         (cond ((or (eq? logger-mode 'tests)
+        ((eq? attr 'algorithms)
+         (cond ((or (eq? logger-mode 'checkpoints)
                     (eq? logger-mode 'simplifications)
-                    (eq? logger-mode 'results))
+                    (eq? logger-mode 'algorithms))
                 (begin (newline)
                        (newline)
                        (proc)
                        (display (make-string 52 #\=))))))
         ((eq? attr 'simplifications)
-         (cond ((or (eq? logger-mode 'tests)
+         (cond ((or (eq? logger-mode 'checkpoints)
                     (eq? logger-mode 'simplifications))
                 (begin (newline)
                        (newline)
                        (proc)
                        (display (make-string 52 #\-))))))
-        ((eq? attr 'tests)
-         (cond ((eq? logger-mode 'tests)
+        ((eq? attr 'checkpoints)
+         (cond ((eq? logger-mode 'checkpoints)
                 (begin (newline)
                        (newline)
                        (proc)

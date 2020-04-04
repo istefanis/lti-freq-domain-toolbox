@@ -69,7 +69,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     (define (process-set-input i)
       (if (not (null? input))
-          (log-single-message "input substitution - block" 'tests)
+          (log-single-message "[CP-01] input substitution - block" 'checkpoints)
           'do-nothing)
       (set! input i))
     
@@ -198,9 +198,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             
             (begin (if (and (eq? (length (append tfs blocks)) 1) (null? adders))
                        
-                       (log-single-message "FULL SIMPLIFICATION COMPLETED " 'results)
+                       (log-single-message "FULL SIMPLIFICATION COMPLETED " 'algorithms)
 
-                       (log-single-message "PARTIAL SIMPLIFICATION COMPLETED " 'results))
+                       (log-single-message "PARTIAL SIMPLIFICATION COMPLETED " 'algorithms))
                    
                    (log-messages (lambda ()
                                    (newline)
@@ -220,7 +220,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                    ;(display "simplified tf:")
                                    ;(newline)
                                    )
-                                 'results)
+                                 'algorithms)
                    
                    
                    (set! i-am-simplified #t)
@@ -280,12 +280,12 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
           (begin (set! i-am-simplified #t)
                  (set! value ((car (append tfs blocks)) 'get-value))
                  ;(newline)
-                 (log-single-message "NO SIMPLIFICATIONS TO BE DONE" 'results))
+                 (log-single-message "NO SIMPLIFICATIONS TO BE DONE" 'algorithms))
           
           (begin ;(log-messages (lambda () 
             ;                  (newline)
             ;                  )
-            ;                'results)
+            ;                'algorithms)
             ;(display "problem")
             ;(map simplify blocks)
             ;(newline)
@@ -313,14 +313,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             (begin (when (not (equal? (length adders) (length so-far)))
                      (begin (update-simplifications-counters!)
                             (set! adders so-far)
-                            (log-messages (lambda () (display "adders now:")
+                            (log-messages (lambda () (display "[SF-11] new adders list:")
                                             (newline)
                                             (newline)
                                             (display (map (lambda (x) (get-value x)) adders))
                                             (newline)
                                             (newline))
                                           'simplifications)))
-                   (log-single-message "DONE - UNUSED ADDERS REMOVED" 'results))
+                   (log-single-message "[AL-10] DONE - UNUSED ADDERS REMOVED" 'algorithms))
             
             (if (or (has-input? (car set))
                     (has-outputs? (car set)))
@@ -348,11 +348,15 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                       
                       (else (remove (cdr set) (cons (car set) so-far)))) ; retain adder
                 
-                (begin (log-messages (lambda () (display (get-value (car set)))
+                (begin (log-messages (lambda ()
+                                       (display "[CP-11]")
+                                       (newline)
+                                       (newline)
+                                       (display (get-value (car set)))
                                        (display " removed")
                                        (newline)
                                        (newline))
-                                     'tests)
+                                     'checkpoints)
                        (remove (cdr set) so-far))))) ; remove adder - not connected
       (remove adders '()))
     
@@ -366,7 +370,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (create-single-output-tfs current-pair)
       (if (null? current-pair)
           
-          (log-single-message "DONE - SINGLE OUTPUT TFS CREATED" 'results)
+          (log-single-message "[AL-20] DONE - SINGLE OUTPUT TFS CREATED" 'algorithms)
           
           (check-tf-for-outputs (get-tf-from-pair current-pair) current-pair)))
     
@@ -375,7 +379,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (let ((outputs (get-outputs tf)))
         (if (null? outputs)
             
-            (log-single-message "no-outputs-to-separate" 'tests)
+            (log-single-message "[CP-21] no-outputs-to-separate" 'checkpoints)
             
             (create-separate-tfs-from-tf tf outputs))
         
@@ -408,7 +412,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                   
                   (update-simplifications-counters!)
                   (log-messages (lambda () 
-                                  (display "separate single output tf created: ")
+                                  (display "[SF-21] separate single output tf created: ")
                                   (newline)
                                   (newline)
                                   (display "tfs now: ")
@@ -440,7 +444,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (parallel-merging-tfs current-pair)
       (if (null? current-pair)
           
-          (log-single-message "DONE - PARALLEL TFS MERGED" 'results)
+          (log-single-message "[AL-30] DONE - PARALLEL TFS MERGED" 'algorithms)
           
           (check-adder (get-adder-from-pair current-pair) current-pair)))
     
@@ -449,7 +453,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (let ((inputs (get-input adder)))
         (if (null? inputs)
             
-            (log-single-message "no-inputs-for-this-adder" 'tests)
+            (log-single-message "[CP-31] no-inputs-for-this-adder" 'checkpoints)
             
             (check-adder-inputs adder inputs))
         
@@ -465,15 +469,15 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             
             (if (and (not (adder? input1)) (single-output? input1))
                 
-                (begin (log-single-message "check-input1" 'tests)
+                (begin (log-single-message "[CP-32] check-input1" 'checkpoints)
                        (check-input1 adder input1 (cdr inputs)))
                 
                 (begin (log-messages (lambda () 
-                                       (display "no-single-output: ")
+                                       (display "[CP-33] no-single-output: ")
                                        (display (get-value input1))
                                        (newline)
                                        (newline))
-                                     'tests)
+                                     'checkpoints)
                        (check-adder-inputs adder (cdr inputs)))))))
     
     
@@ -510,7 +514,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                              
                                              (update-simplifications-counters!)
                                              (log-messages (lambda () 
-                                                             (display "parallel tfs merging done:")
+                                                             (display "[SF-31] parallel tfs merging done:")
                                                              (newline)
                                                              (newline)
                                                              (display "tfs now:")
@@ -523,22 +527,22 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                              
                                              (check-adder-inputs adder inputs))
                                       
-                                      (begin (log-single-message "eq? adder1 adder2" 'tests)
+                                      (begin (log-single-message "[CP-34] eq? adder1 adder2" 'checkpoints)
                                              (check-input1 adder input1 (cdr inputs)))))
                                 
-                                (begin (log-single-message "(adder? (get-input input2))" 'tests)
+                                (begin (log-single-message "[CP-35] (adder? (get-input input2))" 'checkpoints)
                                        (check-input1 adder input1 (cdr inputs))))
                             
-                            (begin (log-single-message "(has-input? input2)" 'tests)
+                            (begin (log-single-message "[CP-36] (has-input? input2)" 'checkpoints)
                                    (check-input1 adder input1 (cdr inputs))))
                         
-                        (begin (log-single-message "(single-output? input2)" 'tests)
+                        (begin (log-single-message "[CP-37] (single-output? input2)" 'checkpoints)
                                (check-input1 adder input1 (cdr inputs)))))
                   
-                  (begin (log-single-message "(adder? (get-input input1))" 'tests)
+                  (begin (log-single-message "[CP-38] (adder? (get-input input1))" 'checkpoints)
                          (check-adder-inputs adder (cdr inputs))))
               
-              (begin (log-single-message "(has-input? input1)" 'tests)
+              (begin (log-single-message "[CP-39] (has-input? input1)" 'checkpoints)
                      (check-adder-inputs adder (cdr inputs))))))
     ;|#
     
@@ -552,7 +556,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (feedback-loop-merging current-pair)
       (if (null? current-pair)
           
-          (log-single-message "DONE - FEEDBACK LOOPS SIMPLIFIED" 'results)
+          (log-single-message "[AL-40] DONE - FEEDBACK LOOPS SIMPLIFIED" 'algorithms)
           
           (check-tf (get-tf-from-pair current-pair) current-pair)))
     
@@ -561,7 +565,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
       (let ((outputs (get-outputs tf)))
         (if (null? outputs)
             
-            (log-single-message "no-outputs" 'tests)
+            (log-single-message "[CP-41] no-outputs" 'checkpoints)
             
             (check-tf-output tf outputs))
         
@@ -632,7 +636,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                               
                               (update-simplifications-counters!)
                               (log-messages (lambda () 
-                                              (display "feedback loop merging with no feedback tf done:")
+                                              (display "[SF-41] feedback loop merging with no feedback tf done:")
                                               (newline)
                                               (newline)
                                               (display "tfs now:")
@@ -651,13 +655,13 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                               
                               (check-tf-output tf (cdr outputs)))
                             
-                            (begin (log-single-message "no-loop-here (eq? adder-output tf) - no feedback tf" 'tests)
+                            (begin (log-single-message "[CP-42] no-loop-here (eq? adder-output tf) - no feedback tf" 'checkpoints)
                                    (check-tf-output tf (cdr outputs))))
                         
                         ))
                     
                     
-                    (begin (log-single-message "no-loop-here (single-output? first-adder)" 'tests)
+                    (begin (log-single-message "[CP-43] no-loop-here (single-output? first-adder)" 'checkpoints)
                            (check-tf-output tf (cdr outputs)))
                     
                     ))
@@ -743,7 +747,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                           
                                           (update-simplifications-counters!)
                                           (log-messages (lambda () 
-                                                          (display "feedback loop merging with feedback tf done:")
+                                                          (display "[SF-42] feedback loop merging with feedback tf done:")
                                                           (newline)
                                                           (newline)
                                                           (display "tfs now:")
@@ -762,23 +766,23 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                           
                                           (check-tf-output tf (cdr outputs)))
                                         
-                                        (begin (log-single-message "no-loop-here (eq? adder-output tf)" 'tests)
+                                        (begin (log-single-message "[CP-44] no-loop-here (eq? adder-output tf)" 'checkpoints)
                                                (check-tf-output tf (cdr outputs)))
                                         
                                         )))
                                 
-                                (begin (log-single-message "no-loop-here (single-output? first-adder)" 'tests)
+                                (begin (log-single-message "[CP-45] no-loop-here (single-output? first-adder)" 'checkpoints)
                                        (check-tf-output tf (cdr outputs)))
                                 
                                 ))          
                           
                           
-                          (begin (log-single-message "no-loop-here (adder? feedback-tf-output)" 'tests)
+                          (begin (log-single-message "[CP-46] no-loop-here (adder? feedback-tf-output)" 'checkpoints)
                                  (check-tf-output tf (cdr outputs)))
                           
                           ))
                     
-                    (begin (log-single-message "no-loop-here (single-output? feedback-tf)" 'tests)
+                    (begin (log-single-message "[CP-47] no-loop-here (single-output? feedback-tf)" 'checkpoints)
                            (check-tf-output tf (cdr outputs)))
                     
                     ))
@@ -794,7 +798,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (serial-merging-tfs current-pair)
       (if (null? current-pair)
           
-          (log-single-message "DONE - SERIAL TFS MERGED" 'results)
+          (log-single-message "[AL-50] DONE - SERIAL TFS MERGED" 'algorithms)
           
           (let ((tf (get-tf-from-pair current-pair))
                 (next-pair (get-next-pair current-pair)))  ; current, next and previous pairs of tfs
@@ -816,11 +820,14 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                 (let ((second-tf (car (get-outputs tf))))
                   (if (adder? second-tf)
                       
-                      (begin (log-single-message "no-serial-merging-tfs-here (adder?)" 'tests)
+                      (begin (log-single-message "[CP-51] no-serial-merging-tfs-here (adder?)" 'checkpoints)
                              (serial-merging-tfs next-pair))
                       
                       (begin (update-simplifications-counters!)
-                             (log-messages (lambda () 
+                             (log-messages (lambda ()
+                                             (display "[SF-51]")
+                                             (newline)
+                                             (newline)
                                              (display (get-value tf))
                                              (newline)
                                              (newline)
@@ -875,7 +882,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                              |#
                              
                              (log-messages (lambda () 
-                                             (display "tfs now:")
+                                             (display "[CP-52] tfs now:")
                                              (newline)
                                              (newline)
                                              (display (map (lambda (x) (get-value x)) tfs))
@@ -886,13 +893,13 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                              (serial-merging-tfs next-pair))))
                 
                 (begin (log-messages (lambda ()
-                                       (display "no-serial-merging-tfs-here (single-output?) ")
+                                       (display "[CP-53] no-serial-merging-tfs-here (single-output?) ")
                                        (newline)
                                        (newline)
                                        (display (get-value tf))
                                        (newline)
                                        (newline))
-                                     'tests)
+                                     'checkpoints)
                        (serial-merging-tfs next-pair))))
           
           ))
@@ -905,7 +912,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     (define (serial-merging-adders current-pair)
       (if (null? current-pair)
           
-          (log-single-message "DONE - SERIAL ADDERS MERGED" 'results)
+          (log-single-message "[AL-60] DONE - SERIAL ADDERS MERGED" 'algorithms)
           
           (let ((adder (get-adder-from-pair current-pair))
                 (next-pair (get-next-pair current-pair)))  ; current, next and previous pairs of adders
@@ -914,17 +921,20 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                 (let ((second-adder (car (get-outputs adder))))
                   (if (not (adder? second-adder))
                       
-                      (begin (log-single-message "no-serial-merging-adders-here (adder?)" 'tests)
+                      (begin (log-single-message "[CP-61] no-serial-merging-adders-here (adder?)" 'checkpoints)
                              (serial-merging-adders next-pair))
                       
                       (if (not (single-input? second-adder))
                           
-                          (begin (log-single-message "no-serial-merging-adders-here (single-input?)" 'tests)
+                          (begin (log-single-message "[CP-62] no-serial-merging-adders-here (single-input?)" 'checkpoints)
                                  (serial-merging-adders next-pair))
                           
                           
                           (begin (update-simplifications-counters!)
-                                 (log-messages (lambda () 
+                                 (log-messages (lambda ()
+                                                 (display "[SF-61]")
+                                                 (newline)
+                                                 (newline)                                                 
                                                  (display (get-value adder))
                                                  (display " and")
                                                  (newline)
@@ -946,7 +956,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                                  ; delete adder from adders:
                                  (process-remove-from-adders! adder)
                                  
-                                 (log-messages (lambda () (display "adders now:")
+                                 (log-messages (lambda () (display "[SF-62] adders now:")
                                                  (newline)
                                                  (display (map (lambda (x) (get-value x)) adders))
                                                  (newline)
@@ -958,13 +968,13 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                           )))
                 
                 (begin (log-messages (lambda ()
-                                       (display "no-serial-merging-adders-here (single-output?) ")
+                                       (display "[CP-63] no-serial-merging-adders-here (single-output?) ")
                                        (newline)
                                        (newline)
                                        (display (get-value adder))
                                        (newline)
                                        (newline))
-                                     'tests)
+                                     'checkpoints)
                        (serial-merging-adders next-pair))))
           
           ))

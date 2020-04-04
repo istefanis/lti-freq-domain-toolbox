@@ -55,7 +55,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     
     (define (process-set-input i)
       (if (not (null? input))
-          (log-single-message "input substitution - tf" 'tests)
+          (log-single-message "[CP-00] input substitution - tf" 'checkpoints)
           'do-nothing)
       (set! input i))
     
