@@ -373,3 +373,38 @@ The @racket[pade-delay] procedure adds a time delay component to a block, modele
 
 
 
+
+
+
+@;//////////   Section 4   //////////
+
+
+@section[#:tag "circuit-simplifications"]{Circuit simplifications}
+
+In order to compute the overall transfer function (tf) of a system modeled by interconnected elements inside a block, a simplification of its structure
+must be performed.
+
+This simplification is performed by running a set of algorithms inside the block. Each algorithm may run more than once.
+During each algorithm run, a simplification may or may not be performed. 
+
+To be able to test and review this whole process, logging checkpoints have been implemented, with respective messages available to be displayed.
+
+
+@subsection[#:tag "display-modes"]{Display modes}
+
+
+@defproc[(set-logger-mode! [logger-mode symbol?]) void?]
+
+@racketblock[(set-logger-mode! 'checkpoints)]
+
+The @racket[set-logger-mode!] procedure can adjust the volume of simplifications-related messages displayed, in terms of the four following levels:
+
+@itemlist[@item{@bold{'nil}: no messages are displayed (default)}
+          @item{@bold{'algorithms}: only messages regarding the algorithms run are displayed}
+          @item{@bold{'simplifications}: only messages regarding the algorithms run and the simplifications performed are displayed}
+          @item{@bold{'checkpoints}: all messages at all checkpoints are displayed}]
+
+
+
+
+

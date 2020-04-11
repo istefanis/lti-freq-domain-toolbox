@@ -34,11 +34,17 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 ;       more information printed -->
 
 
-
 (define logger-mode 'nil)
 
 (define (set-logger-mode! mode)
   (set! logger-mode mode))
+
+
+
+
+(define display-width 52)
+(pretty-print-columns display-width)
+
 
 
 
@@ -47,8 +53,10 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
   (define (print-messages l c)
     (newline)
     (newline)
-    (for-each (lambda (x) (display x) (newline) (newline)) l)
-    (display (make-string 52 c)))
+    (for-each (lambda (x) (pretty-display x) (newline))       ; pretty display 
+              ;(lambda (x) (display x) (newline) (newline))   ; regular display
+              l)
+    (display (make-string display-width c)))
 
   
   (cond ((eq? logger-mode 'nil) (display ""))
