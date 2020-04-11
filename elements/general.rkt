@@ -89,6 +89,9 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                  (begin (log-messages (list "[CP-99] Block not fully simplified - GET-BLOCK-VALUE") 'checkpoints)
                         (block 'get-value))))))
 
+(define (re-initialize-block! block) (block 're-initialize!))
+
+
 
 ; For adders:
 

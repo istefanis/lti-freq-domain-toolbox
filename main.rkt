@@ -224,6 +224,15 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
     ;Nyquist
     (displayc "> (nyquist (circuit3 a))")
     (nyquist (circuit3 a))
+
+
+
+    ;block re-initialization:
+    ;if the elements stored inside a block will no longer be used, it can be manually re-initialized
+    ;
+    ;warning: errors may arise if previously stored elements are attempted to be used again
+    (re-initialize-block! a)
+
     
     
     ;Step

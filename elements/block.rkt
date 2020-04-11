@@ -810,7 +810,7 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
                              (display (get-value a))
                              |#
                              
-                             (log-messages (list "[CP-52] tfs now:"
+                             (log-messages (list "[CP-52] (continued) tfs now:"
                                                  (map (lambda (x) (get-value x)) tfs))
                                            'simplifications)
                              
@@ -928,6 +928,23 @@ See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
             ((eq? request 'get-blocks) blocks)
             ((eq? request 'get-tfs) tfs)
             ((eq? request 'get-adders) adders)
+
+            ((eq? request 're-initialize!) (set! value '())
+                                           (set! i-am-block #t)
+                                           (set! i-am-tf #f)
+                                           (set! i-am-adder #f)
+                                           (set! blocks '())
+                                           (set! tfs '())
+                                           (set! adders '())
+                                           (set! input '())
+                                           (set! outputs-list '())
+                                           (set! i-am-simplified #t)
+
+                                           (newline)
+                                           (displayln "block re-initialized")
+                                           (newline)
+                                           (displayln "warning: errors may arise if previously stored elements are attempted to be used again")
+                                           (newline))
             
             (else (error "Unknown request - MAKE-TF" request))))
     
