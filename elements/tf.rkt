@@ -3,7 +3,7 @@ lti-freq-domain-toolbox
 Copyright (C) 2014-2020 Ioannis Stefanis <iastefan@outlook.com>
 
 lti-freq-domain-toolbox is distributed under the GNU Lesser General Public License Version 3 (LGPLv3). 
-The LGPLv3 license text is included in the file "LICENSE_LESSER.txt".
+The LGPLv3 license text is included in the "COPYING.LESSER" file.
 
 See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
 |#
