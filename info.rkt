@@ -8,4 +8,4 @@
                    "plot-gui-lib"))
 (define build-deps (list "racket-doc"
                          "scribble-lib"))
-(define scribblings '(("doc/main.scrbl" ())))
+(define scribblings '(("doc/lti-freq-domain-toolbox.scrbl" ())))
