@@ -1,11 +1,19 @@
 #|
-lti-freq-domain-toolbox
-Copyright (C) 2014-2020 Ioannis Stefanis <iastefan@outlook.com>
+lti-freq-domain-toolbox | Functions for studying LTI (linear time-invariant) dynamical systems 
+Copyright (C) 2014-2022  Ioannis Stefanis
 
-lti-freq-domain-toolbox is distributed under the GNU Lesser General Public License Version 3 (LGPLv3). 
-The LGPLv3 license text is included in the "COPYING.LESSER" file.
+This file is part of lti-freq-domain-toolbox.
 
-See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
+lti-freq-domain-toolbox is free software: you can redistribute it and/or modify it under the terms of 
+the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of 
+the License, or (at your option) any later version.
+
+lti-freq-domain-toolbox is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License along with lti-freq-domain-toolbox. 
+If not, see <https://www.gnu.org/licenses/>.
 |#
 
 

@@ -1,3 +1,42 @@
+#|
+lti-freq-domain-toolbox | Functions for studying LTI (linear time-invariant) dynamical systems 
+Copyright (C) 2014-2022  Ioannis Stefanis
+
+This file is part of lti-freq-domain-toolbox.
+
+lti-freq-domain-toolbox is free software: you can redistribute it and/or modify it under the terms of 
+the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of 
+the License, or (at your option) any later version.
+
+lti-freq-domain-toolbox is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License along with lti-freq-domain-toolbox. 
+If not, see <https://www.gnu.org/licenses/>.
+|#
+
+
+
+
+#|
+Parts of this library have been implemented as demonstrated in:
+
+Structure and Interpretation of Computer Programs second edition. 
+The MIT Press with the McGraw-Hill Book Company, 1996
+Harold Abelson and Gerald Jay Sussman with Julie Sussman, foreword by Alan J. Perlis. 
+
+or are modifications of code presented there.
+
+The book is available under a Creative Commons Attribution-ShareAlike 4.0 International License 
+(https://creativecommons.org/licenses/by-sa/4.0/). See: <http://mitpress.mit.edu/sicp>.
+|#
+
+
+
+
+
+
 #lang racket
 
 ;(require "general.rkt")
@@ -10,19 +49,6 @@
 
 
 ; //////////  Numerical analysis library  //////////
-
-#|
-Parts of this library have been implemented as demonstrated in:
-
-Structure and Interpretation of Computer Programs second edition. 
-The MIT Press with the McGraw-Hill Book Company, 1996
-Harold Abelson and Gerald Jay Sussman with Julie Sussman, foreword by Alan J. Perlis. 
-
-or are modifications of code presented there.
-|#
-
-
-
 
 
 
