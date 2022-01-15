@@ -1,12 +1,14 @@
 lti-freq-domain-toolbox
 =======================
 
-The lti-freq-domain-toolbox is a collection of functions written in [Racket](https://racket-lang.org), which lets Control Systems engineers study LTI (linear time-invariant) dynamical systems - from PID controllers to more complex systems.
+A library written in [Racket](https://racket-lang.org), which lets Control Systems engineers study LTI (linear time-invariant) dynamical systems - from PID controllers to multipart systems of complex design.
 
 It can perform tasks such as:
-* computation of the overall transfer function (tf) of a system that is modeled by interconnected tfs in the s-domain
-* generation of its Bode and Nyquist plots
-* numerical computation of its time domain response
+* the analytical computation of the overall transfer function (tf) of a system modeled by interconnected elements in the s-domain
+* the generation of its Bode and Nyquist plots
+* the numerical computation of its time domain response
+
+> *Predefined circuits are also included: controllers (PI, PD and PID), filters (Chebyshev type I), delay components (Padé) etc.*
 
 ## Installation
 
