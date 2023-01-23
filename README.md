@@ -54,7 +54,7 @@ It can perform tasks such as:
 
 Copyright (C) 2014-2022  Ioannis Stefanis <iastefan@outlook.com>
 
-lti-freq-domain-toolbox is distributed under the GNU Lesser General Public License Version 3 (LGPLv3). 
-The LGPLv3 license text is included in the "COPYING.LESSER" file.
+lti-freq-domain-toolbox is distributed under the GNU General Public License Version 3 (GPLv3). 
+The GPLv3 license text is included in the "COPYING.TXT" file.
 
-See http://www.gnu.org/licenses/lgpl-3.0.txt for more information.
+See http://www.gnu.org/licenses/gpl-3.0.txt for more information.

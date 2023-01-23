@@ -5,14 +5,13 @@ Copyright (C) 2014-2022  Ioannis Stefanis
 This file is part of lti-freq-domain-toolbox.
 
 lti-freq-domain-toolbox is free software: you can redistribute it and/or modify it under the terms of 
-the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of 
-the License, or (at your option) any later version.
+the GNU General Public License Version 3 as published by the Free Software Foundation.
 
 lti-freq-domain-toolbox is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
 without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-See the GNU Lesser General Public License for more details.
+See the GNU General Public License Version 3 for more details.
 
-You should have received a copy of the GNU Lesser General Public License along with lti-freq-domain-toolbox. 
+You should have received a copy of the GNU General Public License Version 3 along with lti-freq-domain-toolbox. 
 If not, see <https://www.gnu.org/licenses/>.
 |#
 

@@ -1,7 +1,7 @@
 #lang info
 
 (define collection 'use-pkg-name)
-(define license 'LGPL-3.0-only)
+(define license 'GPL-3.0-only)
 (define version "0.4")
 (define deps (list "plot-lib"
                    "base"
