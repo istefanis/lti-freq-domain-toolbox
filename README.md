@@ -52,7 +52,7 @@ It can perform tasks such as:
 
 ## License
 
-Copyright (C) 2014-2022  Ioannis Stefanis <iastefan@outlook.com>
+Copyright (C) 2014-2023  Ioannis Stefanis <iastefan@outlook.com>
 
 lti-freq-domain-toolbox is distributed under the GNU General Public License Version 3 (GPLv3). 
 The GPLv3 license text is included in the "COPYING.TXT" file.

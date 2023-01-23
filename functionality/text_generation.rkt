@@ -1,6 +1,6 @@
 #|
 lti-freq-domain-toolbox | Functions for studying LTI (linear time-invariant) dynamical systems 
-Copyright (C) 2014-2022  Ioannis Stefanis
+Copyright (C) 2014-2023  Ioannis Stefanis
 
 This file is part of lti-freq-domain-toolbox.
 
