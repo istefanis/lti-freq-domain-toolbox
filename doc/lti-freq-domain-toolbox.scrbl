@@ -18,6 +18,7 @@ It can perform tasks such as:
           @item{generation of its Bode and Nyquist plots}
           @item{numerical computation of its time domain response}]
 
+Known issues & limitations: check the package's README.md file.
 
 @table-of-contents[]
 
