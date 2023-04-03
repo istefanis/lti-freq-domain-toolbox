@@ -12,7 +12,7 @@ It can perform tasks such as:
 
 ## Known issues & limitations
 
-* phase computation: 1) no adjustment via value at w -> ∞ based on zeros & poles, 2) no unwrapping for >+180 deg
+* phase computation: 1) no adjustment via value at w -> ∞ based on zeros & poles, 2) imperfect unwrapping cases
 * bandwidth computation in more complicated cases (ex. double band pass filters)
 
 These have been treated in the newest [Controllio](https://github.com/istefanis/controllio) app, using more advanced numerical algorithms.

@@ -110,52 +110,27 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
-;Angle unwarping: from (-180 < angle < 180) to (-540 < angle < 180), in Figures 1 & 2
+;Angle unwarping (in Figures 1 & 2)
 
 (define had-neg-values-1 #f)
-(define passed-180-1 #f)
-(define passed-360-1 #f)
-
 (define had-neg-values-2 #f) ;used in compare function
-(define passed-180-2 #f)
-(define passed-360-2 #f)
 
 
 (define (had-neg-values? fig)
   (if (= fig 1) had-neg-values-1 had-neg-values-2))
 
-(define (passed-180? fig)
-  (if (= fig 1) passed-180-1 passed-180-2))
-
-(define (passed-360? fig)
-  (if (= fig 1) passed-360-1 passed-360-2))
-
-
 (define (set-had-neg-values-true! fig)
   (if (= fig 1) (set! had-neg-values-1 #t) (set! had-neg-values-2 #t)))
 
-(define (set-passed-180-true! fig)
-  (if (= fig 1) (set! passed-180-1 #t) (set! passed-180-2 #t)))
-
-(define (set-passed-360-true! fig)
-  (if (= fig 1) (set! passed-360-1 #t) (set! passed-360-2 #t)))
-
-
 (define (initialize-angle-params-fig-1!)
-  (set! had-neg-values-1 #f)
-  (set! passed-180-1 #f)
-  (set! passed-360-1 #f))
+  (set! had-neg-values-1 #f))
 
 (define (initialize-angle-params-fig-2!) ;used in compare function
-  (set! had-neg-values-2 #f)
-  (set! passed-180-2 #f)
-  (set! passed-360-2 #f))
+  (set! had-neg-values-2 #f))
 
 
 
-
-(define (unwarp-angle-simple! ang w fig)
-  
+(define (unwarp-angle-simple! ang w fig)  
   (if (and (eq? (had-neg-values? fig) #t) (> ang (/ pi 2)))
       (- ang (* 2 pi))
       (if (or (< ang 0) (and (= ang 0) (> w w-min)))
@@ -166,44 +141,43 @@ If not, see <https://www.gnu.org/licenses/>.
   )
 
 
-(define (unwarp-angle-elaborate! ang w fig)
-  
-  (cond ((and (eq? (had-neg-values? fig) #t) (eq? (passed-360? fig) #t) 
-              (> (+ ang (* 2 pi)) 0)
-              )
-         (- ang (* 2 pi)))
-        
-        ;#|
-        ((and (eq? (had-neg-values? fig) #t) (not (eq? (passed-180? fig) #t))
-              (> ang 0) 
-              (< ang (/ pi 2)))
-         ;works for pid:
-         ang
-         ;works for delay:
-         ;(- ang (* 2 pi))
-         )
-        ;|#
-        
-        ((and (eq? (had-neg-values? fig) #t) ;(eq? (get-passed-180 id) #t)
-              (> ang 0))
-         (when ;(< (- ang (* 2 pi)) (* (- 1.8) pi))
-             (and (eq? (passed-180? fig) #t) (< (- ang (* 2 pi)) 0))
-           (set-passed-360-true! fig))
-         
-         ;change:
-         (when (> (abs (- ang (* 2 pi))) (* 0.8 pi))
-           (set-passed-180-true! fig))
-         
-         (- ang (* 2 pi)))
-        
-        (else
-         (when (or (< ang 0) (and (= ang 0) (> w w-min)))
-           (set-had-neg-values-true! fig))
-         (when (> (abs ang) (* 0.8 pi))
-           (set-passed-180-true! fig))
-         ang))
-  )
+;Unwrap based on the comparison of consecutive phase values:
 
+(define angle-adjustment-total-1 0) ;fig1
+(define angle-adjustment-total-2 0) ;fig2
+
+(define last-angle-value-1 0)
+(define last-angle-value-2 0)
+
+(define (unwrap-angle-value! new-angle-value w fig)
+  (set! new-angle-value (+ new-angle-value
+                           (if (eq? fig 1) angle-adjustment-total-1 angle-adjustment-total-2)));
+  (let ((new-adjustment 0)
+        (diff (- new-angle-value (if (eq? fig 1) last-angle-value-1 last-angle-value-2))))
+    (cond ((> diff 3.5)
+           ;(displayln new-angle-value)
+           ;(displayln (if (eq? fig 1) last-angle-value-1 last-angle-value-2))
+           ;(display "Angle unwarp adjustment by -360, at w=")
+           ;(displayln (round-decimal w 5))
+           (set! new-adjustment (* -2 pi)))
+          ((< diff -3.5)
+           ;(displayln new-angle-value)
+           ;(displayln (if (eq? fig 1) last-angle-value-1 last-angle-value-2))
+           ;(display "Angle unwarp adjustment by +360, at w=")
+           ;(displayln (round-decimal w 5))
+           (set! new-adjustment (* 2 pi))))
+    (if (eq? fig 1)
+        (begin (set! diff (+ diff new-adjustment))
+               (set! angle-adjustment-total-1 (+ angle-adjustment-total-1 new-adjustment))
+               (set! last-angle-value-1 (+ last-angle-value-1 diff))
+               ;(displayln last-angle-value-1)
+               last-angle-value-1)
+        (begin  (set! diff (+ diff new-adjustment))
+                (set! angle-adjustment-total-2 (+ angle-adjustment-total-2 new-adjustment))
+                (set! last-angle-value-2 (+ last-angle-value-2 diff))
+                ;(displayln last-angle-value-2)
+                last-angle-value-2)))
+  )
 
 
 ;bandwidth thresholds
@@ -517,7 +491,10 @@ If not, see <https://www.gnu.org/licenses/>.
       
       (set-chebyshev-threshold! 1000)
       (initialize-angle-params-fig-1!)          
-      (bode-plot-parameters) 
+      (bode-plot-parameters)
+
+      (set! angle-adjustment-total-1 0)
+      (set! last-angle-value-1 (angle (tfs w-min)))
 
       
       (for-each 
@@ -605,7 +582,7 @@ If not, see <https://www.gnu.org/licenses/>.
                                             
                                             ;f1
                                             ;(unwarp-angle-simple f1 w 1)
-                                            (unwarp-angle-elaborate! f1 w 1)
+                                            (unwrap-angle-value! f1 w 1)
                                             
                                             )))
                                 w-min w-max  ;#:color 3
@@ -689,6 +666,11 @@ If not, see <https://www.gnu.org/licenses/>.
     
     
     (bode-plot-parameters)
+
+    (set! angle-adjustment-total-1 0)
+    (set! angle-adjustment-total-2 0)
+    (set! last-angle-value-1 (angle (tfs1 w-min)))
+    (set! last-angle-value-2 (angle (tfs2 w-min)))
     
     (for-each
      displayln
@@ -735,7 +717,7 @@ If not, see <https://www.gnu.org/licenses/>.
                           (let ((f1 (angle (tfs1 w))))
                             
                             ;f1
-                            (unwarp-angle-elaborate! f1 w 1)
+                            (unwrap-angle-value! f1 w 1)
                             
                             )))                        
                 
@@ -746,7 +728,7 @@ If not, see <https://www.gnu.org/licenses/>.
                           (let ((f1 (angle (tfs2 w))))
                             
                             ;f1
-                            (unwarp-angle-elaborate! f1 w 2)
+                            (unwrap-angle-value! f1 w 2)
                             
                             )))              
                 
