@@ -38,7 +38,7 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
 
 #lang racket
 
-;(require "general.rkt")
+(require "assets/complex-polynomial-roots.rkt")
 (provide (all-defined-out))
 
 
