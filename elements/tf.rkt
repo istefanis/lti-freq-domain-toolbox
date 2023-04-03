@@ -24,7 +24,7 @@ If not, see <https://www.gnu.org/licenses/>.
 #lang racket
 
 (require "../math_library/symbolic_algebra.rkt")
-(require "../auxiliary/display_modes.rkt")
+(require "../util/display_modes.rkt")
 (require "general.rkt")
 (provide (all-defined-out))
 

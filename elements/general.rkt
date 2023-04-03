@@ -22,7 +22,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #lang racket
 
-(require "../auxiliary/display_modes.rkt")
+(require "../util/display_modes.rkt")
 (provide (all-defined-out))
 
 

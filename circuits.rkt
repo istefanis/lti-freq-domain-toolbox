@@ -30,7 +30,7 @@ If not, see <https://www.gnu.org/licenses/>.
 (require "elements/block.rkt")
 (require "elements/tf.rkt")
 (require "elements/adder.rkt")
-(require "functionality/plot_freq_domain.rkt")
+(require "features/plot_freq_domain.rkt")
 (provide (all-defined-out))
 
 

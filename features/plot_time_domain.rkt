@@ -40,7 +40,7 @@ approximations. BIT. Numerical Mathematics, 46(3):653 670, 2006.
 (require "../math_library/numerical_analysis.rkt")
 (require "../math_library/symbolic_algebra.rkt")
 (require "../elements/general.rkt")
-(require "../auxiliary/display_modes.rkt")
+(require "../util/display_modes.rkt")
 (require "text_generation.rkt")
 (provide (all-defined-out))
 

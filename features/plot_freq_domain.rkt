@@ -26,7 +26,7 @@ If not, see <https://www.gnu.org/licenses/>.
 (require "../math_library/general.rkt")
 (require "../math_library/numerical_analysis.rkt")
 (require "../elements/general.rkt")
-(require "../auxiliary/display_modes.rkt")
+(require "../util/display_modes.rkt")
 (require "text_generation.rkt")
 (provide (all-defined-out))
 
