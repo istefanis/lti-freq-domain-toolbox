@@ -38,6 +38,7 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
 
 #lang racket
 
+(require "general.rkt")
 (require "assets/complex-polynomial-roots.rkt")
 (provide (all-defined-out))
 
@@ -198,6 +199,37 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
 (half-interval-method (λ (x) (- x (exp (- 0 x)))) -1 1.1)
 |#
 
+
+
+
+; COMPLEX UNIVARIATE POLYNOMIAL ROOTS COMPUTATION
+
+
+;Using an implementation of the Weierstrass / Durand-Kerner method,
+;compute the complex roots of a polynomial and return them inside a list
+(define (find-complex-roots-of-polynomial terms)
+
+  (define (zero-roots-from-polynomial-terms-array terms)
+    (let ((zero-roots-counter 0)
+          (i 0))
+      (for-each (λ(x)
+                  (cond ((and (eq? i zero-roots-counter) (eq? x 0))
+                         (set! zero-roots-counter (+ zero-roots-counter 1))))
+                  (set! i (+ i 1)))
+                (reverse terms))   
+      zero-roots-counter))
+
+  (let ((complex-roots '())
+        (r 0)) 
+    (if (eq? (- (length terms) 1) (zero-roots-from-polynomial-terms-array terms))
+        ;if all roots are zero, provide a tailored initial guess
+        (set! r (find-roots (reverse terms) #f #f #f (build-list (- (length terms) 1) (lambda (x) 0)) #f))
+        (set! r (find-roots (reverse terms) #f #f #f #f #f)))
+  
+    (set! complex-roots (map (λ(x) (make-rectangular (round-decimal (real-part x) 3)
+                                                     (round-decimal (imag-part x) 3))) r))
+    
+    (sort complex-roots (λ(x1 x2) (< (real-part x1) (real-part x2))))))
 
 
 

@@ -24,6 +24,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 (require plot)
 (require "../math_library/general.rkt")
+(require "../math_library/symbolic_algebra.rkt")
 (require "../math_library/numerical_analysis.rkt")
 (require "../elements/general.rkt")
 (require "../util/display_modes.rkt")
@@ -110,7 +111,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
-;Angle unwarping (in Figures 1 & 2)
+;Angle unwraping (in Figures 1 & 2)
 
 (define had-neg-values-1 #f)
 (define had-neg-values-2 #f) ;used in compare function
@@ -130,7 +131,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
-(define (unwarp-angle-simple! ang w fig)  
+(define (unwrap-angle-simple! ang w fig)  
   (if (and (eq? (had-neg-values? fig) #t) (> ang (/ pi 2)))
       (- ang (* 2 pi))
       (if (or (< ang 0) (and (= ang 0) (> w w-min)))
@@ -157,13 +158,13 @@ If not, see <https://www.gnu.org/licenses/>.
     (cond ((> diff 3.5)
            ;(displayln new-angle-value)
            ;(displayln (if (eq? fig 1) last-angle-value-1 last-angle-value-2))
-           ;(display "Angle unwarp adjustment by -360, at w=")
+           ;(display "Angle unwrap adjustment by -360, at w=")
            ;(displayln (round-decimal w 5))
            (set! new-adjustment (* -2 pi)))
           ((< diff -3.5)
            ;(displayln new-angle-value)
            ;(displayln (if (eq? fig 1) last-angle-value-1 last-angle-value-2))
-           ;(display "Angle unwarp adjustment by +360, at w=")
+           ;(display "Angle unwrap adjustment by +360, at w=")
            ;(displayln (round-decimal w 5))
            (set! new-adjustment (* 2 pi))))
     (if (eq? fig 1)
@@ -388,6 +389,85 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
+;Computation of zeros & poles
+(define zeros-1 '())
+(define zeros-2 '())
+
+(define poles-1 '())
+(define poles-2 '())
+
+(define (compute-zeros-poles tf fig)
+  (let ((a (get-numer tf)) ;'(poly-dense s 5 8)
+        (b (get-denom tf)))
+    (let ((numer-term-list (cdr (cdr a))) ;'(5 8)
+          (denom-term-list (cdr (cdr b))))
+
+      (if (or (contains-symbols?-tree numer-term-list)
+              (contains-symbols?-tree denom-term-list))
+          (begin 
+            ;no reduction in this case - so numbers must be rounded
+            (set! numer-term-list (make-poly-dense 's (map (λ (x) (if (list? x)
+                                                                      (if (contains-symbols?-tree x)
+                                                                          (round-decimal-tree x)
+                                                                          (round-decimal (eval x anchor) 3))
+                                                                      (if (not (symbol? x))
+                                                                          (round-decimal (eval x anchor) 3)
+                                                                          x))) 
+                                                           numer-term-list)))
+
+            (set! denom-term-list (make-poly-dense 's (map (λ (x) (if (list? x)
+                                                                      (if (contains-symbols?-tree x)
+                                                                          (round-decimal-tree x)
+                                                                          (round-decimal (eval x anchor) 3))
+                                                                      (if (not (symbol? x))
+                                                                          (round-decimal (eval x anchor) 3)
+                                                                          x)))
+                                                           denom-term-list))))
+
+          ;reduction
+          (let ((reduction (reduce (make-poly-dense 's (map (λ(x) (eval x anchor)) numer-term-list))
+                                   (make-poly-dense 's (map (λ(x) (eval x anchor)) denom-term-list)))))
+            ;(displayln reduction)
+            (set! numer-term-list (map (λ(x) (if (< (imag-part x) 0.000001) (real-part x) x)) (cdr (cdr (car reduction)))))
+            (set! denom-term-list (map (λ(x) (if (< (imag-part x) 0.000001) (real-part x) x)) (cdr (cdr (cadr reduction)))))
+
+            (if (eq? fig 1)
+                (begin
+                  (set! zeros-1 (find-complex-roots-of-polynomial numer-term-list))
+                  (set! poles-1 (find-complex-roots-of-polynomial denom-term-list))
+                  (display "zeros: ")(displayln zeros-1)
+                  (display "poles: ")(displayln poles-1))
+                (begin
+                  (set! zeros-2 (find-complex-roots-of-polynomial numer-term-list))
+                  (set! poles-2 (find-complex-roots-of-polynomial denom-term-list))
+                  (display "zeros: ")(displayln zeros-2)
+                  (display "poles: ")(displayln poles-2)))
+            (newline)
+            )))))
+
+
+
+
+; Computation of phase points
+(define (compute-phase-points! w-min w-max tfs fig)
+  (define (loop points w) 
+    (if (< w w-max)
+        (let ((new-phase-value (* 180 (/ 1 pi) (unwrap-angle-value! (angle (tfs w)) w fig))))
+          ;(display w)
+          ;(display ": ")
+          ;(displayln new-phase-value)
+          (loop (append points (list (list w new-phase-value))) (+ w (/ (sqrt w) 100))))
+        points))
+
+  (if (eq? fig 1)
+      (begin (set! angle-adjustment-total-1 0)
+             (set! last-angle-value-1 (angle (tfs w-min))))
+      (begin (set! angle-adjustment-total-2 0)
+             (set! last-angle-value-2 (angle (tfs w-min)))))
+  (loop '() w-min))
+
+
+
 
 
 
@@ -406,7 +486,11 @@ If not, see <https://www.gnu.org/licenses/>.
                                           (fw2-func w)
                                           (fw3-func w)
                                           (fw4-func w)))
-    
+
+    ;(display (get-simplified-block-value block))
+    (compute-zeros-poles (get-simplified-block-value block) 1)
+
+      
     
     (let* ((AR-at-freq-min (magnitude (tfs w-min)))
            (AR-at-freq-max (magnitude (tfs w-max)))
@@ -447,7 +531,7 @@ If not, see <https://www.gnu.org/licenses/>.
            
            ;gain margin parameters computation
            (f-gain-margin (λ (w) (- (let ((f1 (angle (tfs w))))
-                                      (unwarp-angle-simple! f1 w 1))
+                                      (unwrap-angle-simple! f1 w 1))
                                     
                                     (- pi))))
            
@@ -495,6 +579,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
       (set! angle-adjustment-total-1 0)
       (set! last-angle-value-1 (angle (tfs w-min)))
+
 
       
       (for-each 
@@ -565,7 +650,7 @@ If not, see <https://www.gnu.org/licenses/>.
                       (tick-grid)
                       (function (λ (w) (- 180)) w-min w-max  #:color 3 #:style 'dot)
 
-                      ;not unwarped angle:
+                      ;not unwraped angle:
                       #|
                       (function (λ (w) (* 180 (/ 1 pi)
                                           (let ((f1 (angle (tfs w))))
@@ -576,17 +661,21 @@ If not, see <https://www.gnu.org/licenses/>.
                                 w-min w-max  #:color 3 #:style 'dot #:width 0.5
                                 )
                       |#
-
+                      
+                      #|
                       (function (λ (w) (* 180 (/ 1 pi)
                                           (let ((f1 (angle (tfs w))))
                                             
                                             ;f1
-                                            ;(unwarp-angle-simple f1 w 1)
+                                            ;(unwrap-angle-simple f1 w 1)
                                             (unwrap-angle-value! f1 w 1)
                                             
                                             )))
                                 w-min w-max  ;#:color 3
                                 )
+                      |#
+                      (lines (compute-phase-points! w-min w-max tfs 1))
+                      
                       #|
                     (function-interval (λ (w) 0)
                                        (λ (w) (* 180 (/ 1 pi)
@@ -594,8 +683,8 @@ If not, see <https://www.gnu.org/licenses/>.
                                                  (let ((f1 (angle (tfs-value-evaluation (make-rectangular 0 w)))))
                                                    
                                                    ;f1
-                                                   ;(unwarp-angle-simple f1 w 1)
-                                                   (unwarp-angle f1 w 1)
+                                                   ;(unwrap-angle-simple f1 w 1)
+                                                   (unwrap-angle f1 w 1)
                                                    
                                                    )))
                                        ;|#
@@ -662,7 +751,10 @@ If not, see <https://www.gnu.org/licenses/>.
                                             (fw2-func w)
                                             (fw3-func w) 
                                             (fw4-func w)))
+
     
+    (compute-zeros-poles (get-simplified-block-value block1) 1)
+    (compute-zeros-poles (get-simplified-block-value block2) 2)
     
     
     (bode-plot-parameters)
@@ -712,6 +804,8 @@ If not, see <https://www.gnu.org/licenses/>.
         
         (plot (list ;(axes)
                (tick-grid)
+
+               #|
                (function
                 (λ (w) (* 180 (/ 1 pi)
                           (let ((f1 (angle (tfs1 w))))
@@ -723,6 +817,10 @@ If not, see <https://www.gnu.org/licenses/>.
                 
                 w-min w-max
                 #:label "tf1")
+               |#
+               (lines (compute-phase-points! w-min w-max tfs1 1) #:label "tf1")
+
+               #|
                (function
                 (λ (w) (* 180 (/ 1 pi)
                           (let ((f1 (angle (tfs2 w))))
@@ -735,6 +833,9 @@ If not, see <https://www.gnu.org/licenses/>.
                 w-min w-max
                 #:color 3 
                 #:label "tf2")
+                |#
+               (lines (compute-phase-points! w-min w-max tfs2 2) #:color 3 #:label "tf2")
+             
                (function (λ (x) 0) #:color 0 #:style 'dot)
                (function (λ (w) (- 180)) w-min w-max  #:color 3 #:style 'dot))))
       
@@ -773,7 +874,8 @@ If not, see <https://www.gnu.org/licenses/>.
                                                 (fw3-func w) 
                                                 (fw4-func w)))
         
-        
+
+        (compute-zeros-poles (get-simplified-block-value block1) 1)
         
         (bode-plot-parameters)
         
@@ -813,9 +915,13 @@ If not, see <https://www.gnu.org/licenses/>.
                             
                             (plot (list ;(axes)
                                    (tick-grid)
+                                   #|
                                    (function (λ (w) (* 180 (/ 1 pi) (angle (tfs1 w))))
                                              w-min w-max
                                              #:label "tf")
+                                   |#
+                                   (lines (compute-phase-points! w-min w-max tfs1 1) #:label "tf")
+                                   
                                    (function (λ (x) 0) #:color 0 #:style 'dot)
                                    (function (λ (w) (- 180)) w-min w-max  #:color 3 #:style 'dot))))
                           
@@ -871,15 +977,23 @@ If not, see <https://www.gnu.org/licenses/>.
                        
                        (plot (list ;(axes)
                               (tick-grid)
+                              #|
                               (function (λ (w) (* 180 (/ 1 pi)
                                                   (angle (tfs1 w))))
                                         w-min w-max
                                         #:label "tf")
+                              |#
+                              (lines (compute-phase-points! w-min w-max tfs1 1) #:label "tf")
+
+                              #|
                               (function (λ (w) (* 180 (/ 1 pi)
                                                   (angle (tfs-temp w))))
                                         w-min w-max
                                         #:color 0 #:style 'dot
                                         #:label "previous tf")
+                              |#
+                              (lines (compute-phase-points! w-min w-max tfs-temp 2) #:color 0 #:style 'dot #:label "previous tf")
+                              
                               (function (λ (x) 0) #:color 0 #:style 'dot)
                               (function (λ (w) (- 180)) w-min w-max  #:color 3 #:style 'dot))))
                      
@@ -915,6 +1029,7 @@ If not, see <https://www.gnu.org/licenses/>.
   ;(newline)
   
   (set! total-tfs-value (cons 'λ (cons '(y) (list (ratio-to-list (get-simplified-block-value block))))))
+
   ;ratio-to-list-lite
   ;change:
   #|
@@ -998,7 +1113,6 @@ If not, see <https://www.gnu.org/licenses/>.
                                                                                 (fw3-func w)
                                                                                 (fw4-func w)))))
                                         w-min w-max)
-                              
                               (function (λ (x) 0) #:color 0 #:style 'dot)
                               (function (λ (w) (- 180)) w-min w-max  #:color 3 #:style 'dot))))
                      
@@ -1121,6 +1235,9 @@ If not, see <https://www.gnu.org/licenses/>.
                                           (fw2-func w)
                                           (fw3-func w)
                                           (fw4-func w)))
+
+    
+    (compute-zeros-poles (get-simplified-block-value block) 1)
     
     
     (let* ((AR-at-freq-min (magnitude (tfs w-min)))
@@ -1162,7 +1279,7 @@ If not, see <https://www.gnu.org/licenses/>.
            
            ;gain margin parameters computation
            (f-gain-margin (λ (w) (- (let ((f1 (angle (tfs w))))
-                                      (unwarp-angle-simple! f1 w 1))
+                                      (unwrap-angle-simple! f1 w 1))
 
                                     (- pi))))
            
