@@ -172,9 +172,13 @@ If not, see <https://www.gnu.org/licenses/>.
                (cond ((list? coeff) (list-to-string coeff '()))
                      ((symbol? coeff) (list (symbol->string coeff)))
                      (else (list (number->string (abs coeff)))))
-               (cons "s^"
-                     (cons (number->string (car (cdr (cdr (car (cdr (cdr (car (cdr lst)))))))))
-                           (list-to-printable-list-2 (car (cddr lst)))))))
+               (if (> coeff 0)
+                   (cons "s^" 
+                         (cons (number->string (car (cdr (cdr (car (cdr (cdr (car (cdr lst)))))))))
+                               (list-to-printable-list-2 (car (cddr lst)))))
+                   (cons "-" (cons "s^"
+                         (cons (number->string (car (cdr (cdr (car (cdr (cdr (car (cdr lst)))))))))
+                               (list-to-printable-list-2 (car (cddr lst)))))))))
           
           (else
            (if (not (pair? (car (cddr lst))))
