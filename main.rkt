@@ -194,6 +194,62 @@ If not, see <https://www.gnu.org/licenses/>.
     (define tf1 (tf '(5 0) '(1 1 1) a)) ;band-pass filter
     (bode a)
 
+    (displayc "> (bode a)")
+    (define tf1 (tf '(1 0 -0.1) '(-0.1 -0.2 -0.1) a))
+    (bode a)
+
+    (displayc "> (bode a)")
+    (define tf1 (tf '(1 2 5) '(4 4) a))
+    (bode a)
+
+    (displayc "> (bode a)")
+    (define tf1 (tf '(1) '(0.3 0.1 1) a))
+    (bode a)
+
+    (displayc "> (bode a)")
+    (define tf1 (tf '(1 0.2) '(1.6 0.2) a))
+    (bode a)
+
+    (displayc "> (bode a)")
+    (define tf1 (tf '(-0.1 -0.2 -0.1) '(1 0 -0.1) a))
+    (bode a)
+
+    (displayc "> (bode a)")
+    (define tf1 (tf '(1 1.6) '(0.2 0) a))
+    (bode a)
+
+    (displayc "> (bode a)")
+    (define tf1 (tf '(1 0.625) '(0.125) a))
+    (bode a)
+
+    (displayc "> (bode a)")
+    (define tf1 (tf '(1 0 0 0) '(1) a))
+    (bode a)
+    
+    (displayc "> (bode a)")
+    (define tf1 (tf '(1 0 1) '(1) a))
+    (bode a)
+
+    (displayc "> (bode a)")
+    (define tf1 (tf '(1) '(1 0) a))
+    (bode a)
+
+    (displayc "> (bode a)")
+    (define tf1 (tf '(1) '(1 0 1) a))
+    (bode a)
+
+    (displayc "> (bode a)")
+    (define tf1 (tf '(1) '(1 0 0 0) a))
+    (bode a)
+    
+    (displayc "> (bode a)")
+    (define tf1 (tf '(1) '(64 5.214 64.212 3.375 8.062) a))
+    (bode a)
+
+    (displayc "> (bode a)")
+    (define tf1 (tf '(1 1.25 2) '(0.25 0) a))
+    (bode a)
+    
     
     ;Compare
     (displayc "> (compare c1 c2)")
