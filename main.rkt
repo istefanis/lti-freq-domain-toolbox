@@ -195,22 +195,6 @@ If not, see <https://www.gnu.org/licenses/>.
     (bode a)
 
     (displayc "> (bode a)")
-    (define tf1 (tf '(1 0 -0.1) '(-0.1 -0.2 -0.1) a))
-    (bode a)
-
-    (displayc "> (bode a)")
-    (define tf1 (tf '(1 2 5) '(4 4) a))
-    (bode a)
-
-    (displayc "> (bode a)")
-    (define tf1 (tf '(1) '(0.3 0.1 1) a))
-    (bode a)
-
-    (displayc "> (bode a)")
-    (define tf1 (tf '(1 0.2) '(1.6 0.2) a))
-    (bode a)
-
-    (displayc "> (bode a)")
     (define tf1 (tf '(-0.1 -0.2 -0.1) '(1 0 -0.1) a))
     (bode a)
 
