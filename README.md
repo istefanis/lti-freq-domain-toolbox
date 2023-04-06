@@ -10,12 +10,11 @@ It can perform tasks such as:
 
 > *Predefined circuits are also included: controllers (PI, PD and PID), filters (Chebyshev type I), delay components (Padé) etc.*
 
+> *This is a command-line tool. For a GUI one, check the newer [Controllio](https://github.com/istefanis/controllio) app.*
+
 ## Known issues & limitations
 
-* phase computation: 1) no adjustment via value at w -> ∞ based on zeros & poles, 2) imperfect unwrapping cases
 * bandwidth computation in more complicated cases (ex. double band pass filters)
-
-These have been treated in the newest [Controllio](https://github.com/istefanis/controllio) app, using more advanced numerical algorithms.
 
 ## Installation
 

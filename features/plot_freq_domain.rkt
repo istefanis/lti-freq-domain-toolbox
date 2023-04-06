@@ -372,7 +372,8 @@ If not, see <https://www.gnu.org/licenses/>.
              (newline))
       (begin (display "gain margin  = ∞")
              (newline)))
-      
+
+  #|
   (if (not (eq? phase-margin #f))
       (begin (display "phase margin = ")
              (display (round-decimal phase-margin 2))
@@ -384,17 +385,23 @@ If not, see <https://www.gnu.org/licenses/>.
       (begin (display "phase margin = ∞")
              (newline)
              (newline)))
-  )
+  |#
+)
 
 
 
 
 ;Computation of zeros & poles
+
 (define zeros-1 '())
 (define zeros-2 '())
 
 (define poles-1 '())
 (define poles-2 '())
+
+(define expected-phase-value-at-w-max-1 null)
+(define expected-phase-value-at-w-max-2 null)
+
 
 (define (compute-zeros-poles tf fig)
   (let ((a (get-numer tf)) ;'(poly-dense s 5 8)
@@ -431,24 +438,42 @@ If not, see <https://www.gnu.org/licenses/>.
             (set! numer-term-list (map (λ(x) (if (< (imag-part x) 0.000001) (real-part x) x)) (cdr (cdr (car reduction)))))
             (set! denom-term-list (map (λ(x) (if (< (imag-part x) 0.000001) (real-part x) x)) (cdr (cdr (cadr reduction)))))
 
+     
             (if (eq? fig 1)
                 (begin
                   (set! zeros-1 (find-complex-roots-of-polynomial numer-term-list))
                   (set! poles-1 (find-complex-roots-of-polynomial denom-term-list))
                   (display "zeros: ")(displayln zeros-1)
-                  (display "poles: ")(displayln poles-1))
+                  (display "poles: ")(displayln poles-1)
+
+                  ;computation of expected phase value at w-max, according to zeros & poles
+                  (let* ((zeros-at-positive-halfplane (length (filter (λ(x) (> (real-part x) 0)) zeros-1)))
+                         (zeros-at-negative-halfplane-or-y-axis (length (filter (λ(x) (<= (real-part x) 0)) zeros-1))))
+                    (set! expected-phase-value-at-w-max-1
+                          (* -90 (+ (length denom-term-list) -1 zeros-at-positive-halfplane (- zeros-at-negative-halfplane-or-y-axis))))
+                    ;(display "expected phase value at w-max: ")(displayln expected-phase-value-at-w-max-1)
+                    ))
                 (begin
                   (set! zeros-2 (find-complex-roots-of-polynomial numer-term-list))
                   (set! poles-2 (find-complex-roots-of-polynomial denom-term-list))
                   (display "zeros: ")(displayln zeros-2)
-                  (display "poles: ")(displayln poles-2)))
+                  (display "poles: ")(displayln poles-2)
+
+                  ;computation of expected phase value at w-max, according to zeros & poles
+                  (let* ((zeros-at-positive-halfplane (length (filter (λ(x) (> (real-part x) 0)) zeros-2)))
+                         (zeros-at-negative-halfplane-or-y-axis (length (filter (λ(x) (<= (real-part x) 0)) zeros-2))))
+                    (set! expected-phase-value-at-w-max-2
+                          (* -90 (+ (length denom-term-list) -1 zeros-at-positive-halfplane (- zeros-at-negative-halfplane-or-y-axis))))
+                    ;(display "expected phase value at w-max: ")(displayln expected-phase-value-at-w-max-2)
+                    )))
             (newline)
             )))))
 
 
 
 
-; Computation of phase points
+;Computation of phase points
+
 (define (compute-phase-points! w-min w-max tfs fig)
   (define (loop points w) 
     (if (< w w-max)
@@ -458,13 +483,49 @@ If not, see <https://www.gnu.org/licenses/>.
           ;(displayln new-phase-value)
           (loop (append points (list (list w new-phase-value))) (+ w (/ (sqrt w) 100))))
         points))
-
+  
   (if (eq? fig 1)
       (begin (set! angle-adjustment-total-1 0)
              (set! last-angle-value-1 (angle (tfs w-min))))
       (begin (set! angle-adjustment-total-2 0)
              (set! last-angle-value-2 (angle (tfs w-min)))))
-  (loop '() w-min))
+
+  ;adjustment of phase based on expected phase value at w-max according to zeros & poles
+  (let* ((points (loop '() w-min))
+         (last-phase-value (cadr (last points)))
+         (expected-phase-value-at-w-max (if (eq? fig 1) expected-phase-value-at-w-max-1 expected-phase-value-at-w-max-2)))
+    
+    (cond ((not (eq? expected-phase-value-at-w-max '()))
+          
+           (cond ((> last-phase-value (+ expected-phase-value-at-w-max 10))
+                  (let ((factor (ceiling (/ (- (abs (- last-phase-value expected-phase-value-at-w-max)) 10) 180))))
+                    #|
+                    (display "Current phase value at w-max: ") (displayln last-phase-value)
+                    (display "Expected phase value at w-max: ") (displayln expected-phase-value-at-w-max)
+                    (display "Phase adjustment via w-max: ") (displayln (- (* factor 180)))
+                    (newline)
+                    |#
+                    (log-messages (list "[CP-88] Current phase value at w-max: " last-phase-value
+                                        "Expected phase value at w-max: " expected-phase-value-at-w-max
+                                        "Phase adjustment via w-max: " (- (* factor 180)))
+                                  'checkpoints)
+                    (set! points (map (λ(x) (list (car x) (- (cadr x) (* factor 180)))) points))))
+                 
+                 ((< (+ last-phase-value 10) expected-phase-value-at-w-max)
+                  (let ((factor (ceiling (/ (- (abs (- expected-phase-value-at-w-max last-phase-value)) 10) 180))))
+                    #|
+                    (display "Current phase value at w-max: ") (displayln last-phase-value)
+                    (display "Expected phase value at w-max: ") (displayln expected-phase-value-at-w-max)
+                    (display "Phase adjustment via w-max: ") (displayln (* factor 180))
+                    (newline)
+                    |#
+                    (log-messages (list "[CP-89] Current phase value at w-max: " last-phase-value
+                                        "Expected phase value at w-max: " expected-phase-value-at-w-max
+                                        "Phase adjustment via w-max: " (* factor 180))
+                                  'checkpoints)
+                    (set! points (map (λ(x) (list (car x) (+ (cadr x) (* factor 180)))) points)))))))
+    
+    points))
 
 
 
@@ -677,25 +738,26 @@ If not, see <https://www.gnu.org/licenses/>.
                       (lines (compute-phase-points! w-min w-max tfs 1))
                       
                       #|
-                    (function-interval (λ (w) 0)
-                                       (λ (w) (* 180 (/ 1 pi)
-                                                 ;#|
-                                                 (let ((f1 (angle (tfs-value-evaluation (make-rectangular 0 w)))))
+                      (function-interval (λ (w) 0)
+                                         (λ (w) (* 180 (/ 1 pi)
+                                                   ;#|
+                                                   (let ((f1 (angle (tfs-value-evaluation (make-rectangular 0 w)))))
                                                    
                                                    ;f1
                                                    ;(unwrap-angle-simple f1 w 1)
                                                    (unwrap-angle f1 w 1)
                                                    
                                                    )))
-                                       ;|#
-                                       freq_min freq_max  #:color 1 #:line2-color 1 #:line1-style 'transparent)
-                    |#
-                      
+                                         ;|#
+                                         freq_min freq_max  #:color 1 #:line2-color 1 #:line1-style 'transparent)
+                      |#
+
+                      #|
                       (if (not (eq? w-phase-margin #f)) 
                           (error-bars (list 
                                        (vector w-phase-margin (+ (- 180) (/ phase-margin 2)) (/ phase-margin 2))))
                           '())
-                      
+                      |#
                       
                       (function (λ (x) 0) #:color 0 #:style 'dot))))
              
@@ -1122,7 +1184,7 @@ If not, see <https://www.gnu.org/licenses/>.
                     ))
                   
                   
-                  
+                  #|
                   ((eq? (cadr condition) 'ph)
                    
                    (set! m2 (newton-meth-for-solv-eq
@@ -1203,7 +1265,7 @@ If not, see <https://www.gnu.org/licenses/>.
                                
                                ))
                        ))
-                  
+                  |#
                   
                   (else (error "Unrecognized condition"))))
           
