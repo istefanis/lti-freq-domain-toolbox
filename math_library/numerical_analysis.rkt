@@ -32,6 +32,21 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
 |#
 
 
+#|
+The implementation of the Talbot algorithm for Laplace inversion
+was originally demonstrated in Python by F.D. Nieuwveldt and D. Kadelka. See: 
+<https://code.activestate.com/recipes/576934/>
+<https://code.activestate.com/recipes/576938/>
+
+Reference:
+L.N. Trefethen, J.A.C. Weideman, and T. Schmelzer. Talbot quadratures and rational 
+approximations. BIT. Numerical Mathematics, 46(3):653 670, 2006.
+
+The original implementations are licensed under the MIT License,
+and their licences are included in respective 'math_library\assets' subdirectories.
+|#
+
+
 
 
 
@@ -256,6 +271,43 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
   
   (sum-iter-custom f a add-dx b 0 n (/ (- b a) n) 0))  
 |#
+
+
+
+
+; LAPLACE INVERSION
+
+
+; Talbot numerical method
+(define (talbot-method F t N)
+  (when (= t 0) (display "error - t must be positive - TALBOT METHOD"))
+  
+  (let ((h (/ (* 2 pi) N))
+        (shift 0.0) ;contour should be shifted if positive real poles exist
+        (c1 0.5017) ;parameters by Weideman (see reference above)
+        (c2 0.6407)
+        (c3 0.6122)
+        (c4 0.2645))
+    
+    ;evaluation at theta
+    (define (loop k ans)
+      (if (> k N)
+          
+          (* (/ h (make-rectangular 0 (* 2 pi))) ans)
+          
+          (let* ((theta (+ (* -1 pi) (* (+ k 0.5) h)))
+                 
+                 (z (+ shift (* (/ N t) (+ (* c1 theta (cot (* c2 theta)))
+                                           (- c3) 
+                                           (make-rectangular 0 (* c4 theta))))))
+                 
+                 (dz-dtheta (* (/ N t) (+ (* (- c1) c2 theta (expt (csc (* c2 theta)) 2))
+                                          (* c1 (cot (* c2 theta)))
+                                          (make-rectangular 0 c4)))))
+            
+            (loop (+ k 1) (+ ans (* (exp (* z t)) (F z) dz-dtheta))))))
+    
+    (real-part (loop 0 0))))
 
 
 

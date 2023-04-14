@@ -18,29 +18,15 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
-#|
-The implementation of the Talbot algorithm for Laplace inversion
-was originally demonstrated in Python by F.D. Nieuwveldt. See: 
-<http://code.activestate.com/recipes/576934-numerical-inversion-of-the-laplace-transform-using/>
-
-Reference:
-L.N. Trefethen, J.A.C. Weideman, and T. Schmelzer. Talbot quadratures and rational 
-approximations. BIT. Numerical Mathematics, 46(3):653 670, 2006.
-|#
-
-
-
 
 
 
 #lang racket
 
 (require plot)
-(require "../math_library/general.rkt")
 (require "../math_library/numerical_analysis.rkt")
 (require "../math_library/symbolic_algebra.rkt")
 (require "../elements/general.rkt")
-(require "../util/display_modes.rkt")
 (require "text_generation.rkt")
 (provide (all-defined-out))
 
@@ -62,44 +48,6 @@ approximations. BIT. Numerical Mathematics, 46(3):653 670, 2006.
 ;min & max time [s]
 (define t-min (/ 1 1000)) ;when writen in this form - instead of 0.001 - the time domain plots are generated faster by the Plot library 
 (define t-max 30)
-
-
-
-
-
-
-;///// Talbot algorithm for Laplace inversion
-
-(define (Talbot F t N)
-  
-  ; stepsize initialization:
-  (let ((h (/ (* 2 pi) N))
-        (shift 0.0))
-    
-    
-    (when (= t 0) (display "error - Inverse transform can not be calculated for t=0 - TALBOT"))
-    
-    
-    ; loop is evaluating the Laplace inversion at each point theta which is based on the trapezoidal rule:
-    (define (loop k ans)
-      (if (> k N)
-          
-          (* (/ h (* 2 (make-rectangular 0 1) pi)) ans)
-          
-          (let* ((theta (+ (* -1 pi) (* (+ k 0.5) h)))
-                 
-                 (z (+ shift (* (/ N t) (+ (* 0.5017 theta (cot (* 0.6407 theta))) -0.6122 
-                                           (* 0.2645 (make-rectangular 0 1) theta)))))
-                 
-                 (dz (* (/ N t) (+ (* -0.5017 0.6407 theta (expt (csc (* 0.6407 theta)) 2)) 
-                                   (* 0.5017 (cot (* 0.6407 theta))) (* 0.2645 (make-rectangular 0 1))))))
-            
-            
-            (loop (+ k 1) (+ ans (* (exp (* z t)) (F z) dz))))))
-    
-    (loop 0 0)))
-
-
 
 
 
@@ -135,7 +83,7 @@ approximations. BIT. Numerical Mathematics, 46(3):653 670, 2006.
         (plot (list
                ;(axes)
                (tick-grid)
-               (function (λ (t) (real-part (Talbot tfs t 150))) t-min t-max)
+               (function (λ (t) (talbot-method tfs t 150)) t-min t-max)
                (function (λ (t) -10.0) t-min t-max #:color 0 #:style 'dot)
                (function (λ (t) 10.0) t-min t-max #:color 0 #:style 'dot)
                (function (λ (t) 0) t-min t-max #:color 0 #:style 'dot))))
@@ -177,7 +125,7 @@ approximations. BIT. Numerical Mathematics, 46(3):653 670, 2006.
         (plot (list
                ;(axes)
                (tick-grid)
-               (function (deriv (λ (t) (real-part (Talbot tfs t 150)))) t-min t-max)
+               (function (deriv (λ (t) (talbot-method tfs t 150))) t-min t-max)
                (function (λ (t) -10.0) t-min t-max #:color 0 #:style 'dot)
                (function (λ (t) 10.0) t-min t-max #:color 0 #:style 'dot))))
       
@@ -205,7 +153,7 @@ approximations. BIT. Numerical Mathematics, 46(3):653 670, 2006.
     
     
     (let ((t-list (cdr (build-list 1000 (λ (x) (* x 0.01)))))
-          (f (λ (t) (real-part (Talbot tfs t 150)))))
+          (f (λ (t) (talbot-method tfs t 150))))
       
       (for-each
        displayln
@@ -310,7 +258,7 @@ approximations. BIT. Numerical Mathematics, 46(3):653 670, 2006.
       (plot (list
              (axes)
              (tick-grid)
-             (function (λ (t) (real-part (Talbot tfs t 150))) t-min t-max)
+             (function (λ (t) (talbot-method tfs t 150)) t-min t-max)
              (function (λ (t) -10.0) t-min t-max #:color 0 #:style 'dot)
              (function (λ (t) 10.0) t-min t-max #:color 0 #:style 'dot)
              (function (λ (t) gain) t-min t-max #:color 0 #:style 'dot)

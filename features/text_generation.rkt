@@ -25,7 +25,6 @@ If not, see <https://www.gnu.org/licenses/>.
 (require "../math_library/general.rkt")
 (require "../math_library/symbolic_algebra.rkt")
 (require "../elements/general.rkt")
-(require "../util/display_modes.rkt")
 (provide (all-defined-out))
 
 
