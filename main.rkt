@@ -144,6 +144,9 @@ If not, see <https://www.gnu.org/licenses/>.
 
     (displayc "> (bode (pid-controller 5 8 4 a))")
     (bode (pid-controller 5 8 4 a))
+
+    (displayc "> (bode (pid-controller 600 100 3 a))")
+    (bode (pid-controller 600 100 3 a))
     
     (displayc "> (evolve (pid-controller 6 7 3 a))")
     (evolve (pid-controller 6 7 3 a))
@@ -199,23 +202,11 @@ If not, see <https://www.gnu.org/licenses/>.
     (bode a)
 
     (displayc "> (bode a)")
-    (define tf1 (tf '(1 1.6) '(0.2 0) a))
-    (bode a)
-
-    (displayc "> (bode a)")
-    (define tf1 (tf '(1 0.625) '(0.125) a))
-    (bode a)
-
-    (displayc "> (bode a)")
     (define tf1 (tf '(1 0 0 0) '(1) a))
     (bode a)
     
     (displayc "> (bode a)")
     (define tf1 (tf '(1 0 1) '(1) a))
-    (bode a)
-
-    (displayc "> (bode a)")
-    (define tf1 (tf '(1) '(1 0) a))
     (bode a)
 
     (displayc "> (bode a)")
@@ -226,10 +217,6 @@ If not, see <https://www.gnu.org/licenses/>.
     (define tf1 (tf '(1) '(1 0 0 0) a))
     (bode a)
     
-    (displayc "> (bode a)")
-    (define tf1 (tf '(1) '(64 5.214 64.212 3.375 8.062) a))
-    (bode a)
-
     (displayc "> (bode a)")
     (define tf1 (tf '(1 1.25 2) '(0.25 0) a))
     (bode a)
@@ -328,7 +315,7 @@ If not, see <https://www.gnu.org/licenses/>.
     ;Methods comparison:
     (displayc "> (compare (pade-delay 1 (sine b)) a)")
     (define tf1 (tf '(1) '(1 0 1) a))
-    (define fw-delay1 (tf '(fw3) '(1) a)) ;fw3 is defined in: ../functionality/text_generation.rkt
+    (define fw-delay1 (tf '(fw3) '(1) a)) ;fw3 is defined in: ../features/text_generation.rkt
     (connect fw-delay1 tf1)
     (compare (pade-delay 1 (sine b)) a)
     
