@@ -15,6 +15,7 @@ It can perform tasks such as:
 ## Known issues & limitations
 
 * bandwidth computation in more complicated cases (ex. double band pass filters)
+* phase adjustment in some cases of steep phase shifts
 
 ## Installation
 

@@ -160,30 +160,60 @@ If not, see <https://www.gnu.org/licenses/>.
 
 ;Characteristic numbers computation & text display functions [SHOULD BE IMPROVED]
 
-(define (display-filter-type AR-at-freq-min AR-at-freq-max bandwidth-threshold w-upper-cutoff band-stop-filter?)
-  (cond ((and (< AR-at-freq-min bandwidth-threshold)
-              (< AR-at-freq-max bandwidth-threshold)
-              (not (eq? w-upper-cutoff #f)))
+(define all-pass-filter #f)
+(define no-pass-filter #f)
+(define band-pass-filter #f)
+(define band-stop-filter #f)
+(define low-pass-filter #f)
+(define high-pass-filter #f)
+
+(define (compute-filter-type! min-magnitude max-magnitude magnitude-at-w-min magnitude-at-w-max bandwidth-threshold)
+
+  (set! all-pass-filter #f)
+  (set! no-pass-filter #f)
+  (set! band-pass-filter #f)
+  (set! band-stop-filter #f)
+  (set! low-pass-filter #f)
+  (set! high-pass-filter #f)
+  
+  (cond ((> min-magnitude bandwidth-threshold)
+         (display "All-pass filter")
+         (set! all-pass-filter #t)
+         (newline)
+         (newline))
+        ((< max-magnitude bandwidth-threshold)
+         (display "No-pass filter")
+         (set! no-pass-filter #t)
+         (newline)
+         (newline))
+        ((and (< magnitude-at-w-min bandwidth-threshold)
+              (< magnitude-at-w-max bandwidth-threshold)
+              (> max-magnitude bandwidth-threshold))
          (display "Band-pass filter")
+         (set! band-pass-filter #t)
          (newline)
          (newline))
-        ((and (> AR-at-freq-min bandwidth-threshold)
-              (> AR-at-freq-max bandwidth-threshold)
-              (not (eq? w-upper-cutoff #f))
-              (eq? band-stop-filter? #t))
+        ((and (> magnitude-at-w-min bandwidth-threshold)
+              (> magnitude-at-w-max bandwidth-threshold)
+              (< min-magnitude bandwidth-threshold))
          (display "Band-stop filter")
+         (set! band-stop-filter #t)
          (newline)
          (newline))
-        ((and (> (/ AR-at-freq-min AR-at-freq-max) 1.5)
-              (> AR-at-freq-min bandwidth-threshold)
-              (not (> AR-at-freq-max (* 3 bandwidth-threshold))))
+        ((and (> magnitude-at-w-min magnitude-at-w-max)
+              (> magnitude-at-w-min bandwidth-threshold)
+              (< magnitude-at-w-max (* 3 bandwidth-threshold))
+              (> (/ magnitude-at-w-min magnitude-at-w-max) 1.5))
          (display "Low-pass filter")
+         (set! low-pass-filter #t)
          (newline)
          (newline))    
-        ((and (> (/ AR-at-freq-max AR-at-freq-min) 1.5)
-              (> AR-at-freq-max bandwidth-threshold)
-              (not (> AR-at-freq-min (* 3 bandwidth-threshold))))
+        ((and (> magnitude-at-w-max magnitude-at-w-min)
+              (> magnitude-at-w-max bandwidth-threshold)
+              (< magnitude-at-w-min (* 3 bandwidth-threshold))
+              (> (/ magnitude-at-w-max magnitude-at-w-min) 1.5))
          (display "High-pass filter")
+         (set! high-pass-filter #t)
          (newline)
          (newline))
         ))
@@ -265,14 +295,14 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
-(define (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
+(define (display-roll-off magnitude-at-w-min magnitude-at-w-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
            
-  (cond ((and (> (/ AR-at-freq-min AR-at-freq-max) 1.5)
-              (> AR-at-freq-min bandwidth-threshold)
-              (not (> AR-at-freq-max (* 3 bandwidth-threshold))))
+  (cond ((and (> (/ magnitude-at-w-min magnitude-at-w-max) 1.5)
+              (> magnitude-at-w-min bandwidth-threshold)
+              (not (> magnitude-at-w-max (* 3 bandwidth-threshold))))
              
          ;Low-pass filter:
-         (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-at-100 AR-at-freq-max))
+         (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-at-100 magnitude-at-w-max))
                                                             (log (/ 100 w-max)))) 3))
          (display "roll-off     = ")
          (display roll-off) ;(log(AR2/AR1)/log(w2/w1))
@@ -284,12 +314,12 @@ If not, see <https://www.gnu.org/licenses/>.
                   )))
          (newline))
             
-        ((and (> (/ AR-at-freq-max AR-at-freq-min) 1.5)
-              (> AR-at-freq-max bandwidth-threshold)
-              (not (> AR-at-freq-min (* 3 bandwidth-threshold))))
+        ((and (> (/ magnitude-at-w-max magnitude-at-w-min) 1.5)
+              (> magnitude-at-w-max bandwidth-threshold)
+              (not (> magnitude-at-w-min (* 3 bandwidth-threshold))))
              
          ;High-pass filter:
-         (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-at-freq-min AR-at-001))
+         (define roll-off (round-decimal (exact->inexact (/ (log (/ magnitude-at-w-min AR-at-001))
                                                             (log (/ w-min 0.01)))) 3))
          (display "roll-off     = ")
          (display roll-off) ;(log(AR2/AR1)/log(w2/w1))
@@ -300,14 +330,14 @@ If not, see <https://www.gnu.org/licenses/>.
                   (display " [dB/dec]"))))
          (newline))
             
-        ((and (< AR-at-freq-min bandwidth-threshold)
-              (< AR-at-freq-max bandwidth-threshold)
+        ((and (< magnitude-at-w-min bandwidth-threshold)
+              (< magnitude-at-w-max bandwidth-threshold)
               (not (eq? w-upper-cutoff #f)))
              
          ;Band-pass filter:         
-         (define roll-off-low (round-decimal (exact->inexact (/ (log (/ AR-at-freq-min AR-at-001))
+         (define roll-off-low (round-decimal (exact->inexact (/ (log (/ magnitude-at-w-min AR-at-001))
                                                                 (log (/ w-min 0.01)))) 3))
-         (define roll-off-high (round-decimal (exact->inexact (/ (log (/ AR-at-100 AR-at-freq-max))
+         (define roll-off-high (round-decimal (exact->inexact (/ (log (/ AR-at-100 magnitude-at-w-max))
                                                                  (log (/ 100 w-max)))) 3))
          (display "roll-off (low)  = ")
          (display roll-off-low) ;(log(AR2/AR1)/log(w2/w1))
@@ -446,15 +476,37 @@ If not, see <https://www.gnu.org/licenses/>.
 (define magnitude-points-1 '())
 (define magnitude-points-2 '())
 
+(define min-magnitude-1 1e8)
+(define max-magnitude-1 0)
+(define min-magnitude-2 1e8)
+(define max-magnitude-2 0)
+
 (define (compute-magnitude-points! w-min w-max tfs fig)
   (define (loop points w) 
     (if (< w w-max)
         (let ((new-magnitude-value (magnitude (tfs w))))
-          (loop (append points (list (list w new-magnitude-value)))
+          (if (eq? fig 1)
+              (begin (cond ((and (number? new-magnitude-value) (< new-magnitude-value min-magnitude-1)) (set! min-magnitude-1 new-magnitude-value)))
+                     (cond ((and (number? new-magnitude-value) (> new-magnitude-value max-magnitude-1)) (set! max-magnitude-1 new-magnitude-value))))
+              (begin (cond ((and (number? new-magnitude-value) (< new-magnitude-value min-magnitude-2)) (set! min-magnitude-2 new-magnitude-value)))
+                     (cond ((and (number? new-magnitude-value) (> new-magnitude-value max-magnitude-2)) (set! max-magnitude-2 new-magnitude-value)))))
+          (loop (append points (list (list w new-magnitude-value)))      
                 (+ w (/ (sqrt w) curves-precision-factor))))
         points))
 
+  (if (eq? fig 1)
+      (begin (set! min-magnitude-1 1e8)
+             (set! max-magnitude-1 0))
+      (begin (set! min-magnitude-2 1e8)
+             (set! max-magnitude-2 0)))
   (let ((points (loop '() w-min)))
+    #|
+    (if (eq? fig 1)
+        (begin (displayln min-magnitude-1)
+               (displayln max-magnitude-1))
+        (begin (displayln min-magnitude-2)
+               (displayln max-magnitude-2)))
+    |#
     (if (eq? fig 1)
         (set! magnitude-points-1 points)
         (set! magnitude-points-2 points))
@@ -562,9 +614,9 @@ If not, see <https://www.gnu.org/licenses/>.
 
       
     
-    (let* ((AR-at-freq-min (magnitude (tfs w-min)))
-           (AR-at-freq-max (magnitude (tfs w-max)))
-           (AR-min-value (min AR-at-freq-min AR-at-freq-max half-power-threshold 0.099))
+    (let* ((magnitude-at-w-min (magnitude (tfs w-min)))
+           (magnitude-at-w-max (magnitude (tfs w-max)))
+           (AR-min-value (min magnitude-at-w-min magnitude-at-w-max half-power-threshold 0.099))
            (AR-at-001 (magnitude (tfs 0.01)))
            (AR-at-100 (magnitude (tfs 100)))
            
@@ -727,13 +779,13 @@ If not, see <https://www.gnu.org/licenses/>.
       
       
       ;filter type computation & text display
-      (display-filter-type AR-at-freq-min AR-at-freq-max bandwidth-threshold w-upper-cutoff band-stop-filter?)
+      (compute-filter-type! min-magnitude-1 max-magnitude-1 magnitude-at-w-min magnitude-at-w-max bandwidth-threshold)
       
       ;bandwidth computation & text display
       (display-bandwidth bandwidth-threshold w-lower-cutoff w-upper-cutoff band-stop-filter?)
       
       ;roll-off computation & text display
-      (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
+      (display-roll-off magnitude-at-w-min magnitude-at-w-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
            
       ;gain & phase margins text display
       ;(display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)
@@ -1262,9 +1314,9 @@ If not, see <https://www.gnu.org/licenses/>.
     (compute-zeros-poles! (get-simplified-block-value block) 1)
     
     
-    (let* ((AR-at-freq-min (magnitude (tfs w-min)))
-           (AR-at-freq-max (magnitude (tfs w-max)))
-           (AR-min-value (min AR-at-freq-min AR-at-freq-max half-power-threshold 0.099))
+    (let* ((magnitude-at-w-min (magnitude (tfs w-min)))
+           (magnitude-at-w-max (magnitude (tfs w-max)))
+           (AR-min-value (min magnitude-at-w-min magnitude-at-w-max half-power-threshold 0.099))
            (AR-at-001 (magnitude (tfs 0.01)))
            (AR-at-100 (magnitude (tfs 100)))
            
@@ -1411,13 +1463,13 @@ If not, see <https://www.gnu.org/licenses/>.
       
             
       ;filter type computation & text display
-      (display-filter-type AR-at-freq-min AR-at-freq-max bandwidth-threshold w-upper-cutoff band-stop-filter?)
+      (compute-filter-type! min-magnitude-1 max-magnitude-1 magnitude-at-w-min magnitude-at-w-max bandwidth-threshold)
       
       ;bandwidth computation & text display
       (display-bandwidth bandwidth-threshold w-lower-cutoff w-upper-cutoff band-stop-filter?)
       
       ;roll-off computation & text display
-      (display-roll-off AR-at-freq-min AR-at-freq-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
+      (display-roll-off magnitude-at-w-min magnitude-at-w-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
            
       ;gain & phase margins text display
       ;(display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)     
