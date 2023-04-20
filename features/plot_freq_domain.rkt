@@ -158,7 +158,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
-;Characteristic numbers computation & text display functions [SHOULD BE IMPROVED]
+;Characteristic numbers computation & text display functions
 
 (define all-pass-filter #f)
 (define no-pass-filter #f)
@@ -217,147 +217,89 @@ If not, see <https://www.gnu.org/licenses/>.
          (newline)
          (newline))
         ))
-      
 
 
-(define (display-bandwidth bandwidth-threshold w-lower-cutoff w-upper-cutoff band-stop-filter?)
-  (let ((bandwidth-threshold-rounded (round-decimal bandwidth-threshold 3)))
+
+
+(define (compute-bandwidth w-cutoff-roots magnitude-points bandwidth-function bandwidth-threshold)
+
+  (let ((bandwidth-text ""))
+
+    (if (eq? (length w-cutoff-roots) 0)
+        (set! bandwidth-text (if (> (bandwidth-function 1) 0)
+                                 "(0, ∞) [rad/s]"
+                                 "N/A"))
+        (let ((bandwidth-text-prefix "")
+              (bandwidth-text-infix (λ(i) (if (odd? i)
+                                              "] ∪ ["
+                                              ", ")))
+              (bandwidth-text-suffix "")
+              (z 0)
+              (i -1))
+
+          (if (> (bandwidth-function w-min) 0)
+              (begin (set! bandwidth-text-prefix "(0, ")
+                     (set! bandwidth-text-suffix (if (odd? (length w-cutoff-roots))
+                                                     "] [rad/s]"
+                                                     ", ∞) [rad/s]"))
+                     (set! z (+ z 1)))
+              (begin (set! bandwidth-text-prefix "[")
+                     (set! bandwidth-text-suffix (if (odd? (length w-cutoff-roots))
+                                                     ", ∞) [rad/s]"
+                                                     "] [rad/s]"))))
+          
+          (set! bandwidth-text (string-append
+                                bandwidth-text-prefix 
+                                (string-join (map 
+                                              (λ(x)
+                                                (set! i (+ i 1))
+                                                (string-append (number->string (round-decimal x 3))
+                                                               (if (not (eq? i (- (length w-cutoff-roots) 1)))
+                                                                   (bandwidth-text-infix (+ i z))
+                                                                   "")))
+                                              w-cutoff-roots))
+                                bandwidth-text-suffix))
+          ))
     
-    (cond ((eq? w-lower-cutoff #f) 
-           (display "bandwidth    = (0,∞) [rad/s],")
-           (if (= bandwidth-threshold-rounded half-power-threshold)
-               (begin (newline)
-                      (display "threshold    = ")
-                      (display bandwidth-threshold-rounded)
-                      (display " = -3 [dB]"))
-               (begin (display " thresh. = ")
-                      (display bandwidth-threshold-rounded))))
-          
-          ((eq? w-upper-cutoff #f)
-           (if (= (round-decimal w-lower-cutoff 2) 0)
-               (begin (display "bandwidth    = (0,∞) [rad/s],"))            
-               (begin (display "bandwidth    = (0,")
-                      (display (round-decimal w-lower-cutoff 2))
-                      (display "] [rad/s],")))
-           (if (= bandwidth-threshold-rounded half-power-threshold)
-               (begin (newline)
-                      (display "threshold    = ")
-                      (display bandwidth-threshold-rounded)
-                      (display " = -3 [dB]"))
-               (begin (display " thresh. = ")
-                      (display bandwidth-threshold-rounded))))
-          
-          ((> (round-decimal w-upper-cutoff 2) (round-decimal w-lower-cutoff 2))
-           (if (eq? (round-decimal w-lower-cutoff 2) 0)
-               (begin (display "bandwidth    = (0,")
-                      (display (round-decimal w-upper-cutoff 2))
-                      (display "] [rad/s],")
-                      (if (= bandwidth-threshold-rounded half-power-threshold)
-                          (begin (newline)
-                                 (display "threshold    = ")
-                                 (display bandwidth-threshold-rounded)
-                                 (display " = -3 [dB]"))
-                          (begin (display " thresh. = ")
-                                 (display bandwidth-threshold-rounded))))             
-               (begin
-                 (if (eq? band-stop-filter? #t)
-                     (begin (display "bandwidth    = (0,")
-                            (display (round-decimal w-lower-cutoff 2))
-                            (display "] ∪ [")
-                            (display (round-decimal w-upper-cutoff 2))
-                            (display ",∞) [rad/s],"))
-                     (begin (display "bandwidth    = [")
-                            (display (round-decimal w-lower-cutoff 2))
-                            (display ",")
-                            (display (round-decimal w-upper-cutoff 2))
-                            (display "] [rad/s],")))
-                 (newline)
-                 (display "threshold    = ")
-                 (display bandwidth-threshold-rounded)
-                 (cond ((= bandwidth-threshold-rounded half-power-threshold)
-                        (display " = -3 [dB]"))))))
-          
-          (else
-           (if (eq? (round-decimal w-lower-cutoff 2) 0)
-               (begin (display "bandwidth    = (0,∞) [rad/s],"))
-               (begin (display "bandwidth    = (0,")
-                      (display (round-decimal w-lower-cutoff 2))
-                      (display "] [rad/s],")))
-           (if (= bandwidth-threshold-rounded half-power-threshold)
-               (begin (newline)
-                      (display "threshold    = ")
-                      (display bandwidth-threshold-rounded)
-                      (display " = -3 [dB]"))
-               (begin (display " thresh. = ")
-                      (display bandwidth-threshold-rounded)))))
-    
-    (newline)))
+    (display "bandwidth    = ")(displayln bandwidth-text)
+
+    (display "threshold    = ")
+    (let ((bandwidth-threshold-rounded (round-decimal bandwidth-threshold 3)))   
+      (if (= bandwidth-threshold-rounded half-power-threshold)
+          (begin (display bandwidth-threshold-rounded) (display " = -3 [dB]"))
+          (display bandwidth-threshold-rounded)))
+    (newline)
+    ))
 
 
 
-(define (display-roll-off magnitude-at-w-min magnitude-at-w-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
-           
-  (cond ((and (> (/ magnitude-at-w-min magnitude-at-w-max) 1.5)
-              (> magnitude-at-w-min bandwidth-threshold)
-              (not (> magnitude-at-w-max (* 3 bandwidth-threshold))))
+
+(define (compute-roll-off magnitude-at-w-min magnitude-at-w-max magnitude-at-0005 magnitude-at-900) 
+  (cond ((or all-pass-filter no-pass-filter band-pass-filter
+             band-stop-filter low-pass-filter high-pass-filter)
+         (let* ((roll-off-low (round-decimal
+                               (/ (log (/ magnitude-at-w-min magnitude-at-0005)) (log (/ w-min 0.005))) ;log(AR2/AR1)/log(w2/w1))
+                               3))
+                (roll-off-high (round-decimal
+                                (/ (log (/ magnitude-at-900 magnitude-at-w-max)) (log (/ 900 w-max)))
+                                3))
+                (roll-off-text (string-append (if (eq? roll-off-low 0)
+                                                  "0 (low)"
+                                                  (string-append (number->string (round-decimal (* 20 roll-off-low) 3))
+                                                                 " [dB/dec] (low)"))
+                                              ", "
+                                              (if (eq? roll-off-high 0)
+                                                  "0 (high)"
+                                                  (string-append (number->string (round-decimal (* 20 roll-off-high) 3))
+                                                                 " [dB/dec] (high)")))))         
+           (display "roll-off     = ")
+           (displayln roll-off-text)))))
+
+
+
+
+;[SHOULD BE IMPROVED]
              
-         ;Low-pass filter:
-         (define roll-off (round-decimal (exact->inexact (/ (log (/ AR-at-100 magnitude-at-w-max))
-                                                            (log (/ 100 w-max)))) 3))
-         (display "roll-off     = ")
-         (display roll-off) ;(log(AR2/AR1)/log(w2/w1))
-         (cond ((not (= roll-off 0))
-                (begin 
-                  (display "    = ")
-                  (display (* 20 roll-off))
-                  (display " [dB/dec]")
-                  )))
-         (newline))
-            
-        ((and (> (/ magnitude-at-w-max magnitude-at-w-min) 1.5)
-              (> magnitude-at-w-max bandwidth-threshold)
-              (not (> magnitude-at-w-min (* 3 bandwidth-threshold))))
-             
-         ;High-pass filter:
-         (define roll-off (round-decimal (exact->inexact (/ (log (/ magnitude-at-w-min AR-at-001))
-                                                            (log (/ w-min 0.01)))) 3))
-         (display "roll-off     = ")
-         (display roll-off) ;(log(AR2/AR1)/log(w2/w1))
-         (cond ((not (= roll-off 0))
-                (begin 
-                  (display "    = ")
-                  (display (* 20 roll-off))
-                  (display " [dB/dec]"))))
-         (newline))
-            
-        ((and (< magnitude-at-w-min bandwidth-threshold)
-              (< magnitude-at-w-max bandwidth-threshold)
-              (not (eq? w-upper-cutoff #f)))
-             
-         ;Band-pass filter:         
-         (define roll-off-low (round-decimal (exact->inexact (/ (log (/ magnitude-at-w-min AR-at-001))
-                                                                (log (/ w-min 0.01)))) 3))
-         (define roll-off-high (round-decimal (exact->inexact (/ (log (/ AR-at-100 magnitude-at-w-max))
-                                                                 (log (/ 100 w-max)))) 3))
-         (display "roll-off (low)  = ")
-         (display roll-off-low) ;(log(AR2/AR1)/log(w2/w1))
-         (cond ((not (= roll-off-low 0))
-                (begin 
-                  (display "    = ")
-                  (display (* 20 roll-off-low))
-                  (display " [dB/dec]"))))
-         (newline)
-         (display "roll-off (high) = ")
-         (display roll-off-high) ;(log(AR2/AR1)/log(w2/w1))
-         (cond ((not (= roll-off-high 0))
-                (begin 
-                  (display "   = ")
-                  (display (* 20 roll-off-high))
-                  (display " [dB/dec]"))))
-         (newline)))
-  )
-
-
 #|
 (define (display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)
 
@@ -611,51 +553,32 @@ If not, see <https://www.gnu.org/licenses/>.
     ;compute points
     (compute-magnitude-points! w-min w-max tfs 1)
     (compute-phase-points! w-min w-max tfs 1)
-
-      
+    
     
     (let* ((magnitude-at-w-min (magnitude (tfs w-min)))
            (magnitude-at-w-max (magnitude (tfs w-max)))
-           (AR-min-value (min magnitude-at-w-min magnitude-at-w-max half-power-threshold 0.099))
-           (AR-at-001 (magnitude (tfs 0.01)))
-           (AR-at-100 (magnitude (tfs 100)))
-           
+           (magnitude-at-0005 (magnitude (tfs 0.005)))
+           (magnitude-at-900 (magnitude (tfs 900)))
 
-           ;[SHOULD BE IMPROVED]
            
            ;bandwidth parameters computation
            (bandwidth-threshold (min half-power-threshold chebyshev-threshold))
            
-           (f-bandwidth (λ (w) (- (magnitude (tfs w)) bandwidth-threshold)))
+           (bandwidth-function (λ (w) (- (magnitude (tfs w)) bandwidth-threshold)))
 
+           (w-cutoff-root-intervals (find-curve-root-intervals
+                                     (map (λ(x) (list (car x) (- (cadr x) bandwidth-threshold))) magnitude-points-1)))
 
-           (w-bandwidth-init (or (half-interval-method f-bandwidth w-min w-max) ;orig
-                                 (newton-meth-for-solv-eq f-bandwidth 0.011)
-                                 (newton-meth-for-solv-eq f-bandwidth 0.101)
-                                 (newton-meth-for-solv-eq f-bandwidth 1.001)
-                                 (newton-meth-for-solv-eq f-bandwidth 10.01)))
-           
-           (w-lower-cutoff (if (not (eq? w-bandwidth-init #f))
-                               (half-interval-method f-bandwidth w-min (+ w-bandwidth-init w-min))
-                               #f))
-           
-           (w-upper-cutoff (if (not (eq? w-lower-cutoff #f))
-                               (half-interval-method f-bandwidth (+ w-bandwidth-init w-min) w-max)
-                               #f))
+           (w-cutoff-roots (map (λ(interval) (half-interval-method bandwidth-function (car interval) (cadr interval)))
+                                w-cutoff-root-intervals))
 
-           (band-stop-filter? (if (not (eq? (and w-lower-cutoff w-upper-cutoff) #f))
-                                  (if (< (f-bandwidth (average w-lower-cutoff w-upper-cutoff))
-                                         (f-bandwidth w-lower-cutoff))
-                                      #t
-                                      #f)
-                                  #f))
+           ;[SHOULD BE IMPROVED]
            
            #|           
            ;gain margin parameters computation
 
            (f-gain-margin (λ (w) (- (let ((f1 (angle (tfs w))))
-                                      (unwrap-angle-simple! f1 w 1))
-                                    
+                                      (unwrap-angle-simple! f1 w 1))                            
                                     (- pi))))
            
            (w-gain-margin (half-interval-method f-gain-margin w-min w-max))
@@ -714,34 +637,30 @@ If not, see <https://www.gnu.org/licenses/>.
                             ;[plot-x-far-ticks  (ticks-scale (plot-x-ticks) (linear-scale (/ 1 (* 2 pi))))]
                             )
                
-               (plot (list 
-                      ;(axes)
-                      (tick-grid)
+               (plot (append
+                      (list 
+                       ;(axes)
+                       (tick-grid)
                       
-                      ;(function (λ (w) (magnitude (tfs w))) w-min w-max) ;#:color 3
+                       ;(function (λ (w) (magnitude (tfs w))) w-min w-max) ;#:color 3
+                       
+                       (lines magnitude-points-1)
 
-                      (lines magnitude-points-1)
+                       (function (λ (x) 1) #:color 3 #:style 'dot)
+                       (function (λ (x) bandwidth-threshold) #:color 3 #:style 'dot #:y-min 0.099 #:y-max 10.001)
                       
-                      ;cutoff-frequences vertical lines
-                      (if (not (eq? w-lower-cutoff #f))
-                          (vrule w-lower-cutoff #:color 3 #:style 'dot #:width 0.5)
-                          '())
-                      (if (not (eq? w-upper-cutoff #f))
-                          (vrule w-upper-cutoff #:color 3 #:style 'dot #:width 0.5)
-                          '())
+                       #|
+                       (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
+                           (error-bars (list 
+                                        (vector w-gain-margin
+                                                (/ (+ 1 (magnitude (tfs w-gain-margin))) 2)
+                                                (/ (- 1 (magnitude (tfs w-gain-margin))) 2))))
+                           '())
+                       |#
+                       )
 
-                      (function (λ (x) 1) #:color 3 #:style 'dot)
-                      (function (λ (x) bandwidth-threshold) #:color 3 #:style 'dot #:y-min 0.099 #:y-max 10.001)
-                      
-                      #|
-                      (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
-                          (error-bars (list 
-                                       (vector w-gain-margin
-                                               (/ (+ 1 (magnitude (tfs w-gain-margin))) 2)
-                                               (/ (- 1 (magnitude (tfs w-gain-margin))) 2))))
-                          '())
-                      |#
-                      
+                      ;cutoff frequences vertical lines
+                      (map (λ(x) (vrule x #:color 3 #:style 'dot #:width 0.5)) w-cutoff-roots)
                       )))
              
              
@@ -782,10 +701,10 @@ If not, see <https://www.gnu.org/licenses/>.
       (compute-filter-type! min-magnitude-1 max-magnitude-1 magnitude-at-w-min magnitude-at-w-max bandwidth-threshold)
       
       ;bandwidth computation & text display
-      (display-bandwidth bandwidth-threshold w-lower-cutoff w-upper-cutoff band-stop-filter?)
+      (compute-bandwidth w-cutoff-roots magnitude-points-1 bandwidth-function bandwidth-threshold)
       
       ;roll-off computation & text display
-      (display-roll-off magnitude-at-w-min magnitude-at-w-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
+      (compute-roll-off magnitude-at-w-min magnitude-at-w-max magnitude-at-0005 magnitude-at-900)
            
       ;gain & phase margins text display
       ;(display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)
@@ -1316,46 +1235,29 @@ If not, see <https://www.gnu.org/licenses/>.
     
     (let* ((magnitude-at-w-min (magnitude (tfs w-min)))
            (magnitude-at-w-max (magnitude (tfs w-max)))
-           (AR-min-value (min magnitude-at-w-min magnitude-at-w-max half-power-threshold 0.099))
-           (AR-at-001 (magnitude (tfs 0.01)))
-           (AR-at-100 (magnitude (tfs 100)))
+           (magnitude-at-0005 (magnitude (tfs 0.005)))
+           (magnitude-at-900 (magnitude (tfs 900)))
            
-
-           ;[SHOULD BE IMPROVED]
            
            ;bandwidth parameters computation
            (bandwidth-threshold (min half-power-threshold chebyshev-threshold))
            
-           (f-bandwidth (λ (w) (- (magnitude (tfs w)) bandwidth-threshold)))
+           (bandwidth-function (λ (w) (- (magnitude (tfs w)) bandwidth-threshold)))
+
+           (w-cutoff-root-intervals (find-curve-root-intervals
+                                     (map (λ(x) (list (car x) (- (cadr x) bandwidth-threshold))) magnitude-points-1)))
+
+           (w-cutoff-roots (map (λ(interval) (half-interval-method bandwidth-function (car interval) (cadr interval)))
+                                w-cutoff-root-intervals))
 
 
-           (w-bandwidth-init (or (half-interval-method f-bandwidth w-min w-max) ;orig
-                                 (newton-meth-for-solv-eq f-bandwidth 0.011)
-                                 (newton-meth-for-solv-eq f-bandwidth 0.101)
-                                 (newton-meth-for-solv-eq f-bandwidth 1.001)
-                                 (newton-meth-for-solv-eq f-bandwidth 10.01)))
-           
-           (w-lower-cutoff (if (not (eq? w-bandwidth-init #f))
-                               (half-interval-method f-bandwidth w-min (+ w-bandwidth-init w-min))
-                               #f))
-           
-           (w-upper-cutoff (if (not (eq? w-lower-cutoff #f))
-                               (half-interval-method f-bandwidth (+ w-bandwidth-init w-min) w-max)
-                               #f))
-
-           (band-stop-filter? (if (not (eq? (and w-lower-cutoff w-upper-cutoff) #f))
-                                  (if (< (f-bandwidth (average w-lower-cutoff w-upper-cutoff))
-                                         (f-bandwidth w-lower-cutoff))
-                                      #t
-                                      #f)
-                                  #f))
+           ;[SHOULD BE IMPROVED]
            
            #|           
            ;gain margin parameters computation
 
            (f-gain-margin (λ (w) (- (let ((f1 (angle (tfs w))))
                                       (unwrap-angle-simple! f1 w 1))
-
                                     (- pi))))
            
            (w-gain-margin (half-interval-method f-gain-margin w-min w-max))
@@ -1466,10 +1368,10 @@ If not, see <https://www.gnu.org/licenses/>.
       (compute-filter-type! min-magnitude-1 max-magnitude-1 magnitude-at-w-min magnitude-at-w-max bandwidth-threshold)
       
       ;bandwidth computation & text display
-      (display-bandwidth bandwidth-threshold w-lower-cutoff w-upper-cutoff band-stop-filter?)
+      (compute-bandwidth w-cutoff-roots magnitude-points-1 bandwidth-function bandwidth-threshold)
       
       ;roll-off computation & text display
-      (display-roll-off magnitude-at-w-min magnitude-at-w-max AR-at-001 AR-at-100 bandwidth-threshold w-upper-cutoff)
+      (compute-roll-off magnitude-at-w-min magnitude-at-w-max magnitude-at-0005 magnitude-at-900)
            
       ;gain & phase margins text display
       ;(display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)     

@@ -217,6 +217,25 @@ and their licences are included in respective 'math_library\assets' subdirectori
 
 
 
+; APPROXIMATE ROOT LOCALIZATION
+
+;Receives as input a list of curve points (with each point represented as a list (x f(x)) itself),
+;and returns a list containing the intervals in which a curve's roots are to be found
+;(with each interval represented as a list itself)
+(define (find-curve-root-intervals curve-points) 
+  (define (loop points root-intervals)
+    (if (eq? (cdr points) '())
+        root-intervals
+        (if (<= (* (cadr (cadr points)) (cadr (car points))) 0)
+            (loop (cdr points) (append root-intervals
+                                       (list (list (car (car points)) (car (cadr points))))))
+            (loop (cdr points) root-intervals))))
+
+  (loop curve-points '()))
+
+
+
+
 ; COMPLEX UNIVARIATE POLYNOMIAL ROOTS COMPUTATION
 
 
