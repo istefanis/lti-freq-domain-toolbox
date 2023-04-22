@@ -28,7 +28,8 @@ If not, see <https://www.gnu.org/licenses/>.
 (require "../math_library/numerical_analysis.rkt")
 (require "../elements/general.rkt")
 (require "../util/display_modes.rkt")
-(require "text_generation.rkt")
+(require "total_tf_parsing.rkt")
+(require "characteristic_numbers.rkt")
 (provide (all-defined-out))
 
 
@@ -107,7 +108,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
-;///// Bode plots auxiliary functions
+;///// Bode plot util functions
 
 ;Common plot parameters for all Bode plot-creating functions
 
@@ -119,218 +120,8 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
-;Angle unwrapping based on the comparison of consecutive phase values
 
-;for Figures 1 & 2
-(define angle-adjustment-total-1 0) ;fig1
-(define angle-adjustment-total-2 0) ;fig2
-
-(define last-angle-value-1 0)
-(define last-angle-value-2 0)
-
-(define (unwrap-angle-value! new-angle-value w fig)
-  (set! new-angle-value (+ new-angle-value
-                           (if (eq? fig 1) angle-adjustment-total-1 angle-adjustment-total-2)));
-  (let ((new-adjustment 0)
-        (diff (- new-angle-value (if (eq? fig 1) last-angle-value-1 last-angle-value-2))))
-    (cond ((> diff 3.5)
-           ;(displayln new-angle-value)
-           ;(displayln (if (eq? fig 1) last-angle-value-1 last-angle-value-2))
-           ;(display "Angle unwrap adjustment by -360, at w=")(displayln (round-decimal w 5))
-           (set! new-adjustment (* -2 pi)))
-          ((< diff -3.5)
-           ;(displayln new-angle-value)
-           ;(displayln (if (eq? fig 1) last-angle-value-1 last-angle-value-2))
-           ;(display "Angle unwrap adjustment by +360, at w=")(displayln (round-decimal w 5))
-           (set! new-adjustment (* 2 pi))))
-    (if (eq? fig 1)
-        (begin (set! diff (+ diff new-adjustment))
-               (set! angle-adjustment-total-1 (+ angle-adjustment-total-1 new-adjustment))
-               (set! last-angle-value-1 (+ last-angle-value-1 diff))
-               ;(displayln last-angle-value-1)
-               last-angle-value-1)
-        (begin  (set! diff (+ diff new-adjustment))
-                (set! angle-adjustment-total-2 (+ angle-adjustment-total-2 new-adjustment))
-                (set! last-angle-value-2 (+ last-angle-value-2 diff))
-                ;(displayln last-angle-value-2)
-                last-angle-value-2))))
-
-
-
-
-;Characteristic numbers computation & text display functions
-
-(define all-pass-filter #f)
-(define no-pass-filter #f)
-(define band-pass-filter #f)
-(define band-stop-filter #f)
-(define low-pass-filter #f)
-(define high-pass-filter #f)
-
-(define (compute-filter-type! min-magnitude max-magnitude magnitude-at-w-min magnitude-at-w-max bandwidth-threshold)
-
-  (set! all-pass-filter #f)
-  (set! no-pass-filter #f)
-  (set! band-pass-filter #f)
-  (set! band-stop-filter #f)
-  (set! low-pass-filter #f)
-  (set! high-pass-filter #f)
-  
-  (cond ((> min-magnitude bandwidth-threshold)
-         (display "All-pass filter")
-         (set! all-pass-filter #t)
-         (newline)
-         (newline))
-        ((< max-magnitude bandwidth-threshold)
-         (display "No-pass filter")
-         (set! no-pass-filter #t)
-         (newline)
-         (newline))
-        ((and (< magnitude-at-w-min bandwidth-threshold)
-              (< magnitude-at-w-max bandwidth-threshold)
-              (> max-magnitude bandwidth-threshold))
-         (display "Band-pass filter")
-         (set! band-pass-filter #t)
-         (newline)
-         (newline))
-        ((and (> magnitude-at-w-min bandwidth-threshold)
-              (> magnitude-at-w-max bandwidth-threshold)
-              (< min-magnitude bandwidth-threshold))
-         (display "Band-stop filter")
-         (set! band-stop-filter #t)
-         (newline)
-         (newline))
-        ((and (> magnitude-at-w-min magnitude-at-w-max)
-              (> magnitude-at-w-min bandwidth-threshold)
-              (< magnitude-at-w-max (* 3 bandwidth-threshold))
-              (> (/ magnitude-at-w-min magnitude-at-w-max) 1.5))
-         (display "Low-pass filter")
-         (set! low-pass-filter #t)
-         (newline)
-         (newline))    
-        ((and (> magnitude-at-w-max magnitude-at-w-min)
-              (> magnitude-at-w-max bandwidth-threshold)
-              (< magnitude-at-w-min (* 3 bandwidth-threshold))
-              (> (/ magnitude-at-w-max magnitude-at-w-min) 1.5))
-         (display "High-pass filter")
-         (set! high-pass-filter #t)
-         (newline)
-         (newline))
-        ))
-
-
-
-
-(define (compute-bandwidth w-cutoff-roots magnitude-points bandwidth-function bandwidth-threshold)
-
-  (let ((bandwidth-text ""))
-
-    (if (eq? (length w-cutoff-roots) 0)
-        (set! bandwidth-text (if (> (bandwidth-function 1) 0)
-                                 "(0, ∞) [rad/s]"
-                                 "N/A"))
-        (let ((bandwidth-text-prefix "")
-              (bandwidth-text-infix (λ(i) (if (odd? i)
-                                              "] ∪ ["
-                                              ", ")))
-              (bandwidth-text-suffix "")
-              (z 0)
-              (i -1))
-
-          (if (> (bandwidth-function w-min) 0)
-              (begin (set! bandwidth-text-prefix "(0, ")
-                     (set! bandwidth-text-suffix (if (odd? (length w-cutoff-roots))
-                                                     "] [rad/s]"
-                                                     ", ∞) [rad/s]"))
-                     (set! z (+ z 1)))
-              (begin (set! bandwidth-text-prefix "[")
-                     (set! bandwidth-text-suffix (if (odd? (length w-cutoff-roots))
-                                                     ", ∞) [rad/s]"
-                                                     "] [rad/s]"))))
-          
-          (set! bandwidth-text (string-append
-                                bandwidth-text-prefix 
-                                (string-join (map 
-                                              (λ(x)
-                                                (set! i (+ i 1))
-                                                (string-append (number->string (round-decimal x 3))
-                                                               (if (not (eq? i (- (length w-cutoff-roots) 1)))
-                                                                   (bandwidth-text-infix (+ i z))
-                                                                   "")))
-                                              w-cutoff-roots))
-                                bandwidth-text-suffix))
-          ))
-    
-    (display "bandwidth    = ")(displayln bandwidth-text)
-
-    (display "threshold    = ")
-    (let ((bandwidth-threshold-rounded (round-decimal bandwidth-threshold 3)))   
-      (if (= bandwidth-threshold-rounded half-power-threshold)
-          (begin (display bandwidth-threshold-rounded) (display " = -3 [dB]"))
-          (display bandwidth-threshold-rounded)))
-    (newline)
-    ))
-
-
-
-
-(define (compute-roll-off magnitude-at-w-min magnitude-at-w-max magnitude-at-0005 magnitude-at-900) 
-  (cond ((or all-pass-filter no-pass-filter band-pass-filter
-             band-stop-filter low-pass-filter high-pass-filter)
-         (let* ((roll-off-low (round-decimal
-                               (/ (log (/ magnitude-at-w-min magnitude-at-0005)) (log (/ w-min 0.005))) ;log(AR2/AR1)/log(w2/w1))
-                               3))
-                (roll-off-high (round-decimal
-                                (/ (log (/ magnitude-at-900 magnitude-at-w-max)) (log (/ 900 w-max)))
-                                3))
-                (roll-off-text (string-append (if (eq? roll-off-low 0)
-                                                  "0 (low)"
-                                                  (string-append (number->string (round-decimal (* 20 roll-off-low) 3))
-                                                                 " [dB/dec] (low)"))
-                                              ", "
-                                              (if (eq? roll-off-high 0)
-                                                  "0 (high)"
-                                                  (string-append (number->string (round-decimal (* 20 roll-off-high) 3))
-                                                                 " [dB/dec] (high)")))))         
-           (display "roll-off     = ")
-           (displayln roll-off-text)))))
-
-
-
-
-;[SHOULD BE IMPROVED]
-             
-#|
-(define (display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)
-
-  (if (not (eq? gain-margin #f))
-      (begin (display "gain margin  = ")
-             (display (round-decimal gain-margin 2))
-             (display " at ")
-             (display (round-decimal w-gain-margin 2))
-             (display " [rad/s]")
-             (newline))
-      (begin (display "gain margin  = ∞")
-             (newline)))
-  
-  (if (not (eq? phase-margin #f))
-      (begin (display "phase margin = ")
-             (display (round-decimal phase-margin 2))
-             (display " [deg] at ")
-             (display (round-decimal w-phase-margin 2))
-             (display " [rad/s]")
-             (newline)
-             (newline))
-      (begin (display "phase margin = ∞")
-             (newline)
-             (newline)))
-  )
-|#
-
-
-
-
-;Computation of zeros & poles
+;///// Computation of zeros & poles
 
 (define zeros-1 '())
 (define zeros-2 '())
@@ -413,7 +204,8 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
-;Computation of magnitude points
+
+;///// Computation of magnitude points
 
 (define magnitude-points-1 '())
 (define magnitude-points-2 '())
@@ -457,10 +249,49 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
-;Computation of phase points
+
+;///// Computation of phase points
 
 (define phase-points-1 '())
 (define phase-points-2 '())
+
+
+;Angle unwrapping based on the comparison of consecutive phase values
+
+(define angle-adjustment-total-1 0) ;Figure 1
+(define angle-adjustment-total-2 0) ;Figure 2
+
+(define last-angle-value-1 0)
+(define last-angle-value-2 0)
+
+(define (unwrap-angle-value! new-angle-value w fig)
+  (set! new-angle-value (+ new-angle-value
+                           (if (eq? fig 1) angle-adjustment-total-1 angle-adjustment-total-2)));
+  (let ((new-adjustment 0)
+        (diff (- new-angle-value (if (eq? fig 1) last-angle-value-1 last-angle-value-2))))
+    (cond ((> diff 3.5)
+           ;(displayln new-angle-value)
+           ;(displayln (if (eq? fig 1) last-angle-value-1 last-angle-value-2))
+           ;(display "Angle unwrap adjustment by -360, at w=")(displayln (round-decimal w 5))
+           (set! new-adjustment (* -2 pi)))
+          ((< diff -3.5)
+           ;(displayln new-angle-value)
+           ;(displayln (if (eq? fig 1) last-angle-value-1 last-angle-value-2))
+           ;(display "Angle unwrap adjustment by +360, at w=")(displayln (round-decimal w 5))
+           (set! new-adjustment (* 2 pi))))
+    (if (eq? fig 1)
+        (begin (set! diff (+ diff new-adjustment))
+               (set! angle-adjustment-total-1 (+ angle-adjustment-total-1 new-adjustment))
+               (set! last-angle-value-1 (+ last-angle-value-1 diff))
+               ;(displayln last-angle-value-1)
+               last-angle-value-1)
+        (begin  (set! diff (+ diff new-adjustment))
+                (set! angle-adjustment-total-2 (+ angle-adjustment-total-2 new-adjustment))
+                (set! last-angle-value-2 (+ last-angle-value-2 diff))
+                ;(displayln last-angle-value-2)
+                last-angle-value-2))))
+
+
 
 (define (compute-phase-points! w-min w-max tfs fig)
   (define (loop points w) 
@@ -517,6 +348,7 @@ If not, see <https://www.gnu.org/licenses/>.
         (set! phase-points-1 points)
         (set! phase-points-2 points))
     points))
+
 
 
 
@@ -701,16 +533,15 @@ If not, see <https://www.gnu.org/licenses/>.
       (compute-filter-type! min-magnitude-1 max-magnitude-1 magnitude-at-w-min magnitude-at-w-max bandwidth-threshold)
       
       ;bandwidth computation & text display
-      (compute-bandwidth w-cutoff-roots magnitude-points-1 bandwidth-function bandwidth-threshold)
+      (compute-bandwidth w-cutoff-roots magnitude-points-1 bandwidth-function bandwidth-threshold half-power-threshold w-min)
       
       ;roll-off computation & text display
-      (compute-roll-off magnitude-at-w-min magnitude-at-w-max magnitude-at-0005 magnitude-at-900)
+      (compute-roll-off magnitude-at-w-min magnitude-at-w-max magnitude-at-0005 magnitude-at-900 w-min w-max)
            
       ;gain & phase margins text display
       ;(display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)
 
       ))
-  
   )
 
 
@@ -1205,7 +1036,6 @@ If not, see <https://www.gnu.org/licenses/>.
       (error "Unrecognized condition"))
   
   ;)
-  
   )
 
 
@@ -1354,8 +1184,7 @@ If not, see <https://www.gnu.org/licenses/>.
                          #:color 1
                          )
                  
-                 ; error bars are vertical - can't be used here
-                 
+                 ; error bars are vertical - can't be used here               
                  )))
         
         
@@ -1368,16 +1197,15 @@ If not, see <https://www.gnu.org/licenses/>.
       (compute-filter-type! min-magnitude-1 max-magnitude-1 magnitude-at-w-min magnitude-at-w-max bandwidth-threshold)
       
       ;bandwidth computation & text display
-      (compute-bandwidth w-cutoff-roots magnitude-points-1 bandwidth-function bandwidth-threshold)
+      (compute-bandwidth w-cutoff-roots magnitude-points-1 bandwidth-function bandwidth-threshold half-power-threshold w-min)
       
       ;roll-off computation & text display
-      (compute-roll-off magnitude-at-w-min magnitude-at-w-max magnitude-at-0005 magnitude-at-900)
+      (compute-roll-off magnitude-at-w-min magnitude-at-w-max magnitude-at-0005 magnitude-at-900 w-min w-max)
            
       ;gain & phase margins text display
       ;(display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)     
       
       ))
-  
   )
 
 

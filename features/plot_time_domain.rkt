@@ -27,7 +27,7 @@ If not, see <https://www.gnu.org/licenses/>.
 (require "../math_library/numerical_analysis.rkt")
 (require "../math_library/symbolic_algebra.rkt")
 (require "../elements/general.rkt")
-(require "text_generation.rkt")
+(require "total_tf_parsing.rkt")
 (provide (all-defined-out))
 
 
