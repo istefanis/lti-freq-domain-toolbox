@@ -175,8 +175,9 @@ If not, see <https://www.gnu.org/licenses/>.
                 (begin
                   (set! zeros-1 (find-complex-roots-of-polynomial numer-term-list))
                   (set! poles-1 (find-complex-roots-of-polynomial denom-term-list))
-                  (display "zeros: ")(displayln zeros-1)
-                  (display "poles: ")(displayln poles-1)
+                  
+                  (display "zeros: ")(displayln (replace-empty-list-for-display (merge-complex-conjugates-for-display zeros-1)))
+                  (display "poles: ")(displayln (replace-empty-list-for-display (merge-complex-conjugates-for-display poles-1)))
 
                   ;computation of expected phase value at w-max, according to zeros & poles
                   (let* ((zeros-at-positive-halfplane (length (filter (λ(x) (> (real-part x) 0)) zeros-1)))
@@ -188,8 +189,9 @@ If not, see <https://www.gnu.org/licenses/>.
                 (begin
                   (set! zeros-2 (find-complex-roots-of-polynomial numer-term-list))
                   (set! poles-2 (find-complex-roots-of-polynomial denom-term-list))
-                  (display "zeros: ")(displayln zeros-2)
-                  (display "poles: ")(displayln poles-2)
+                  
+                  (display "zeros: ")(displayln (replace-empty-list-for-display (merge-complex-conjugates-for-display zeros-2)))
+                  (display "poles: ")(displayln (replace-empty-list-for-display (merge-complex-conjugates-for-display poles-2)))
 
                   ;computation of expected phase value at w-max, according to zeros & poles
                   (let* ((zeros-at-positive-halfplane (length (filter (λ(x) (> (real-part x) 0)) zeros-2)))
@@ -200,6 +202,21 @@ If not, see <https://www.gnu.org/licenses/>.
                     )))
             (newline)
             )))))
+
+
+(define (merge-complex-conjugates-for-display complex-numbers-list)
+  (map (λ(x) (if (< (imag-part x) 0)
+                 (string-append (number->string (real-part x))
+                                "±"
+                                (number->string (abs (imag-part x)))
+                                "i")
+                 x))
+       (filter (λ(x) (<= (imag-part x) 0)) complex-numbers-list)))
+
+(define (replace-empty-list-for-display complex-numbers-list)
+  (if (> (length complex-numbers-list) 0)
+      complex-numbers-list
+      "N/A"))
 
 
 
