@@ -1104,7 +1104,7 @@ If not, see <https://www.gnu.org/licenses/>.
                                             (imag-part (tfw w))
                                             ))
                              0.0000001 10
-                             #:x-min -10 #:x-max 10 #:y-min -10 #:y-max 10
+                             #:x-min -20 #:x-max 20 #:y-min -20 #:y-max 20
                              #:color 3
                              #:label "0 < w < ∞"
                              )
@@ -1130,6 +1130,12 @@ If not, see <https://www.gnu.org/licenses/>.
                              ;#:x-min -1.5 #:x-max 1.5 #:y-min -1.5 #:y-max 1.5
                              #:color 2
                              )
+
+                 
+                 (points (map vector (map real-part zeros-1) (map imag-part zeros-1)))
+                 (points (map vector (map real-part poles-1) (map imag-part poles-1)) #:sym 'times)
+
+                 
                  (points (list (vector -1 0))
                          ;#:sym 'fullcircle2
                          #:sym 'times

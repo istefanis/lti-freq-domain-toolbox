@@ -173,7 +173,8 @@ If not, see <https://www.gnu.org/licenses/>.
                                                   (string-append (number->string (round-decimal (* 20 roll-off-high) 3))
                                                                  " [dB/dec] (high)")))))         
            (display "roll-off     = ")
-           (displayln roll-off-text)))))
+           (displayln roll-off-text)
+           (newline)))))
 
 
 
