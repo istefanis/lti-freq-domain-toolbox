@@ -99,6 +99,17 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
             (exact->inexact number)))))
 
 
+(define (round-decimal-tree l) 
+  (if (null? l)
+      '()
+      (if (list? (car l))
+          (cons (round-decimal-tree (car l))
+                (round-decimal-tree (cdr l)))
+          (if (symbol? (car l))
+              (cons (car l) (round-decimal-tree (cdr l)))
+              (cons (round-decimal (car l) 3) (round-decimal-tree (cdr l)))))))
+
+
 
 
 

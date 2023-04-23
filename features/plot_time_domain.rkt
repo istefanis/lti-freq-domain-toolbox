@@ -59,14 +59,13 @@ If not, see <https://www.gnu.org/licenses/>.
 
 (define (impulse block)
   
-  (let* ((total-tfs-value (get-total-tfs-value block))
+  (let* ((reduced-total-tf (reduce-block-value (get-simplified-block-value block)))
+         (total-tf-expression (get-total-tf-expression-with-display reduced-total-tf))
          
          ; it must be evaluated here and not inside the function of the plot procedure,
-         ; so that zooming on the figure is plausible:
-         (tfs-value-evaluation (eval total-tfs-value anchor))) ;tfs-value-evaluation is a function of s and w
-    
-    (define (tfs s) (tfs-value-evaluation s 0 0 0 0)) 
-    
+         ; so that zooming on the figure is possible:
+         (total-tf-evaluation (eval total-tf-expression anchor)) ;total-tf-evaluation is a function of s and w
+         (tfs (λ(s) (total-tf-evaluation s 0 0 0 0))))   
     
     
     (for-each
@@ -101,14 +100,10 @@ If not, see <https://www.gnu.org/licenses/>.
 
 (define (impulse-deriv block)
   
-  (let* ((total-tfs-value (get-total-tfs-value block))
-         
-         ; it must be evaluated here and not inside the function of the plot procedure,
-         ; so that zooming on the figure is plausible:
-         (tfs-value-evaluation (eval total-tfs-value anchor))) ;tfs-value-evaluation is a function of s and w
-    
-    (define (tfs s) (tfs-value-evaluation s 0 0 0 0))
-    
+  (let* ((reduced-total-tf (reduce-block-value (get-simplified-block-value block)))
+         (total-tf-expression (get-total-tf-expression-with-display reduced-total-tf))
+         (total-tf-evaluation (eval total-tf-expression anchor)) ;total-tf-evaluation is a function of s and w
+         (tfs (λ(s) (total-tf-evaluation s 0 0 0 0))))
     
     
     (for-each
@@ -142,13 +137,13 @@ If not, see <https://www.gnu.org/licenses/>.
 
 (define (trajectory block)
   
-  (let* ((total-tfs-value (get-total-tfs-value block))
+  (let* ((reduced-total-tf (reduce-block-value (get-simplified-block-value block)))
+         (total-tf-expression (get-total-tf-expression-with-display reduced-total-tf))
          
          ; it must be evaluated here and not inside the function of the plot procedure,
-         ; so that zooming on the figure is plausible:
-         (tfs-value-evaluation (eval total-tfs-value anchor))) ;tfs-value-evaluation is a function of s and w
-    
-    (define (tfs s) (tfs-value-evaluation s 0 0 0 0))
+         ; so that zooming on the figure is possible:
+         (total-tf-evaluation (eval total-tf-expression anchor)) ;total-tf-evaluation is a function of s and w
+         (tfs (λ(s) (total-tf-evaluation s 0 0 0 0))))
     
     
     
@@ -185,23 +180,14 @@ If not, see <https://www.gnu.org/licenses/>.
 
 (define (step block gain)
   
-  (define total-tfs-value '())
+  (define total-tf-expression '())
   
   ;(newline)
-  ;(set-logger-mode! 'nil)
+  ;(set-logger-mode! 'nil) 
   
-  
-  (let ((num (get-numer (get-simplified-block-value block)))
-        (den (get-denom (get-simplified-block-value block))))
-    
-    
-    #|
-          (displayln (get-value (car tfs)))
-          (newline)
-          (displayln num)
-          (displayln den)
-          |#          
-    
+  (let* ((reduced-total-tf (reduce-block-value (get-simplified-block-value block)))
+         (num (get-numer reduced-total-tf))
+         (den (get-denom reduced-total-tf)))    
     
     ; adding the step tf ([gain]/[1 0]):
     
@@ -209,39 +195,29 @@ If not, see <https://www.gnu.org/licenses/>.
           (new-den (mul den (make-poly-dense 's (list 1 0)))))
       
       #|
-            (newline)
-            (displayln new-num)
-            (displayln new-den)
-            |#
-      
+      (newline)
+      (displayln new-num)
+      (displayln new-den)
+      |#    
       
       ; just for displaying:
-      (ratio-to-list (get-simplified-block-value block))
+      (tf-to-expanded-expression-with-display reduced-total-tf)
       (newline)
-      (display "with gain:")
-      (newline)
-      (ratio-to-list (make-ratio new-num new-den))
+      (displayln "with gain:")
+      (tf-to-expanded-expression-with-display (make-ratio new-num new-den))
+
       
-      #|
-            (newline)
-            (displayln (make-ratio new-num new-den))
-            (newline)
-            (newline)
-            (ratio-to-list (make-ratio new-num new-den) 'do-not-display)
-            (newline)
-            (displayln 'test-1)
-            |#
-      
-      (set! total-tfs-value (cons 'λ (cons '(s fw1 fw2 fw3 fw4) (list (ratio-to-list (make-ratio new-num new-den) 'do-not-display)))))
+      (set! total-tf-expression
+            (cons 'λ (cons '(s fw1 fw2 fw3 fw4) (list (tf-to-expanded-expression-with-display (make-ratio new-num new-den) 'do-not-display)))))
       ))
   
   
-  (define tfs-value-evaluation (eval total-tfs-value anchor))
-  (define (tfs s) (tfs-value-evaluation s
-                                        0
-                                        0
-                                        0
-                                        (fw4-func s)))
+  (define total-tf-evaluation (eval total-tf-expression anchor))
+  (define (tfs s) (total-tf-evaluation s
+                                       0
+                                       0
+                                       0
+                                       (fw4-func s)))
   
   
   (for-each

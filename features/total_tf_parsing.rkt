@@ -22,33 +22,27 @@ If not, see <https://www.gnu.org/licenses/>.
 
 #lang racket
 
-(require "../math_library/general.rkt")
 (require "../math_library/symbolic_algebra.rkt")
 (require "../elements/general.rkt")
 (provide (all-defined-out))
 
 
 
-(define-namespace-anchor n_anchor)
-(define anchor (namespace-anchor->namespace n_anchor))
 
 
 
 
+; //////////   E. Generate the ready-for-evaluation total block tf expression, display it, and add f(w) functions to it   //////////
 
 
-
-; //////////   E. Adding f(w) functions to a total block tfs expression, preparing it for evaluation & displaying it   //////////
-
-
-(define (get-total-tfs-value block)
+(define (get-total-tf-expression-with-display reduced-total-tf)
   
   ;(set-logger-mode! 'nil)
   ;(newline)
-  
   ;(let ((cached-simplification-result (simplify block)))
+  
   (cons 'λ (cons '(s fw1 fw2 fw3 fw4) 
-                 (list (ratio-to-list (get-simplified-block-value block))))))
+                 (list (tf-to-expanded-expression-with-display reduced-total-tf)))))
 
 
 
@@ -73,59 +67,40 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
-; 'fast-display' procedure displays a circuit's simplified tf in three formats - for testing:
+(define (substitute-s-with-w total-tf-evaluation)
+  (λ(w) (total-tf-evaluation (make-rectangular 0 w) 
+                             (fw1-func w)  ;4 slots for f(w) functions provided here 
+                             (fw2-func w)
+                             (fw3-func w) 
+                             (fw4-func w))))
+
+
+
+
+
+
+
+; //////////   F. Transform a tf value to an expanded expression for evaluation, and display its infix expression equivalent  //////////
+
+
+; 'tf-to-expanded-expression-with-display':
 ;
-;     (ratio (poly-dense s 5 8) (poly-dense s 1 0))
+; (i)   gets as input the reduced value in the poly format, ex.:
 ;
-;           s^1 + 1.6
-;     tf:   ---------
-;            0.2*s^1
+;       '(ratio (poly-dense s 1 1.6) (poly-dense s 0.2 0))
 ;
-;     (/ (+ (* 1 (expt s 1)) (+ (* 1.6 (expt s 0)) 0))
-;        (+ (* 0.2 (expt s 1)) (+ (* 0 (expt s 0)) 0)))
-
-(define (fast-display block)
-  (let ((res (get-simplified-block-value block)))
-    (newline)
-    (displayln res)
-    (newline)
-    (displayln (ratio-to-list res))
-    (newline)))
-
-
-
-
-
-
-
-; //////////   F. Transforming a tf expression to infix notation, for evaluation & display  //////////
-
-
-; ratio-to-list:
-; (i)   gets as input the simplified value in the poly format, ex.:
-;
-;       > (bode (pi-controller 5 8 a))
-;       > (get-simplified-block-value a)
-;
-;       '(ratio (poly-dense s 5 8) (poly-dense s 1 0))
-;
-; (ii)  examines whether the reduction of the polynomial is possible using 'contains-symbols?-tree'.
-;       If so, it performs it using 'reduce' from the symbolic algebra package,
-;       otherwise it uses 'round-decimal-tree'. Ex. (reduction case):
-;
-;       '((poly-dense s 1 1.6) (poly-dense s 0.2 0))
-;
-; (iii) expands the result using 'expand-polynomial', ex:
+; (ii)  expands the result using 'expand-polynomial', ex:
 ;
 ;       '(+ (* 1 (expt s 1)) (+ (* 1.6 (expt s 0)) 0))
 ;       '(+ (* 0.2 (expt s 1)) (+ (* 0 (expt s 0)) 0))
 ;
-; (iv)  transforms the latter to the string format ready for display using
+; (iii) transforms the latter to the string format ready for display using
 ;       'prefix-list-to-infix-string-list', and finally displays it using 'display-tf', ex.:
 ;
 ;       '("s^" "1" " + " "1.6")
 ;       '("0.2" "*s^" "1")
 ;
+;       append a list of strings to a string:
 ;       "s^1 + 1.6"
 ;       "0.2*s^1"
 ;
@@ -133,92 +108,34 @@ If not, see <https://www.gnu.org/licenses/>.
 ;       tf:   ---------
 ;              0.2*s^1
 ;
-; (v)   returns the expanded value (iii) to the calling function, ready for evaluation, ex.:
+; (iv)  returns the expanded value (ii) to the calling function, ready for evaluation, ex.:
 ;
 ;       '(/
 ;         (+ (* 1 (expt s 1)) (+ (* 1.6 (expt s 0)) 0))
 ;         (+ (* 0.2 (expt s 1)) (+ (* 0 (expt s 0)) 0)))
 
+(define (tf-to-expanded-expression-with-display reduced-total-tf . disp) ;(i)
+  (let* ((nom (expand-polynomial (cdr (cdr (get-numer reduced-total-tf))))) ;(ii)
+         (den (expand-polynomial (cdr (cdr (get-denom reduced-total-tf))))))
 
-(define (ratio-to-list value . disp) ;(i)
-  (let ((a (get-numer value)) ;'(poly-dense s 5 8)
-        (b (get-denom value)))
-    (let ((a-term-list (cdr (cdr a))) ;'(5 8)
-          (b-term-list (cdr (cdr b))))
+    #|
+    (newline) 
+    (displayln nom)
+    (displayln den)
 
-      #|
+    ;chebyshev:
+    (displayln (list-to-printable-list nom))
+    (displayln (list-to-printable-list den))
+    |#
+        
+    (when (null? disp)
       (newline)
-      (displayln a-term-list)
-      (displayln b-term-list)
-      |#
-      (let* ((res (or (contains-symbols?-tree a-term-list) ;(ii)
-                      (contains-symbols?-tree b-term-list)))
-             
-             (division (if res
-                           
-                           ;no reduction in this case - so numbers must be rounded
-                           (list (make-poly-dense 's (map (λ (x) (if (list? x)
-                                                                     (if (contains-symbols?-tree x)
-                                                                         (round-decimal-tree x)
-                                                                         (round-decimal (eval x anchor) 3))
-                                                                     (if (not (symbol? x))
-                                                                         (round-decimal (eval x anchor) 3)
-                                                                         x))) 
-                                                          a-term-list))
+      (newline)
 
-                                 (make-poly-dense 's (map (λ (x) (if (list? x)
-                                                                     (if (contains-symbols?-tree x)
-                                                                         (round-decimal-tree x)
-                                                                         (round-decimal (eval x anchor) 3))
-                                                                     (if (not (symbol? x))
-                                                                         (round-decimal (eval x anchor) 3)
-                                                                         x)))
-                                                          b-term-list)))
+      (display-tf (apply string-append (prefix-list-to-infix-string-list nom)) ;(iii)
+                  (apply string-append (prefix-list-to-infix-string-list den))))
 
-                           ;reduction
-                           (reduce (make-poly-dense 's (map (λ(x) (eval x anchor)) a-term-list))
-                                   (make-poly-dense 's (map (λ(x) (eval x anchor)) b-term-list)))))
-             
-             (nom (expand-polynomial (cdr (cdr (car division))))) ;(iii)
-             (den (expand-polynomial (cdr (cdr (cadr division))))))
-
-        #|
-        (newline) 
-        (displayln nom)
-        (displayln den)
-        |#
-        
-        ;chebyshev:
-        #|
-        (newline)
-        (displayln den)
-        (displayln (list-to-printable-list nom))
-        (displayln (list-to-printable-list den))
-        |#
-        
-        (when (null? disp)
-          (newline)
-          (newline)
-
-          ;append a list of strings to a string, ex.:
-          ;'("s^" "1" " + " "1.6")   =>   "s^1 + 1.6"
-          (display-tf (apply string-append (prefix-list-to-infix-string-list nom)) ;(iv)
-                      (apply string-append (prefix-list-to-infix-string-list den)))) 
-
-        (list '/ nom den))))) ;(v)
-
-
-
-
-
-; a lite version of the same procedure:
-
-(define (ratio-to-list-lite value)
-  (let ((a (get-numer value))
-        (b (get-denom value)))
-    (list '/ 
-          (expand-polynomial (cdr (cdr a)))
-          (expand-polynomial (cdr (cdr b))))))
+    (list '/ nom den))) ;(iv)
 
 
 
@@ -227,39 +144,6 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 ;///// Util functions for parsing & displaying
-
-; before a ratio of polynomials is reduced by 'ratio-to-list',
-; the coefficient lists must be evaluated so that the coefficients are simplified 
-; - no evaluations must be done on symbols:
-
-(define (contains-symbols?-tree l)
-  (if (null? l)
-      #f
-      (if (list? (car l))
-          (or (contains-symbols?-tree (car l))
-              (contains-symbols?-tree (cdr l)))    
-          (or (and (symbol? (car l)) (not (or (eq? (car l) '+)
-                                              (eq? (car l) '-)
-                                              (eq? (car l) '*)
-                                              (eq? (car l) '/))))
-              (contains-symbols?-tree (cdr l))))))
-
-
-
-(define (round-decimal-tree l) 
-  (if (null? l)
-      '()
-      (if (list? (car l))
-          (cons (round-decimal-tree (car l))
-                (round-decimal-tree (cdr l)))
-          (if (symbol? (car l))
-              (cons (car l) (round-decimal-tree (cdr l)))
-              (cons (round-decimal (car l) 3) (round-decimal-tree (cdr l)))))))
-
-
-
-
-
 
 
 ; 'expand-polynomial' expands lists of the poly format:
@@ -296,8 +180,6 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
-
-
 ; 'prefix-list-to-infix-string-list' tranforms an expanded polynomial expression in prefix notation list format
 ; to a list of strings of each element of the expression in infix notation, ex.:
 ;
@@ -305,7 +187,7 @@ If not, see <https://www.gnu.org/licenses/>.
 
 (define (prefix-list-to-infix-string-list lst)
   
-  
+  ;helper function
   (define (list-to-string coeff-init rest)
     
     (define (list-to-string2 coeff)
@@ -322,8 +204,7 @@ If not, see <https://www.gnu.org/licenses/>.
               (cond 
                 ;((list? (car coeff)) (cons "f1" (cons " " (list-to-string2 (cdr coeff)))))
                 ((list? (car coeff)) (list-to-string (car coeff) (cons " " (list-to-string2 (cdr coeff)))))
-                
-                
+                               
                 ((symbol? (car coeff)) (cons (symbol->string (car coeff)) 
                                              (cons " " (list-to-string2 (cdr coeff)))))
                 ((number? (car coeff)) (cons (number->string (car coeff)) 
@@ -333,10 +214,7 @@ If not, see <https://www.gnu.org/licenses/>.
         rest
         (cons "("
               (cond 
-                ;((list? (car coeff-init)) (cons "f1" 
-                ;                                  (cons " " (list-to-string2 (cdr coeff-init)))))
-                ((list? (car coeff-init)) (cons "f1" 
-                                                (cons " " (list-to-string2 (cdr coeff-init)))))
+                ((list? (car coeff-init)) (cons "f1" (cons " " (list-to-string2 (cdr coeff-init)))))
                 
                 ((symbol? (car coeff-init)) (cons (symbol->string (car coeff-init)) 
                                                   (cons " " (list-to-string2 (cdr coeff-init)))))
@@ -344,8 +222,7 @@ If not, see <https://www.gnu.org/licenses/>.
                                                   (cons " " (list-to-string2 (cdr coeff-init)))))))))
   
   
-  
-  
+  ;helper function
   ; for all the list elements except the first one:
   (define (list-to-printable-list-2 l)
     
@@ -429,8 +306,8 @@ If not, see <https://www.gnu.org/licenses/>.
                          (cons (number->string (car (cdr (cdr (car (cdr (cdr (car (cdr lst)))))))))
                                (list-to-printable-list-2 (car (cddr lst)))))
                    (cons "-" (cons "s^"
-                         (cons (number->string (car (cdr (cdr (car (cdr (cdr (car (cdr lst)))))))))
-                               (list-to-printable-list-2 (car (cddr lst)))))))))
+                                   (cons (number->string (car (cdr (cdr (car (cdr (cdr (car (cdr lst)))))))))
+                                         (list-to-printable-list-2 (car (cddr lst)))))))))
           
           (else
            (if (not (pair? (car (cddr lst))))
@@ -454,8 +331,6 @@ If not, see <https://www.gnu.org/licenses/>.
                                         (list-to-printable-list-2 (car (cddr lst))))))))                                  
                ))
           )))
-
-
 
 
 
@@ -550,3 +425,22 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
+
+; 'fast-display' displays a circuit's simplified tf in three formats - for testing:
+;
+;     (ratio (poly-dense s 5 8) (poly-dense s 1 0))
+;
+;           s^1 + 1.6
+;     tf:   ---------
+;            0.2*s^1
+;
+;     (/ (+ (* 1 (expt s 1)) (+ (* 1.6 (expt s 0)) 0))
+;        (+ (* 0.2 (expt s 1)) (+ (* 0 (expt s 0)) 0)))
+
+(define (fast-display block)
+  (let ((res (get-simplified-block-value block)))
+    (newline)
+    (displayln res)
+    (newline)
+    (displayln (tf-to-expanded-expression-with-display res))
+    (newline)))

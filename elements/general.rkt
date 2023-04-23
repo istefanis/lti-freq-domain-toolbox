@@ -23,7 +23,13 @@ If not, see <https://www.gnu.org/licenses/>.
 #lang racket
 
 (require "../util/display_modes.rkt")
+(require "../math_library/general.rkt")
+(require "../math_library/symbolic_algebra.rkt")
 (provide (all-defined-out))
+
+
+(define-namespace-anchor n_anchor)
+(define anchor (namespace-anchor->namespace n_anchor))
 
 
 
@@ -68,6 +74,14 @@ If not, see <https://www.gnu.org/licenses/>.
 
 
 
+; For adders:
+
+(define (remove-input! adder) (adder 'remove-input!))
+(define (single-input? adder) (adder 'single-input?))
+(define (two-outputs? adder) (adder 'two-outputs?))
+
+
+
 ; For blocks:
 
 (define (element-of-tfs? block) (block 'element-of-tfs?))
@@ -86,6 +100,10 @@ If not, see <https://www.gnu.org/licenses/>.
 (define (get-adders block) (block 'get-adders))
 (define (get-blocks block) (block 'get-blocks))
 
+(define (re-initialize-block! block) (block 're-initialize!))
+
+
+
 (define (get-simplified-block-value block)
   (if (is-simplified? block)
       (begin ;(display "already simplified")
@@ -96,16 +114,66 @@ If not, see <https://www.gnu.org/licenses/>.
                  (begin (log-messages (list "[CP-99] Block not fully simplified - GET-BLOCK-VALUE") 'checkpoints)
                         (block 'get-value))))))
 
-(define (re-initialize-block! block) (block 're-initialize!))
 
 
+;'reduce-block-value':
+;
+; (i)   gets as input the simplified value in the poly format, ex.:
+;
+;       > (bode (pi-controller 5 8 a))
+;       > (get-simplified-block-value a)
+;
+;       '(ratio (poly-dense s 5 8) (poly-dense s 1 0))
+;
+; (ii)  examines whether the reduction of the polynomial is possible using 'contains-algebraic-symbols?'.
+;       If so, it performs it using 'reduce' from the symbolic algebra package,
+;       otherwise it uses 'round-decimal-tree'
+;
+;       ex. (reduction case):
+;
+;       '((poly-dense s 1 1.6) (poly-dense s 0.2 0))
 
-; For adders:
+(define (reduce-block-value tf) ;(i)
+  (let ((a (get-numer tf))      ;'(poly-dense s 5 8)
+        (b (get-denom tf)))
+    (let ((numer-term-list (cdr (cdr a))) ;'(5 8)
+          (denom-term-list (cdr (cdr b))))
 
-(define (remove-input! adder) (adder 'remove-input!))
-(define (single-input? adder) (adder 'single-input?))
-(define (two-outputs? adder) (adder 'two-outputs?))
+      ;Before a ratio of polynomials is reduced, it must be verified that it contains no symbols.
+      ;Then the coefficients must be evaluated so that they are simplified
+      
+      (if (or (contains-algebraic-symbols? numer-term-list) ;(ii)
+              (contains-algebraic-symbols? denom-term-list))
+          (begin 
+            ;no reduction in this case - so numbers must be rounded
+            (set! numer-term-list (map (λ (x) (if (list? x)
+                                                  (if (contains-algebraic-symbols? x)
+                                                      (round-decimal-tree x)
+                                                      (round-decimal (eval x anchor) 3))
+                                                  (if (not (symbol? x))
+                                                      (round-decimal (eval x anchor) 3)
+                                                      x))) 
+                                       numer-term-list))
 
+            (set! denom-term-list (map (λ (x) (if (list? x)
+                                                  (if (contains-algebraic-symbols? x)
+                                                      (round-decimal-tree x)
+                                                      (round-decimal (eval x anchor) 3))
+                                                  (if (not (symbol? x))
+                                                      (round-decimal (eval x anchor) 3)
+                                                      x)))
+                                       denom-term-list)))
+
+          ;reduction
+          (let ((reduction (reduce (make-poly-dense 's (map (λ(x) (eval x anchor)) numer-term-list))
+                                   (make-poly-dense 's (map (λ(x) (eval x anchor)) denom-term-list)))))
+            ;(displayln reduction)
+            (set! numer-term-list (map (λ(x) (if (< (imag-part x) 0.000001) (real-part x) x)) (cdr (cdr (car reduction)))))
+            (set! denom-term-list (map (λ(x) (if (< (imag-part x) 0.000001) (real-part x) x)) (cdr (cdr (cadr reduction)))))))
+      
+      (make-ratio (make-poly-dense 's numer-term-list)
+                  (make-poly-dense 's denom-term-list)))))
+                     
 
 
 
