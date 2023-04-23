@@ -626,8 +626,8 @@ If not, see <https://www.gnu.org/licenses/>.
 ;///// Evolve system Bode plot
 
 (define evolve
-  (let ((last-value '())
-        (last-simplified-block-value '()))
+  (let ((last-reduced-total-tf '())
+        (last-tf-expression '()))
     
     (lambda (block1)
       
@@ -653,10 +653,10 @@ If not, see <https://www.gnu.org/licenses/>.
         
         (bode-plot-parameters)
         
-        (if (null? last-value)
+        (if (null? last-tf-expression)
             
-            (begin (set! last-value total-tf-expression1)
-                   (set! last-simplified-block-value (get-simplified-block-value block1))
+            (begin (set! last-reduced-total-tf reduced-total-tf1)
+                   (set! last-tf-expression total-tf-expression1)                   
                    
                    (for-each
                     displayln
@@ -700,13 +700,12 @@ If not, see <https://www.gnu.org/licenses/>.
                     ))
             
             
-            (let* ((temp last-value)
-                   (temp-simplified-block-value last-simplified-block-value)
-                   (temp-value-evaluation (eval temp anchor))
-                   (tfw-temp (substitute-s-with-w total-tf-evaluation1)))
+            (let* ((temp-reduced-total-tf last-reduced-total-tf)
+                   (temp-tf-expression (eval last-tf-expression anchor))
+                   (tfw-temp (substitute-s-with-w temp-tf-expression)))
 
 
-              (compute-zeros-poles! temp-simplified-block-value 2)
+              (compute-zeros-poles! temp-reduced-total-tf 2)
 
               ;reset angle unwrapping
               (set! angle-adjustment-total-2 0)
@@ -717,7 +716,8 @@ If not, see <https://www.gnu.org/licenses/>.
               (compute-phase-points! w-min w-max tfw-temp 2)
               
               
-              (set! last-value total-tf-expression1)
+              (set! last-reduced-total-tf reduced-total-tf1)
+              (set! last-tf-expression total-tf-expression1)
               
               (for-each
                displayln
@@ -1004,7 +1004,18 @@ If not, see <https://www.gnu.org/licenses/>.
          (tfw (substitute-s-with-w total-tf-evaluation)))
 
     
+      
+    (set-chebyshev-threshold! 1000)        
+
     (compute-zeros-poles! reduced-total-tf 1)
+
+    ;reset angle unwrapping
+    (set! angle-adjustment-total-1 0)
+    (set! last-angle-value-1 (angle (tfw w-min)))
+
+    ;compute points
+    (compute-magnitude-points! w-min w-max tfw 1)
+    (compute-phase-points! w-min w-max tfw 1)
     
     
     (let* ((magnitude-at-w-min (magnitude (tfw w-min)))
@@ -1069,9 +1080,6 @@ If not, see <https://www.gnu.org/licenses/>.
                              #f))
            |#
            )
-      
-      
-      (set-chebyshev-threshold! 1000)
       
       
       (plot-height 400)
