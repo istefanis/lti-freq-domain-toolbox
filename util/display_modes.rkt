@@ -61,7 +61,7 @@ If not, see <https://www.gnu.org/licenses/>.
     (newline)
     (newline)
     (for-each (lambda (x) (pretty-display x) (newline))       ; pretty display 
-              ;(lambda (x) (display x) (newline) (newline))   ; regular display
+              ;(lambda (x) (displayln x) (newline))   ; regular display
               l)
     (display (make-string display-width c)))
 
@@ -90,7 +90,6 @@ If not, see <https://www.gnu.org/licenses/>.
 #|
 (define (log-cached-simplification-message)
   (newline)
-  (display "- cached simplification")
-  (newline)
+  (displayln "- cached simplification")
   (newline))
 |#

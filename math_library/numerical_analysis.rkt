@@ -238,7 +238,6 @@ and their licences are included in respective 'math_library\assets' subdirectori
 
 ; COMPLEX UNIVARIATE POLYNOMIAL ROOTS COMPUTATION
 
-
 ;Using an implementation of the Weierstrass / Durand-Kerner method,
 ;compute the complex roots of a polynomial and return them inside a list
 (define (find-complex-roots-of-polynomial terms)
@@ -295,7 +294,6 @@ and their licences are included in respective 'math_library\assets' subdirectori
 
 
 ; LAPLACE INVERSION
-
 
 ; Talbot numerical method
 (define (talbot-method F t N)

@@ -117,8 +117,7 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
                                                                      (eq? (car datum) '*)
                                                                      (eq? (car datum) '/)))
           'symbol
-          (car datum)
-          )
+          (car datum))
       (cond ((number? datum) 'complex)
             ((symbol? datum) 'symbol)
             ((and (symbol? datum) (not (or (eq? datum '+)
@@ -138,8 +137,7 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
                                                                      (eq? (car datum) '*)
                                                                      (eq? (car datum) '/)))
           datum
-          (cdr datum)
-          )
+          (cdr datum))
       (cond ((number? datum) datum)
             ;((symbol? datum) datum)
             ;#|
@@ -207,14 +205,9 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
 (define (install-symbolic-package)
   
   (put 'add '(symbol symbol) (λ (x y) (list '+ x y)))
-  
   (put 'sub '(symbol symbol) (λ (x y) (list '- x y)))
-  
   (put 'mul '(symbol symbol) (λ (x y) (list '* x y)))
-  
   (put 'div '(symbol symbol) (λ (x y) (list '/ x y)))
- 
-  
   
   (put 'add '(symbol complex) (λ (x y) (if (= y 0) 
                                            x
@@ -305,15 +298,12 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
 
 ;////// Ratios algebra package (see: SICP 2.5.1)
 
-(define (install-ratio-package)
-  
+(define (install-ratio-package) 
   
   (define (numer r) (car r))
   (define (denom r) (cadr r))
   
   (define (make-rat n d) (list n d))
-  
-  
   
   (define (add-rat x y)
     (make-rat (add (mul (numer x) (denom y))
@@ -330,11 +320,9 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
     (make-rat (mul (numer x) (denom y))
               (mul (denom x) (numer y))))
   
-  
   ;(define (equ?-rat x y) (and (equ? (numer x) (numer y)) (equ? (denom x) (denom y))))
   ;(define (=zero?-rat x) (=zero? (numer x)))
-  
-  
+    
   
   
   (put 'get-numer '(ratio) numer)
@@ -361,8 +349,7 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
   ;(put 'negation '(rational) (lambda (x) (/ (- (numer x)) (denom x))))
   
   (put 'make 'ratio (λ (n d) (tag (make-rat n d))))
-  
-  
+    
   
   ;'done-ratio
   )
@@ -391,7 +378,6 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
   (define (term-list p) (cdr p))
   (define (variable? v) (symbol? v))
   (define (same-variable? v1 v2) (and (variable? v1) (variable? v2) (eq? v1 v2)))
-  
   
   
   
@@ -431,10 +417,8 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
   (define (adjoin-term t1 L) ;it returns ordered lists - see: SICP ex. 2.89
     #|
     (newline)
-    (display t1)
-    (newline)
-    (display L)
-    (newline)
+    (displayln t1)
+    (displayln L)
     |#
     (if (and (number? (coeff t1)) (=zero? (coeff t1)))
         L
@@ -444,12 +428,9 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
                     ((= (order t1) (order L)) 
                      
                      #|
-                     (display "test")
-                     (newline)
-                     (display (coeff t1))
-                     (newline)
-                     (display (coeff t2))
-                     (newline)
+                     (displayln "test")
+                     (displayln (coeff t1))
+                     (displayln (coeff t2))
                      |#
                      
                      (cons 
@@ -459,7 +440,6 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
             t1)))  ;// ex. '(5 0)
   
   
-
 
     
   ;////// sub-poly
@@ -478,8 +458,7 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
   
 
   
-  
-  
+   
   ;////// mul-poly  
   
   ; orig
@@ -509,8 +488,7 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
   
   
 
-  
-  
+   
   ;////// div-poly (see: SICP ex. 2.90)
   
   ;// it returns only the quotient if the remainder is zero
@@ -595,7 +573,7 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
   
   
   
-  ;//////  see: SICP ex. 2.94
+  ;//////  gcd (see: SICP ex. 2.94)
   
   (define (gcd-poly p1 p2)
     (if (same-variable? (variable p1) 
@@ -645,7 +623,7 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
   
   
   
-  ;//////  see: SICP ex. 2.97
+  ;//////  reduce (see: SICP ex. 2.97)
   
   ; orig
   (define (reduce-poly p1 p2)
@@ -672,8 +650,7 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
       #|
       (newline)
       (display "gcd :")
-      (display GCD)
-      (newline)
+      (displayln GCD)
       |#      
       
       (let ((results-list-n        
@@ -689,13 +666,8 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
         
         #|
         (newline)
-        (display "results-list-n :")
-        (display results-list-n)
-        (newline)
-        (newline)
-        (display "results-list-d :")
-        (display results-list-d)
-        (newline)
+        (display "results-list-n :")(displayln results-list-n)
+        (display "results-list-d :")(displayln results-list-d)
         |#        
         
         ;// division with GCD returns no remainder, so:
@@ -708,29 +680,21 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
             
             #|
             (newline)
-            (display "coeff-list-n :")
-            (display coeff-list-n)
+            (display "coeff-list-n :")(displayln coeff-list-n)
             (newline)
-            (newline)
-            (display "coeff-list-d :")
-            (display coeff-list-d)
-            (newline)
+            (display "coeff-list-d :")(displayln coeff-list-d)
             |#
             
             
             #| integer coefficients:
             (let ((gcdivisor (apply gcd (append coeff-list-n coeff-list-d))))
-              
               #|
               (newline)
-              (display "gcdivisor :")
-              (display gcdivisor)
-              (newline)
+              (display "gcdivisor :")(displayln gcdivisor)
               |#              
               ;// result
               (list (mul-scheme-number-by-all-terms (/ 1 gcdivisor) reduced-n)
-                    (mul-scheme-number-by-all-terms (/ 1 gcdivisor) reduced-d)))
-              
+                    (mul-scheme-number-by-all-terms (/ 1 gcdivisor) reduced-d)))             
             |#
             
             
@@ -741,11 +705,9 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
             
             ;// result
             (list (map (λ (x) (round-decimal x 3)) (mul-scheme-number-by-all-terms (/ 1.0 (car coeff-list-n)) reduced-n))
-                  (map (λ (x) (round-decimal x 3)) (mul-scheme-number-by-all-terms (/ 1.0 (car coeff-list-n)) reduced-d)))
-            
+                  (map (λ (x) (round-decimal x 3)) (mul-scheme-number-by-all-terms (/ 1.0 (car coeff-list-n)) reduced-d)))            
             )))))
   ;|#
-  
   
   
   
@@ -794,7 +756,6 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
 
 (define (make-poly-dense var terms)
   ((get 'make 'poly-dense) var terms))
-
 
 
 

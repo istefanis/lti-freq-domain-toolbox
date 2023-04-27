@@ -225,17 +225,10 @@ If not, see <https://www.gnu.org/licenses/>.
                    (set! i-am-simplified #t)
                    #|
                    (newline)
-                   (newline)
-                   (display tfs)
-                   (newline)
-                   (display blocks)
-                   (newline)
-                   (map (λ (x) 
-                          (newline)
-                          (display (get-value x))) tfs)
-                   (map (λ (x) 
-                          (newline)
-                          (display (get-value x))) blocks)
+                   (displayln tfs)
+                   (displayln blocks)
+                   (map (λ(x) (displayln (get-value x))) tfs)
+                   (map (λ(x) (displayln (get-value x))) blocks)
                    |#
                    (set! value ((car (append tfs blocks)) 'get-value))
                    (zero-counters!))
@@ -751,14 +744,10 @@ If not, see <https://www.gnu.org/licenses/>.
                 (next-pair (get-next-pair current-pair)))  ; current, next and previous pairs of tfs
             
             #|
-            (display "hdgjjdghj")
-            (newline)
-            (display (get-value tf))
-            (newline)
-            (newline)
+            (displayln "test1")
+            (displayln (get-value tf))
             (display "outputs: ")
-            (display (get-outputs tf))
-                                  (newline)
+            (displayln (get-outputs tf))
             (newline)
             |#
             
@@ -782,19 +771,15 @@ If not, see <https://www.gnu.org/licenses/>.
                              ; store the merged value at second-tf:
                              #|
                              (newline)
-                             (display "display (get-value tf))")
-                             (display (get-value tf))
-                             (newline)
-                             (display (get-value second-tf))
-                             (newline)
+                             (displayln "display (get-value tf))")
+                             (displayln (get-value tf))
+                             (displayln (get-value second-tf))
                              |#
                              (set-value! second-tf (mul (get-value tf) (get-value second-tf)))
                              
                              #|
-                             (display "new value")
-                             (newline)
-                             (display (get-value second-tf))
-                             (newline)
+                             (displayln "new value")
+                             (displayln (get-value second-tf))
                              |#
                              
                              ; rearrange connections:
@@ -812,8 +797,7 @@ If not, see <https://www.gnu.org/licenses/>.
                              
                              #|
                              (newline)
-                             (display (get-blocks a))
-                             (newline)
+                             (displayln (get-blocks a))
                              (display (get-value a))
                              |#
                              
