@@ -1131,31 +1131,30 @@ If not, see <https://www.gnu.org/licenses/>.
                  (parametric (λ (w) (vector (real-part (tfw w))
                                             (imag-part (tfw w))
                                             ))
-                             0.0000001 10
+                             0.0000001 5
                              #:x-min -20 #:x-max 20 #:y-min -20 #:y-max 20
                              #:color 3
                              #:label "0 < w < ∞"
+                             #:samples 5000
                              )
                  (parametric (λ (w) (vector (real-part (tfw w))
                                             (imag-part (tfw w))
                                             ))
-                             10 (expt 10 3)
-                             ;#:x-min -1.5 #:x-max 1.5 #:y-min -1.5 #:y-max 1.5
+                             5 (expt 10 3)
                              #:color 3
                              )
                  (parametric (λ (w) (vector (real-part (tfw w))
                                             (imag-part (tfw w))
                                             ))
-                             -10 0.0000001
-                             ;#:x-min -1.5 #:x-max 1.5 #:y-min -1.5 #:y-max 1.5
+                             -5 0.0000001
                              #:color 2
                              #:label "-∞ < w ≤ 0"
+                             #:samples 5000
                              )
                  (parametric (λ (w) (vector (real-part (tfw w))
                                             (imag-part (tfw w))
                                             ))
-                             (- (expt 10 3)) -10
-                             ;#:x-min -1.5 #:x-max 1.5 #:y-min -1.5 #:y-max 1.5
+                             (- (expt 10 3)) -5
                              #:color 2
                              )
 

@@ -177,10 +177,10 @@ If not, see <https://www.gnu.org/licenses/>.
     (define tf1 (tf '(1) '(1 0) a))  ;it works
     (bode a)
 
-    (displayc "> (chebyshev-type1 4 8 1 a)")
+    (displayc "> (bode (chebyshev-type1 4 8 1 a))")
     (bode (chebyshev-type1 4 8 1 a))
     
-    (displayc "> (chebyshev-type1 6 1 1 a)")
+    (displayc "> (bode (chebyshev-type1 6 1 1 a))")
     (bode (chebyshev-type1 6 1 1 a))
 
     ;(displayc "> (bode b)")
