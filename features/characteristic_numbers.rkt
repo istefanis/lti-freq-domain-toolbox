@@ -174,41 +174,44 @@ If not, see <https://www.gnu.org/licenses/>.
                                                                  " [dB/dec] (high)")))))         
            (display "roll-off     = ")
            (displayln roll-off-text)
-           (newline)))))
+           ))))
+
+
+
+
+
+(define (display-gain-margins w-and-gain-margins has-all-phase-points-below-180)
+  (if (not (eq? w-and-gain-margins '()))
+      (map (λ(x) (begin (display "gain margin  = ")
+                        (display (round-decimal (cadr x) 3))
+                        (display " at ")
+                        (display (round-decimal (car x) 3))
+                        (displayln " [rad/s]")))
+           w-and-gain-margins)
+      (if has-all-phase-points-below-180
+          (displayln "gain margin  = N/A")    
+          (displayln "gain margin  = ∞")))
+  (newline))
 
 
 
 
 
 ;[SHOULD BE IMPROVED]
-             
-#|
-(define (display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)
 
-  (if (not (eq? gain-margin #f))
-      (begin (display "gain margin  = ")
-             (display (round-decimal gain-margin 2))
-             (display " at ")
-             (display (round-decimal w-gain-margin 2))
-             (display " [rad/s]")
-             (newline))
-      (begin (display "gain margin  = ∞")
-             (newline)))
-  
+#|
+(define (display-phase-margin phase-margin w-phase-margin)
   (if (not (eq? phase-margin #f))
       (begin (display "phase margin = ")
              (display (round-decimal phase-margin 2))
              (display " [deg] at ")
              (display (round-decimal w-phase-margin 2))
-             (display " [rad/s]")
-             (newline)
+             (displayln " [rad/s]")
              (newline))
-      (begin (display "phase margin = ∞")
-             (newline)
+      (begin (displayln "phase margin = ∞")
              (newline)))
   )
 |#
-
 
 
 

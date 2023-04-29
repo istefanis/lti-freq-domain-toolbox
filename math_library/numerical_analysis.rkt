@@ -221,14 +221,18 @@ and their licences are included in respective 'math_library\assets' subdirectori
 
 ;Receives as input a list of curve points (with each point represented as a list (x f(x)) itself),
 ;and returns a list containing the intervals in which a curve's roots are to be found
-;(with each interval represented as a list itself)
-(define (find-curve-root-intervals curve-points) 
+;
+; Each interval returned is represented as a list itself
+; - optionally, the function values may be returned too
+(define (find-curve-root-intervals curve-points include-function-values) 
   (define (loop points root-intervals)
     (if (eq? (cdr points) '())
         root-intervals
         (if (<= (* (cadr (cadr points)) (cadr (car points))) 0)
             (loop (cdr points) (append root-intervals
-                                       (list (list (car (car points)) (car (cadr points))))))
+                                       (if include-function-values 
+                                           (list (list (car points) (cadr points)))
+                                           (list (list (car (car points)) (car (cadr points)))))))
             (loop (cdr points) root-intervals))))
 
   (loop curve-points '()))

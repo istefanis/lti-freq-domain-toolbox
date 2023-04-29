@@ -306,8 +306,7 @@ If not, see <https://www.gnu.org/licenses/>.
                     #|
                     (display "Current phase value at w-max: ") (displayln last-phase-value)
                     (display "Expected phase value at w-max: ") (displayln expected-phase-value-at-w-max)
-                    (display "Phase adjustment via w-max: ") (displayln (- (* factor 180)))
-                    (newline)
+                    (display "Phase adjustment via w-max: ") (displayln (- (* factor 180))) (newline)
                     |#
                     (log-messages (list "[CP-88] Current phase value at w-max: " last-phase-value
                                         "Expected phase value at w-max: " expected-phase-value-at-w-max
@@ -320,8 +319,7 @@ If not, see <https://www.gnu.org/licenses/>.
                     #|
                     (display "Current phase value at w-max: ") (displayln last-phase-value)
                     (display "Expected phase value at w-max: ") (displayln expected-phase-value-at-w-max)
-                    (display "Phase adjustment via w-max: ") (displayln (* factor 180))
-                    (newline)
+                    (display "Phase adjustment via w-max: ") (displayln (* factor 180)) (newline)
                     |#
                     (log-messages (list "[CP-89] Current phase value at w-max: " last-phase-value
                                         "Expected phase value at w-max: " expected-phase-value-at-w-max
@@ -380,27 +378,43 @@ If not, see <https://www.gnu.org/licenses/>.
            (bandwidth-function (λ (w) (- (magnitude (tfw w)) bandwidth-threshold)))
 
            (w-cutoff-root-intervals (find-curve-root-intervals
-                                     (map (λ(x) (list (car x) (- (cadr x) bandwidth-threshold))) magnitude-points-1)))
+                                     (map (λ(x) (list (car x) (- (cadr x) bandwidth-threshold))) magnitude-points-1)
+                                     #f))
 
            (w-cutoff-roots (map (λ(interval) (half-interval-method bandwidth-function (car interval) (cadr interval)))
                                 w-cutoff-root-intervals))
 
-           ;[SHOULD BE IMPROVED]
            
-           #|           
-           ;gain margin parameters computation
+           ;gain margin computation
+           (w-gain-margins-intervals-with-phase-values
+            (let ((intervals (if (> (length (filter (λ(x) (< (cadr x) -182.5)) phase-points-1)) 1)
+                                 (find-curve-root-intervals (map (λ(x) (list (car x) (- (cadr x) -180))) phase-points-1)
+                                                            #t)
+                                 '())))
+              (if (< (length intervals) 10)
+                  intervals
+                  '())))
 
-           (f-gain-margin (λ (w) (- (let ((f1 (angle (tfw w))))
-                                      (unwrap-angle-simple! f1 w 1))                            
-                                    (- pi))))
+           (has-all-phase-points-below-180 (and (eq? w-gain-margins-intervals-with-phase-values '())
+                                                (< (cadr (list-ref phase-points-1 10)) -180)))
+
+           ;linear approximation of phase curve between interval points: fx = fx1 + (x-x1)/(x2-x1)*(fx2-fx1)
+           ;representation of interval with function values: '((x1, fx1) (x2, fx2))
+           (w-gain-margins-roots (map (λ(interval) (half-interval-method (λ(x) (+ (cadar interval) ;fx1
+                                                                                  (* (/ (- x (caar interval)) ;(x-x1)
+                                                                                        (- (caadr interval) (caar interval))) ;(x2-x1)
+                                                                                     (- (cadadr interval) (cadar interval))))) ;(fx2-fx1)
+                                                                         (caar interval)
+                                                                         (caadr interval)))
+                                      w-gain-margins-intervals-with-phase-values))
            
-           (w-gain-margin (half-interval-method f-gain-margin w-min w-max))
+           (w-and-gain-margins (map (λ(w) (list w (/ 1 (magnitude (tfw w)))))
+                                    (filter (λ(w) (< (magnitude (tfw w)) 1)) w-gain-margins-roots))) ;filter out any w with magnitude < 1
+
            
-           (gain-margin (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
-                            (/ 1 (magnitude (tfw w-gain-margin)))
-                            #f))
-           
-           
+           ;[SHOULD BE IMPROVED]
+
+           #|            
            ;phase margin parameters computation
            
            (f-phase-margin (λ (w) (- (magnitude (tfw w)) 1)))
@@ -429,7 +443,6 @@ If not, see <https://www.gnu.org/licenses/>.
                              #f))
            |#           
            )
-      
       
       (bode-plot-parameters)
       
@@ -461,15 +474,15 @@ If not, see <https://www.gnu.org/licenses/>.
 
                        (function (λ (x) 1) #:color 3 #:style 'dot)
                        (function (λ (x) bandwidth-threshold) #:color 3 #:style 'dot #:y-min 0.099 #:y-max 10.001)
-                      
-                       #|
-                       (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
-                           (error-bars (list 
-                                        (vector w-gain-margin
-                                                (/ (+ 1 (magnitude (tfw w-gain-margin))) 2)
-                                                (/ (- 1 (magnitude (tfw w-gain-margin))) 2))))
+                                           
+                       (if (not (eq? w-and-gain-margins '()))
+                           (error-bars (map (λ(x)
+                                              (vector (car x)
+                                                      (/ (+ 1 (magnitude (tfw (car x)))) 2)
+                                                      (abs (/ (- 1 (magnitude (tfw (car x)))) 2))))
+                                            w-and-gain-margins)
+                                       #:alpha 0.6)
                            '())
-                       |#
                        )
 
                       ;cutoff frequences vertical lines
@@ -491,10 +504,8 @@ If not, see <https://www.gnu.org/licenses/>.
                       (function (λ (w) (- 180)) w-min w-max  #:color 3 #:style 'dot)
 
                       ;wrapped angle:
-                      #|
-                      (function (λ (w) (* 180 (/ 1 pi) (angle (tfw w))))
-                                w-min w-max  #:color 3 #:style 'dot #:width 0.5)
-                      |#
+                      ;(function (λ (w) (* 180 (/ 1 pi) (angle (tfw w)))) w-min w-max  #:color 3 #:style 'dot #:width 0.5)
+
                       
                       (lines phase-points-1)
 
@@ -519,9 +530,12 @@ If not, see <https://www.gnu.org/licenses/>.
       ;roll-off computation & text display
       (compute-roll-off magnitude-at-w-min magnitude-at-w-max magnitude-at-0005 magnitude-at-900 w-min w-max)
            
-      ;gain & phase margins text display
-      ;(display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)
+      ;gain margins text display
+      (display-gain-margins w-and-gain-margins has-all-phase-points-below-180)
 
+      ;phase margin text display
+      ;(display-phase-margin phase-margin w-phase-margin)
+      
       ))
   )
 
@@ -1030,28 +1044,42 @@ If not, see <https://www.gnu.org/licenses/>.
            (bandwidth-function (λ (w) (- (magnitude (tfw w)) bandwidth-threshold)))
 
            (w-cutoff-root-intervals (find-curve-root-intervals
-                                     (map (λ(x) (list (car x) (- (cadr x) bandwidth-threshold))) magnitude-points-1)))
+                                     (map (λ(x) (list (car x) (- (cadr x) bandwidth-threshold))) magnitude-points-1)
+                                     #f))
 
            (w-cutoff-roots (map (λ(interval) (half-interval-method bandwidth-function (car interval) (cadr interval)))
                                 w-cutoff-root-intervals))
+           
+        
+           ;gain margins computation
+           (w-gain-margins-intervals-with-phase-values (let ((intervals (if (> (length (filter (λ(x) (< (cadr x) -182.5)) phase-points-1)) 1)
+                                                                            (find-curve-root-intervals (map (λ(x) (list (car x) (- (cadr x) -180))) phase-points-1)
+                                                                                                       #t)
+                                                                            '())))
+                                                         (if (< (length intervals) 10)
+                                                             intervals
+                                                             '())))
 
+           (has-all-phase-points-below-180 (and (eq? w-gain-margins-intervals-with-phase-values '())
+                                                (< (cadr (list-ref phase-points-1 10)) -180)))
 
+           ;linear approximation of phase curve between interval points: fx = fx1 + (x-x1)/(x2-x1)*(fx2-fx1)
+           ;interval representation: '((x1, fx1) (x2, fx2))
+           (w-gain-margins-roots (map (λ(interval) (half-interval-method (λ(x) (+ (cadar interval) ;fx1
+                                                                                  (* (/ (- x (caar interval)) ;(x-x1)
+                                                                                        (- (caadr interval) (caar interval))) ;(x2-x1)
+                                                                                     (- (cadadr interval) (cadar interval))))) ;(fx2-fx1)
+                                                                         (caar interval)
+                                                                         (caadr interval)))
+                                      w-gain-margins-intervals-with-phase-values))
+           
+           (w-and-gain-margins (map (λ(w) (list w (/ 1 (magnitude (tfw w)))))
+                                    (filter (λ(w) (< (magnitude (tfw w)) 1)) w-gain-margins-roots))) ;filter out any w with magnitude < 1
+    
+           
            ;[SHOULD BE IMPROVED]
            
-           #|           
-           ;gain margin parameters computation
-
-           (f-gain-margin (λ (w) (- (let ((f1 (angle (tfw w))))
-                                      (unwrap-angle-simple! f1 w 1))
-                                    (- pi))))
-           
-           (w-gain-margin (half-interval-method f-gain-margin w-min w-max))
-
-           (gain-margin (if (not (or (eq? w-gain-margin #f) (eq? w-gain-margin 0)))
-                            (/ 1 (magnitude (tfw w-gain-margin)))
-                            #f))
-           
-           
+           #|
            ;phase margin parameters computation
 
            (f-phase-margin (λ (w) (- (magnitude (tfw w)) 1)))
@@ -1160,8 +1188,11 @@ If not, see <https://www.gnu.org/licenses/>.
       ;roll-off computation & text display
       (compute-roll-off magnitude-at-w-min magnitude-at-w-max magnitude-at-0005 magnitude-at-900 w-min w-max)
            
-      ;gain & phase margins text display
-      ;(display-gain-phase-margins gain-margin w-gain-margin phase-margin w-phase-margin)     
+      ;gain margins text display
+      (display-gain-margins w-and-gain-margins has-all-phase-points-below-180)
+
+      ;phase margin text display
+      ;(display-phase-margin phase-margin w-phase-margin)
       
       ))
   )

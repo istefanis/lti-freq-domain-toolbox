@@ -222,6 +222,14 @@ If not, see <https://www.gnu.org/licenses/>.
     (displayc "> (bode a)")
     (define tf1 (tf '(1 1.25 2) '(0.25 0) a))
     (bode a)
+
+    (displayc "> (bode a)")
+    (define tf1 (tf '(0.05 0.05 10) '(0.1 0.8 1 1 0.1) a))
+    (bode a)
+    
+    (displayc "> (bode a)")
+    (define tf1 (tf '(0.05 0.05 0.5) '(0.1 0.8 1 1 0.1) a))
+    (bode a)
     
     
     ;Compare
