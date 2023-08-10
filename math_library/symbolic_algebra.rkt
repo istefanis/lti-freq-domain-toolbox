@@ -283,7 +283,7 @@ The book is available under a Creative Commons Attribution-ShareAlike 4.0 Intern
   
   ;(put 'equ? '(complex complex) (λ (x y) (= x y)))
   (put '=zero? '(complex) (λ (x) (= x 0)))
-  (put 'negation '(complex) (λ (x) (sub 0 x)))
+  (put 'negation '(complex) (λ (x) (- x)))
   
   ;(put 'exp '(complex complex) (λ (x y) (expt x y)))
   
