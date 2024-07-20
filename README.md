@@ -14,7 +14,7 @@ It can perform tasks such as:
 
 ## Known issues & limitations
 
-* phase adjustment in some cases of steep phase shifts
+* phase computation (including adjustment in some cases of steep phase shifts)
 
 ## Installation
 
